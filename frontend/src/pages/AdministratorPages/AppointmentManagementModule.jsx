@@ -1,3 +1,4 @@
+import HeaderAdmin from "../../components/administrator/HeaderAdmin/HeaderAdmin.jsx";
 import Hero from "../../components/Hero/Hero.jsx";
 import AppointmentEps from "../../components/administrator/AppointmentManagement/AppointmentEps/AppointmentEps.jsx";
 
@@ -7,6 +8,7 @@ function AppointmentManagementModule (){
     return (
         <div className={styles.pageLayout}>
             <div className={styles.pageContent}>
+                <HeaderAdmin />
                 <Hero 
                     label="Administración"
                     title="Gestión de citas"
@@ -19,4 +21,4 @@ function AppointmentManagementModule (){
     );
 }
 
-export default AppointmentManagementModule
+export default AppointmentManagementModule;
