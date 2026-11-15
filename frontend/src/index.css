@@ -104,15 +104,7 @@ body {
 }
 
 .user-gestor__header > a {
-    margin-bottom: 8px;
-    color: var(--color-primary);
-    font-weight: 700;
-    text-decoration: none;
-}
-
-.user-gestor__header > a:hover {
-    color: var(--hover-primary);
-    text-decoration: underline;
+    display: none;
 }
 
 .user-gestor__eyebrow {
@@ -483,15 +475,7 @@ main:has(#acciones-resultados) > header {
 }
 
 main:has(#acciones-resultados) > header a {
-    margin-bottom: 8px;
-    color: var(--color-primary);
-    font-weight: 700;
-    text-decoration: none;
-}
-
-main:has(#acciones-resultados) > header a:hover {
-    color: var(--hover-primary);
-    text-decoration: underline;
+    display: none;
 }
 
 main:has(#acciones-resultados) > header p:first-of-type {

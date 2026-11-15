@@ -41,7 +41,7 @@ function Convenios() {
         {/* Cabecera del Módulo */}
         <header className={styles.cabeceraConvenios}>
           <h1 className={styles.tituloCabecera}>
-            <span aria-hidden="true">🤝 🏥</span> Gestión de Convenios Institucionales EPS - IPS
+            Gestión de Convenios Institucionales EPS - IPS
           </h1>
           <p className={styles.subtituloCabecera}>
             Formalización, alcance de servicios de salud autorizados y garantías de transporte preferencial adaptado en la red de Tunja.
@@ -51,7 +51,7 @@ function Convenios() {
         {/* Mensaje de notificación */}
         {notificacion && (
           <div className={styles.alertaNotificacion} role="alert">
-            <span aria-hidden="true">✅</span> {notificacion}
+            {notificacion}
           </div>
         )}
         {cargando && <p role="status">Cargando convenios...</p>}

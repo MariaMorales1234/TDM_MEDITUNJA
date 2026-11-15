@@ -16,14 +16,12 @@
     padding: 20px 28px;
     margin: 20px 0;
 
-    background-color: var(--color-bg);
+    background-color: var(--color-bg-card, var(--color-bg));
     border: 1px solid var(--color-border);
     border-radius: 20px;
     box-sizing: border-box;
 
-    box-shadow:
-        0 24px 60px rgba(24, 39, 75, 0.08),
-        0 4px 12px rgba(24, 39, 75, 0.02);
+    box-shadow: 0 16px 40px var(--color-shadow);
 }
 
 .profileContent {
@@ -69,14 +67,12 @@
     width: 100%;
     margin: 20px 0;
     padding: clamp(1.25rem, 4vw, 2rem);
-    background-color: var(--color-bg);
+    background-color: var(--color-bg-card, var(--color-bg));
     border: 1px solid var(--color-border);
     border-radius: 30px;
     box-sizing: border-box;
 
-    box-shadow:
-    0 24px 60px rgba(24, 39, 75, 0.08),
-    0 4px 12px rgba(24, 39, 75, 0.02);
+    box-shadow: 0 16px 40px var(--color-shadow);
 }
 
 .profileContent h3 {
@@ -167,6 +163,49 @@
     outline: 2px solid var(--color-primary, --hover-primary);
     outline-offset: 2px;
     border-radius: 4px;
+}
+
+.themeSection {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 8px 12px;
+}
+
+.themeDescription {
+    color: var(--color-text-secundary);
+    font-family: var(--text);
+    font-size: 15px;
+    line-height: 1.5;
+}
+
+.themeToggleBtn {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    width: fit-content;
+    padding: 12px 22px;
+    border: 1.5px solid var(--color-border);
+    border-radius: 12px;
+    background-color: var(--hover-secundary);
+    color: var(--color-primary);
+    font-family: var(--sm);
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.themeToggleBtn:hover {
+    border-color: var(--color-primary);
+    background-color: var(--color-primary);
+    color: #ffffff;
+    transform: translateY(-1px);
+}
+
+.themeToggleBtn:focus-visible {
+    outline: 3px solid var(--color-primary);
+    outline-offset: 2px;
 }
 
 @media (max-width: 600px) {

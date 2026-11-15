@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
 import { apiBaseUrl, apiRequest, mensajeError } from "../../../auth/api.js";
 import { useAdminAuth } from "../../../auth/useAdminAuth.js";
 
@@ -208,7 +207,6 @@ function UserGestor() {
     return (
         <main className="user-gestor">
             <header className="user-gestor__header">
-                <Link to="/perfilAdministrador">Volver al perfil de administrador</Link>
                 <p className="user-gestor__eyebrow">MediTunja · Administración</p>
                 <h1>Gestión de afiliados</h1>
                 <p>Administra las solicitudes y datos de afiliados de {usuario.eps}.</p>

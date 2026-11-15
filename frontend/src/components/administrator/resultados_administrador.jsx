@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
 import { apiRequest, mensajeError } from "../../auth/api.js";
 import { useAdminAuth } from "../../auth/useAdminAuth.js";
 import Filter from "../Filter/Filter.jsx";
@@ -131,7 +130,6 @@ function ResultadosAdministrador() {
     return (
         <main>
             <header>
-                <Link to="/perfilAdministrador">Volver al perfil de administrador</Link>
                 <p>MediTunja · Administración</p>
                 <h1>Gestión de resultados de procedimientos</h1>
                 <p>

@@ -208,7 +208,7 @@ function FormularioConvenio({
             <div className={styles.contenidoClausula}>
               <div className={styles.encabezadoClausula}>
                 <span className={styles.tituloClausula}>
-                  <span aria-hidden="true">♿ 🚐</span> Cláusula Obligatoria de Transporte Preferencial Adaptado
+                  Cláusula Obligatoria de Transporte Preferencial Adaptado
                 </span>
                 <span
                   className={`${styles.badgeClausula} ${
@@ -236,7 +236,7 @@ function FormularioConvenio({
           Restablecer
         </button>
         <button type="submit" className={styles.btnFormalizar}>
-          📄 Formalizar y Activar Convenio
+          Formalizar y Activar Convenio
         </button>
       </div>
     </form>

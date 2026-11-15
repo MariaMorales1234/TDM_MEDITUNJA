@@ -8,7 +8,7 @@ function ListaConvenios({ convenios, onEliminarConvenio }) {
   return (
     <section className={styles.seccionListado}>
       <h3 className={styles.tituloSeccion}>
-        <span>📋</span> Convenios Formalizados en la Red Tunja
+        Convenios Formalizados en la Red Tunja
       </h3>
       <p className={styles.descripcionSeccion}>
         Convenios institucionales activos y en revisión entre las entidades promotoras (EPS) y los prestadores de salud (IPS) de Tunja.
@@ -63,7 +63,7 @@ function ListaConvenios({ convenios, onEliminarConvenio }) {
                   <td>
                     {c.clausulaTransporte ? (
                       <span className={styles.badgeTransporteSi}>
-                        ♿ 🚐 Cobertura Activa
+                        Cobertura Activa
                       </span>
                     ) : (
                       <span className={styles.badgeTransporteNo}>

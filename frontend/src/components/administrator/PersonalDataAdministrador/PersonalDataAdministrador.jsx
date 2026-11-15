@@ -1,9 +1,12 @@
 import ProfileHeader from "../../ProfileHeader/ProfileHeader.jsx";
 import styles from "./PersonalDataAdministrador.module.css";
 import { useAdminAuth } from "../../../auth/useAdminAuth.js";
+import { useTheme } from "../../../context/ThemeContext.jsx";
+import { Moon, Sun } from "lucide-react";
 
 function PersonalDataAdministrador() {
     const { usuario, cerrarSesion } = useAdminAuth();
+    const { dark, toggle } = useTheme();
     const nombresPerfil = usuario.nombres || usuario.nombre || "—";
     const apellidosPerfil = usuario.apellidos || "—";
     const nombreCompleto = `${nombresPerfil} ${apellidosPerfil}`;
@@ -64,6 +67,24 @@ function PersonalDataAdministrador() {
                             <label>Correo electrónico</label>
                             <p>{usuario?.email || "—"}</p>
                         </div>
+                    </div>
+                </fieldset>
+
+                <fieldset>
+                    <h3>Preferencia de tema</h3>
+
+                    <div className={styles.themeSection}>
+                        <p className={styles.themeDescription}>
+                            Elige entre el tema claro u oscuro para personalizar tu experiencia en la administración de MediTunja.
+                        </p>
+                        <button
+                            type="button"
+                            className={styles.themeToggleBtn}
+                            onClick={toggle}
+                        >
+                            {dark ? <Sun size={20} /> : <Moon size={20} />}
+                            <span>{dark ? "Activar modo claro" : "Activar modo oscuro"}</span>
+                        </button>
                     </div>
                 </fieldset>
 

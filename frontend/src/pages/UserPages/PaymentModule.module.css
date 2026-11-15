@@ -1,0 +1,113 @@
+.page {
+    width: min(100% - 48px, 920px);
+    margin: 32px auto 64px;
+    color: var(--color-text);
+    font-family: var(--text);
+}
+
+.panel {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    padding: clamp(24px, 4vw, 40px);
+    border: 1px solid var(--color-border);
+    border-radius: 26px;
+    background: var(--color-bg-card, var(--color-bg));
+    box-shadow: 0 16px 40px var(--color-shadow);
+}
+
+.eyebrow {
+    margin: 0;
+    color: var(--color-primary);
+    font-family: var(--sm);
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.title {
+    margin: 0;
+    color: var(--color-text);
+    font-family: var(--heading);
+    font-size: clamp(1.8rem, 3.5vw, 2.4rem);
+    line-height: 1.25;
+}
+
+.statusNotice {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 20px 24px;
+    border: 1px solid var(--color-border);
+    border-left: 4px solid var(--color-primary);
+    border-radius: 16px;
+    background: var(--hover-secundary);
+}
+
+.statusTitle {
+    margin: 0;
+    color: var(--color-text);
+    font-family: var(--heading);
+    font-size: 1.2rem;
+    font-weight: 700;
+}
+
+.statusText {
+    margin: 0;
+    color: var(--color-text-secundary);
+    font-family: var(--text);
+    font-size: 0.96rem;
+    line-height: 1.6;
+}
+
+.actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-top: 8px;
+}
+
+.backLink {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 46px;
+    padding: 10px 22px;
+    border-radius: 12px;
+    background: var(--color-primary);
+    color: #ffffff;
+    font-family: var(--sm);
+    font-size: 0.95rem;
+    font-weight: 700;
+    text-decoration: none;
+    transition: background-color 160ms ease, transform 160ms ease;
+}
+
+.backLink:hover {
+    background: var(--hover-primary);
+    color: #ffffff;
+    transform: translateY(-1px);
+    text-decoration: none;
+}
+
+.backLink:focus-visible {
+    outline: 3px solid var(--color-primary);
+    outline-offset: 3px;
+}
+
+@media (max-width: 600px) {
+    .page {
+        width: calc(100% - 32px);
+        margin: 20px auto 48px;
+    }
+
+    .panel {
+        padding: 20px 18px;
+        border-radius: 20px;
+    }
+
+    .backLink {
+        width: 100%;
+    }
+}
