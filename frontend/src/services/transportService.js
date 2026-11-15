@@ -1,0 +1,146 @@
+import metroData from "../components/Map/Metro/metro_tunja.json";
+import busData from "../components/Map/Bus/bus_tunja.json";
+
+/**
+ * Calcula la distancia en metros entre dos coordenadas geográficas.
+ */
+function calcularDistancia(lat1, lon1, lat2, lon2) {
+    const R = 6371000;
+    const dLat = (lat2 - lat1) * (Math.PI / 180);
+    const dLon = (lon2 - lon1) * (Math.PI / 180);
+    const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(lat1 * (Math.PI / 180)) *
+            Math.cos(lat2 * (Math.PI / 180)) *
+            Math.sin(dLon / 2) *
+            Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return Math.round(R * c);
+}
+
+/**
+ * Cálculo local síncrono de respaldo (fallback inmediato).
+ */
+export function calcularTransporteLocal(lat, lng) {
+    let estacionCercana = null;
+    let menorDistMetro = Infinity;
+
+    Object.entries(metroData.estaciones).forEach(([id, est]) => {
+        if (!est.pos) return;
+        const dist = calcularDistancia(lat, lng, est.pos[0], est.pos[1]);
+        if (dist < menorDistMetro) {
+            menorDistMetro = dist;
+            const lineas = metroData.lineas
+                .filter((l) => l.estaciones.includes(id))
+                .map((l) => ({
+                    id: l.id,
+                    nombre: l.nombre,
+                    color: l.color,
+                    recorridoMin: l.recorridoMin,
+                }));
+
+            estacionCercana = {
+                id,
+                nombre: est.nombre,
+                pos: est.pos,
+                distanciaMetros: dist,
+                tiempoCaminandoMin: Math.max(1, Math.round(dist / 75)),
+                lineas,
+            };
+        }
+    });
+
+    const paraderosOrdenados = busData.stops
+        .map((st) => ({
+            name: st.name,
+            pos: st.pos,
+            category: st.category,
+            routes: st.routes || [],
+            distanciaMetros: calcularDistancia(lat, lng, st.pos[0], st.pos[1]),
+        }))
+        .sort((a, b) => a.distanciaMetros - b.distanciaMetros);
+
+    const paraderoPrincipal = paraderosOrdenados[0] || null;
+    const rutasDirectasSet = new Set(paraderoPrincipal?.routes || []);
+    const rutasAdicionalesSet = new Set();
+
+    paraderosOrdenados.slice(1, 5).forEach((p) => {
+        if (p.distanciaMetros <= 250) {
+            p.routes.forEach((rId) => {
+                if (!rutasDirectasSet.has(rId)) {
+                    rutasAdicionalesSet.add(rId);
+                }
+            });
+        }
+    });
+
+    const mapearRuta = (rId, esDirecta = true) => {
+        const ruta = busData.routes.find((r) => r.id === rId);
+        if (!ruta) return null;
+        return {
+            id: ruta.id,
+            number: ruta.number,
+            name: ruta.name,
+            color: ruta.color || "#3b82f6",
+            direction: ruta.directions[0]?.direction || "",
+            description: ruta.directions[0]?.description || "",
+            frequency: ruta.frequency,
+            esDirecta,
+        };
+    };
+
+    const ordenarRutas = (a, b) => {
+        const numA = parseInt(a.number.replace(/\D/g, ""), 10) || 0;
+        const numB = parseInt(b.number.replace(/\D/g, ""), 10) || 0;
+        return numA - numB;
+    };
+
+    const rutasDirectas = [...rutasDirectasSet]
+        .map((rId) => mapearRuta(rId, true))
+        .filter(Boolean)
+        .sort(ordenarRutas);
+
+    const rutasCercanas = [...rutasAdicionalesSet]
+        .map((rId) => mapearRuta(rId, false))
+        .filter(Boolean)
+        .sort(ordenarRutas);
+
+    return {
+        metro: estacionCercana,
+        buses: {
+            paraderoPrincipal,
+            rutasDirectas,
+            rutasCercanas,
+            todasRutas: [...rutasDirectas, ...rutasCercanas],
+        },
+    };
+}
+
+/**
+ * Consulta la proximidad de transporte llamando al backend (/api/transporte/proximidad).
+ * Utiliza fallback local inmediato si el backend no está conectado.
+ */
+export async function consultarTransporteCercano(lat, lng) {
+    try {
+        const res = await fetch(`/api/transporte/proximidad?lat=${encodeURIComponent(lat)}&lng=${encodeURIComponent(lng)}`);
+        if (res.ok) {
+            const data = await res.json();
+            if (data.ok && data.data) {
+                return data.data;
+            }
+        }
+    } catch {
+        // Fallback local silencioso si el backend no está disponible
+    }
+    return calcularTransporteLocal(lat, lng);
+}
+
+/**
+ * Versión síncrona para renderizado inmediato en componentes React.
+ */
+export function obtenerTransporteCercano(ips) {
+    if (!ips || typeof ips.lat !== "number" || typeof ips.lng !== "number") {
+        return null;
+    }
+    return calcularTransporteLocal(ips.lat, ips.lng);
+}

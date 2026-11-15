@@ -1,7 +1,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import styles from "./Map.module.css";
+import { TrainFront, Bus } from "lucide-react";
+import styles from "./map.module.css";
+import {
+    MetroComponent,
+    BusComponent,
+    TransportControls,
+    IpsTransportCard,
+    IpsMapBanner,
+} from ".";
 
 const TUNJA = [5.548, -73.35];
 
@@ -11,7 +19,7 @@ const ubicacionesIps = [
         nombre: "Hospital Universitario San Rafael de Tunja",
         direccion: "Carrera 11 # 27-27",
         lat: 5.540422,
-        lng: -73.361261, 
+        lng: -73.361261,
     },
     {
         id: "santiago-tunja",
@@ -41,6 +49,20 @@ const ubicacionesIps = [
         lat: 5.551633,
         lng: -73.346677,
     },
+    {
+        id: "cm-colsubsidio",
+        nombre: "Centro Médico Colsubsidio",
+        direccion: "Diagonal 38 #12-192, Barrio La María",
+        lat: 5.549552,
+        lng: -73.360060,
+    },
+    {
+        id: "cm-sanitas",
+        nombre: "Centro Médico Sanitas",
+        direccion: "Diagonal 38 # 12-160, Barrio La María",
+        lat: 5.549351,
+        lng: -73.359981,
+    },
 ];
 
 function MapaTunja({
@@ -49,9 +71,16 @@ function MapaTunja({
     ubicacionUsuario,
     onSeleccionar,
     onClicMapa,
+    mostrarMetro,
+    lineasMetroActivas,
+    mostrarBuses,
+    rutaBusSeleccionada,
+    mostrarParaderos,
+    onSelectRuta,
 }) {
     const contenedor = useRef(null);
     const mapa = useRef(null);
+    const [instanciaMapa, setInstanciaMapa] = useState(null);
 
     useEffect(() => {
         const instancia = L.map(contenedor.current, {
@@ -71,9 +100,12 @@ function MapaTunja({
         ).addTo(instancia);
 
         mapa.current = instancia;
+        setInstanciaMapa(instancia);
+
         return () => {
             instancia.remove();
             mapa.current = null;
+            setInstanciaMapa(null);
         };
     }, []);
 
@@ -145,7 +177,26 @@ function MapaTunja({
         return () => instancia.off("click", handleClick);
     }, [onClicMapa]);
 
-    return <div ref={contenedor} className={styles.map} aria-label="Mapa interactivo de Tunja" />;
+    return (
+        <div ref={contenedor} className={styles.map} aria-label="Mapa interactivo de Tunja">
+            {instanciaMapa && (
+                <>
+                    <MetroComponent
+                        map={instanciaMapa}
+                        visible={mostrarMetro}
+                        lineasActivas={lineasMetroActivas}
+                    />
+                    <BusComponent
+                        map={instanciaMapa}
+                        visible={mostrarBuses}
+                        rutaSeleccionada={rutaBusSeleccionada}
+                        mostrarParaderos={mostrarParaderos}
+                        onSelectRuta={onSelectRuta}
+                    />
+                </>
+            )}
+        </div>
+    );
 }
 
 function Map() {
@@ -156,6 +207,14 @@ function Map() {
     const [siguiendoUbicacion, setSiguiendoUbicacion] = useState(false);
     const [errorUbicacion, setErrorUbicacion] = useState("");
     const seguimientoRef = useRef(null);
+
+    // Estados para las capas de transporte (Metro y Bus)
+    const [mostrarMetro, setMostrarMetro] = useState(false);
+    const [lineasMetroActivas, setLineasMetroActivas] = useState(["l1", "l2"]);
+    const [mostrarBuses, setMostrarBuses] = useState(false);
+    const [rutaBusSeleccionada, setRutaBusSeleccionada] = useState("all");
+    const [mostrarParaderos, setMostrarParaderos] = useState(false);
+
     const ipsVisibles = useMemo(() => {
         const termino = busqueda.trim().toLocaleLowerCase("es");
         if (!termino) return ubicacionesIps;
@@ -163,13 +222,16 @@ function Map() {
             `${ips.nombre} ${ips.direccion}`.toLocaleLowerCase("es").includes(termino),
         );
     }, [busqueda]);
+
     const seleccionarIps = useCallback((ips) => {
         setSeleccionada(ips);
         setCoordenadaSeleccionada(null);
     }, []);
+
     const seleccionarCoordenada = useCallback((coordenada) => {
         setCoordenadaSeleccionada(coordenada);
     }, []);
+
     const detenerSeguimiento = useCallback(() => {
         if (seguimientoRef.current !== null) {
             navigator.geolocation.clearWatch(seguimientoRef.current);
@@ -177,6 +239,7 @@ function Map() {
         }
         setSiguiendoUbicacion(false);
     }, []);
+
     const alternarSeguimiento = useCallback(() => {
         if (siguiendoUbicacion) {
             detenerSeguimiento();
@@ -271,6 +334,7 @@ function Map() {
                     ) : (
                         <p role="status">No hay IPS que coincidan con la búsqueda.</p>
                     )}
+
                     <button
                         type="button"
                         className={`${styles.myUbication} ${styles.locationControl}`}
@@ -290,6 +354,56 @@ function Map() {
                             {Math.round(ubicacionUsuario.accuracy)} m).
                         </p>
                     )}
+
+                    {/* Si hay una IPS seleccionada, mostrar la tarjeta interactiva de transporte cercano */}
+                    {seleccionada ? (
+                        <IpsTransportCard
+                            ips={seleccionada}
+                            mostrarMetro={mostrarMetro}
+                            setMostrarMetro={setMostrarMetro}
+                            lineasMetroActivas={lineasMetroActivas}
+                            setLineasMetroActivas={setLineasMetroActivas}
+                            mostrarBuses={mostrarBuses}
+                            setMostrarBuses={setMostrarBuses}
+                            rutaBusSeleccionada={rutaBusSeleccionada}
+                            setRutaBusSeleccionada={setRutaBusSeleccionada}
+                            onCerrar={() => setSeleccionada(null)}
+                        />
+                    ) : (
+                        /* Tarjeta de estado y accesos rápidos de Transporte general */
+                        <div className={styles.transportSidebarCard}>
+                            <h4>
+                                <TrainFront size={16} className={styles.iconPrimary} /> Movilidad Tunja
+                            </h4>
+                            <p>
+                                Selecciona una IPS para consultar sus rutas de metro y bus más cercanas.
+                            </p>
+                            <div className={styles.transportSidebarBadges}>
+                                <button
+                                    type="button"
+                                    className={`${styles.transportMiniBadge} ${
+                                        mostrarMetro ? styles.transportMiniBadgeActiveMetro : ""
+                                    }`}
+                                    onClick={() => setMostrarMetro((prev) => !prev)}
+                                    aria-pressed={mostrarMetro}
+                                >
+                                    <TrainFront size={13} />
+                                    <span>Metro: {mostrarMetro ? "Activo" : "Inactivo"}</span>
+                                </button>
+                                <button
+                                    type="button"
+                                    className={`${styles.transportMiniBadge} ${
+                                        mostrarBuses ? styles.transportMiniBadgeActiveBus : ""
+                                    }`}
+                                    onClick={() => setMostrarBuses((prev) => !prev)}
+                                    aria-pressed={mostrarBuses}
+                                >
+                                    <Bus size={13} />
+                                    <span>Buses: {mostrarBuses ? "Activo" : "Inactivo"}</span>
+                                </button>
+                            </div>
+                        </div>
+                    )}
                 </aside>
 
                 <div className={styles.mapColumn}>
@@ -300,7 +414,42 @@ function Map() {
                             ubicacionUsuario={ubicacionUsuario}
                             onSeleccionar={seleccionarIps}
                             onClicMapa={seleccionarCoordenada}
+                            mostrarMetro={mostrarMetro}
+                            lineasMetroActivas={lineasMetroActivas}
+                            mostrarBuses={mostrarBuses}
+                            rutaBusSeleccionada={rutaBusSeleccionada}
+                            mostrarParaderos={mostrarParaderos}
+                            onSelectRuta={setRutaBusSeleccionada}
                         />
+
+                        {/* Botones flotantes interactivos tipo cápsula en el mapa */}
+                        <TransportControls
+                            mostrarMetro={mostrarMetro}
+                            setMostrarMetro={setMostrarMetro}
+                            lineasMetroActivas={lineasMetroActivas}
+                            setLineasMetroActivas={setLineasMetroActivas}
+                            mostrarBuses={mostrarBuses}
+                            setMostrarBuses={setMostrarBuses}
+                            rutaBusSeleccionada={rutaBusSeleccionada}
+                            setRutaBusSeleccionada={setRutaBusSeleccionada}
+                            mostrarParaderos={mostrarParaderos}
+                            setMostrarParaderos={setMostrarParaderos}
+                        />
+
+                        {/* Banner flotante en el mapa para la IPS seleccionada */}
+                        {seleccionada && (
+                            <IpsMapBanner
+                                ips={seleccionada}
+                                mostrarMetro={mostrarMetro}
+                                setMostrarMetro={setMostrarMetro}
+                                setLineasMetroActivas={setLineasMetroActivas}
+                                mostrarBuses={mostrarBuses}
+                                setMostrarBuses={setMostrarBuses}
+                                rutaBusSeleccionada={rutaBusSeleccionada}
+                                setRutaBusSeleccionada={setRutaBusSeleccionada}
+                                onCerrar={() => setSeleccionada(null)}
+                            />
+                        )}
                     </div>
                     <p className={styles.mapCredits}>
                         Tiles © <a href="https://www.esri.com/">Esri</a>; Sources: Esri, HERE,

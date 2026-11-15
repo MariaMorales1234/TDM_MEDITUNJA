@@ -1,0 +1,55 @@
+{
+  "nombre": "MetroTunja",
+  "atribucion": "© colaboradores de OpenStreetMap (ODbL 1.0)",
+  "parametros": { "velocidadComercial": 30, "intervaloSeg": 240, "esperaEnEstacionSeg": 20, "esperaEnIntercambioSeg": 25, "esperaEnTerminalSeg": 40 },
+  "estaciones": {
+    "jardines": { "nombre": "Jardines", "pos": [5.5782, -73.3378], "salidas": [{ "nombre": "Salida A · Avenida Norte (sentido sur)", "hacia": "Carrera 7, Calle 79" }, { "nombre": "Salida B · Avenida Norte (sentido norte)", "hacia": "Calle 77, Calle 78" }], "vias": ["Avenida Norte", "Calle 77", "Carrera 7"] },
+    "muiscas": { "nombre": "Los Muiscas", "pos": [5.57, -73.3415], "salidas": [{ "nombre": "Salida A · Diagonal 65", "hacia": "Iglesia de los Muiscas, Parque Los Muiscas" }, { "nombre": "Salida B · Transversal 3", "hacia": "Parque de la Cruz, Colegio Gabriel García Márquez" }], "vias": ["Diagonal 65", "Diagonal 66", "Transversal 3"] },
+    "irdet": { "nombre": "IRDET", "pos": [5.56, -73.3488], "salidas": [{ "nombre": "Salida A · Avenida Norte (sentido sur)", "hacia": "Calle 52, Centro Cristiano de Tunja" }, { "nombre": "Salida B · Carrera 2 Este (sentido norte)", "hacia": "Calle 53, barrio La Granja" }], "vias": ["Avenida Norte", "Carrera 2 Este", "Calle 52"] },
+    "uptc": { "nombre": "UPTC", "pos": [5.5518, -73.3522], "salidas": [{ "nombre": "Salida A · Avenida Norte (sentido sur)", "hacia": "Calle 42, Carrera 6, puente peatonal" }, { "nombre": "Salida B · Avenida Norte (sentido norte)", "hacia": "Calle 42A, Polideportivo Santa Inés" }], "vias": ["Avenida Norte", "Calle 42", "Calle 42A", "Carrera 6"] },
+    "estacion-central": { "nombre": "Estación Central", "pos": [5.5447, -73.3573], "salidas": [{ "nombre": "Salida A · Avenida Norte", "hacia": "Parque Recreacional del Norte, centro comercial La Sexta" }, { "nombre": "Salida B · Diagonal 38", "hacia": "Parque Biblioteca de Tunja, Colegio La Presentación" }, { "nombre": "Salida C · Avenida Maldonado", "hacia": "Glorieta a La Raza, Profamilia" }, { "nombre": "Salida D · Avenida Olímpica", "hacia": "Avenida Oriental, Estación Universitaria" }], "vias": ["Avenida Norte", "Diagonal 38", "Avenida Maldonado", "Avenida Olímpica", "Avenida Oriental"] },
+    "las-nieves": { "nombre": "Las Nieves", "pos": [5.5384, -73.3593], "salidas": [{ "nombre": "Salida A · Carrera 9", "hacia": "Plazoleta de las Nieves, Iglesia de las Nieves" }, { "nombre": "Salida B · Calle 26", "hacia": "IPS Colmédica Las Nieves, Hospital San Rafael" }], "vias": ["Carrera 9", "Calle 26", "Carrera 10", "Avenida Colón"] },
+    "plaza-bolivar": { "nombre": "Plaza de Bolívar", "pos": [5.5328, -73.3631], "salidas": [{ "nombre": "Salida A · Carrera 11", "hacia": "Universidad Santo Tomás, SENA" }, { "nombre": "Salida B · Calle 20", "hacia": "Iglesia de Santo Domingo, Comando de Policía" }, { "nombre": "Salida C · Calle 19", "hacia": "Plaza de Bolívar, Gobernación de Boyacá" }], "vias": ["Carrera 11", "Carrera 10", "Calle 19", "Calle 20", "Pasaje Vargas"] },
+    "el-bosque": { "nombre": "El Bosque", "pos": [5.5274, -73.3642], "salidas": [{ "nombre": "Salida A · Carrera 10", "hacia": "Bosque de la República, San Laureano" }, { "nombre": "Salida B · Carrera 11", "hacia": "Calle 14, Santa Bárbara" }], "vias": ["Carrera 11", "Carrera 10", "Calle 14"] },
+    "los-hongos": { "nombre": "Los Hongos", "pos": [5.5163, -73.3686], "salidas": [{ "nombre": "Salida A · Carrera 11A", "hacia": "Monumento Los Hongos, Calle 2A" }, { "nombre": "Salida B · Avenida el Progreso", "hacia": "Avenida Oriental, Calle 2" }], "vias": ["Avenida Oriental", "Avenida el Progreso", "Carrera 11A", "Calle 2A"] },
+    "san-francisco": { "nombre": "San Francisco", "pos": [5.5095, -73.3727], "salidas": [{ "nombre": "Salida A · Carrera 14", "hacia": "Calle 6 Sur, salida a Bogotá" }, { "nombre": "Salida B · Calle 7 Sur", "hacia": "Plaza de Mercado del Sur, Carrera 13" }], "vias": ["Carrera 14", "Calle 7 Sur", "Calle 6 Sur", "Carrera 13"] },
+    "runta": { "nombre": "Runta", "pos": [5.5037, -73.3775] },
+    "terminal-transportes": { "nombre": "Terminal de Transportes", "pos": [5.5296, -73.3446], "salidas": [{ "nombre": "Salida única · Terminal de Transportes", "hacia": "Taquillas, plataformas de buses, taxis" }], "vias": ["Avenida Circunvalar de Tunja", "Calle 18E"] },
+    "estacion-universitaria": { "nombre": "Estación Universitaria", "pos": [5.5418, -73.3503], "salidas": [{ "nombre": "Salida A · Avenida Universitaria", "hacia": "Villa Olímpica, Estadio La Independencia" }, { "nombre": "Salida B · Avenida Olímpica", "hacia": "Unicentro, centro comercial Boulevard" }, { "nombre": "Salida C · Glorieta de la Gobernación", "hacia": "Avenida Paseo Quintana, Terminal de Transportes" }], "vias": ["Avenida Universitaria", "Avenida Olímpica", "Glorieta de la Gobernación", "Avenida Paseo Quintana"] },
+    "la-maria": { "nombre": "La María", "pos": [5.5498, -73.3603], "salidas": [{ "nombre": "Salida A · Carrera 16", "hacia": "Capilla La María, vía de acceso a Sanitas" }, { "nombre": "Salida B · Carrera 14", "hacia": "Centro Comercial Eskala, Transversal 11" }], "vias": ["Diagonal 38", "Carrera 16", "Carrera 14"] },
+    "el-roble": { "nombre": "El Roble", "pos": [5.5548, -73.3627], "salidas": [{ "nombre": "Salida A · Diagonal 38", "hacia": "Calle 38, centro de Tunja" }, { "nombre": "Salida B · Vía Tunja – Moniquirá", "hacia": "Salida a Motavita y Moniquirá" }], "vias": ["Diagonal 38", "Vía Tunja – Moniquirá"] }
+  },
+  "lineas": [
+    {
+      "id": "l1",
+      "nombre": "Línea 1 · Norte – Sur",
+      "color": "#ef6c2f",
+      "estaciones": ["jardines", "muiscas", "irdet", "uptc", "estacion-central", "las-nieves", "plaza-bolivar", "el-bosque", "los-hongos", "san-francisco", "runta"],
+      "recorridoMin": 22,
+      "trenesSugeridos": 11
+    },
+    {
+      "id": "l2",
+      "nombre": "Línea 2 · Suroriente – Noroccidente",
+      "color": "#3fbf87",
+      "estaciones": ["terminal-transportes", "estacion-universitaria", "estacion-central", "la-maria", "el-roble"],
+      "recorridoMin": 8,
+      "trenesSugeridos": 4
+    }
+  ],
+  "sinAsignar": {
+    "nota": "Estaciones definidas en la red pero que no pertenecen a ninguna línea todavía (aparecen en el esquema como columna lateral).",
+    "estaciones": {
+      "pozo-donato": { "nombre": "Pozo de Donato", "pos": [5.5488, -73.3581] },
+      "villa-olimpica": { "nombre": "Villa Olímpica", "pos": [5.5413, -73.352] },
+      "los-patriotas": { "nombre": "Los Patriotas", "pos": [5.5203, -73.365] },
+      "hospital-san-rafael": { "nombre": "Hospital San Rafael", "pos": [5.5316, -73.348] },
+      "maldonado": { "nombre": "Maldonado", "pos": [5.5337, -73.3514] },
+      "suarez-rendon": { "nombre": "Suárez Rendón", "pos": [5.5338, -73.3552] },
+      "santa-ines": { "nombre": "Santa Inés", "pos": [5.5332, -73.3592] },
+      "ciudad-jardin": { "nombre": "Ciudad Jardín", "pos": [5.5306, -73.3686] },
+      "estadio": { "nombre": "Estadio La Independencia", "pos": [5.5286, -73.3736] },
+      "sena": { "nombre": "SENA", "pos": [5.527, -73.379] }
+    }
+  }
+}

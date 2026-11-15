@@ -46,6 +46,7 @@ import {
   crearSolicitudTransporte,
   listarSolicitudesTransporte
 } from '../controllers/transporte.js';
+import { consultarProximidadTransporte } from '../controllers/transporteProximidad.js';
 import * as sesiones from '../repositories/sesiones.js';
 import {
   cerrarSesionTunja,
@@ -82,6 +83,7 @@ router.get('/wallet', autenticarUsuarioTunja, exigirTarjetaVinculada, obtenerSal
 router.post('/wallet/topup', autenticarUsuarioTunja, exigirTarjetaVinculada, recargarSaldo);
 router.get('/transporte', autenticarUsuarioTunja, listarSolicitudesTransporte);
 router.post('/transporte', autenticarUsuarioTunja, exigirTarjetaVinculada, crearSolicitudTransporte);
+router.get('/transporte/proximidad', consultarProximidadTransporte);
 
 router.use(autenticarSesion);
 router.get('/sesion', (req, res) => {
