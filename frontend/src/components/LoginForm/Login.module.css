@@ -204,8 +204,7 @@
     border-color: var(--color-secundary);
 }
 
-.nfcButton:focus-visible,
-.readCardButton:focus-visible {
+.nfcButton:focus-visible, .readCardButton:focus-visible {
     outline: 3px solid var(--color-primary);
     outline-offset: 3px;
 }
@@ -263,6 +262,17 @@
 .registerLinkAnchor {
     color: var(--color-primary);
     text-decoration: none;
+}
+
+p[role=alert]{
+    background-color: var(--hover-secundary);
+    color: var(--color-primary);
+    border: 1.5px solid var(--color-primary);
+    font-family: var(--text);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 13px 26px;
+    border-radius: 8px;
 }
 
 @media (max-width: 480px) {

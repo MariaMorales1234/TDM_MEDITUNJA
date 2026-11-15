@@ -82,7 +82,7 @@
     height: 56px;
     flex-shrink: 0;
     background-color: var(--color-secundary);
-    color: var(--color-text);
+    color: #000f54;
     border-radius: 15px;
 }
 

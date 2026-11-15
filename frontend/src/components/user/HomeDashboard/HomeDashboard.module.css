@@ -2,7 +2,7 @@
     min-height: calc(100vh - 64px);
     padding: 48px 32px 72px;
     overflow: hidden;
-    background-color: #f8f8fd;
+    transition: background-color 0.3s ease;
 }
 
 .main {
@@ -26,12 +26,13 @@
     display: inline-block;
     padding: 9px 16px;
     border-radius: 999px;
-    background-color: #d9fbf8;
+    background-color: var(--color-bg-elevated, #d9fbf8);
     color: var(--color-text);
     font-family: var(--sm);
     font-size: 11px;
     font-weight: 700;
     letter-spacing: 0.16em;
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .welcomeCopy h1 {
@@ -43,14 +44,16 @@
     letter-spacing: -0.02em;
     line-height: 1.1;
     overflow-wrap: anywhere;
+    transition: color 0.3s ease;
 }
 
 .welcomeCopy p {
     margin-top: 14px;
-    color: #6f7184;
+    color: var(--color-text-secundary);
     font-family: var(--text);
     font-size: 17px;
     line-height: 1.5;
+    transition: color 0.3s ease;
 }
 
 .securityBadge {
@@ -60,10 +63,12 @@
     gap: 12px;
     padding: 10px 18px 10px 10px;
     border-radius: 16px;
-    background-color: #fff;
-    box-shadow: 0 10px 28px rgb(0 15 84 / 9%);
+    background-color: var(--color-bg-card, #fff);
+    border: 1px solid var(--color-border);
+    box-shadow: 0 10px 28px var(--color-shadow, rgba(0,15,84,0.09));
     color: var(--color-text);
     font-family: var(--sm);
+    transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .securityIcon {
@@ -72,8 +77,13 @@
     height: 44px;
     place-items: center;
     border-radius: 12px;
-    background-color: #dcfce8;
+    background-color: var(--color-tertiary-soft, #dcfce8);
     color: #14633a;
+}
+
+[data-theme="dark"] .securityIcon {
+    background-color: #14422a;
+    color: #70ff9e;
 }
 
 .securityBadge strong,
@@ -88,7 +98,7 @@
 
 .securityBadge small {
     margin-top: 3px;
-    color: #6f7184;
+    color: var(--color-text-secundary);
     font-size: 12px;
 }
 
@@ -107,13 +117,13 @@
     align-items: center;
     gap: 20px;
     padding: 28px 32px;
-    border: 1px solid #eeeef6;
+    border: 1px solid var(--color-border);
     border-radius: 26px;
-    background-color: #fff;
-    box-shadow: 0 12px 32px rgb(0 15 84 / 6%);
+    background-color: var(--color-bg-card, #fff);
+    box-shadow: 0 12px 32px var(--color-shadow, rgba(0,15,84,0.06));
     color: inherit;
     text-decoration: none;
-    transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+    transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease, background-color 0.3s ease;
     animation: entrada 550ms ease-out both;
 }
 
@@ -123,8 +133,8 @@
 
 .actionCard:hover {
     transform: translateY(-4px);
-    border-color: rgb(96 69 244 / 35%);
-    box-shadow: 0 18px 38px rgb(0 15 84 / 11%);
+    border-color: rgb(96 69 244 / 50%);
+    box-shadow: 0 18px 38px var(--color-shadow, rgba(0,15,84,0.11));
     text-decoration: none;
 }
 
@@ -143,13 +153,20 @@
 }
 
 .purpleIcon {
-    background-color: #efecff;
+    background-color: var(--hover-secundary);
     color: var(--color-primary);
+    transition: background-color 0.3s ease;
 }
 
 .aquaIcon {
     background-color: #dffdfb;
     color: #0b7f84;
+    transition: background-color 0.3s ease;
+}
+
+[data-theme="dark"] .aquaIcon {
+    background-color: #0b3a3c;
+    color: #26fff0;
 }
 
 .actionText strong,
@@ -161,13 +178,15 @@
     color: var(--color-text);
     font-family: var(--heading);
     font-size: 19px;
+    transition: color 0.3s ease;
 }
 
 .actionText small {
     margin-top: 8px;
-    color: #6f7184;
+    color: var(--color-text-secundary);
     font-family: var(--text);
     font-size: 14px;
+    transition: color 0.3s ease;
 }
 
 @keyframes entrada {

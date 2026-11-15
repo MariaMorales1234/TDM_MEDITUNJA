@@ -20,7 +20,7 @@ function Nfc() {
     };
 
     return (
-        <section id="Favorites" className={styles.nfcSection} aria-label="Tarjeta MediTunja NFC">
+        <section id="NFC" className={styles.nfcSection} aria-label="Tarjeta MediTunja NFC">
             <div className={styles.container}>
                 <div className={styles.cardStageWrapper}>
                     <div className={styles.cardStage}>

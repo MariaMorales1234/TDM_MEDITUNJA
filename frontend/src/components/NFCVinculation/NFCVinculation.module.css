@@ -43,6 +43,7 @@
 .demoNotice p, .description {
     font-family: var(--text);
     font-size: 15px;
+    color: #000f54;
     line-height: 1.65;
 }
 

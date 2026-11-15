@@ -16,6 +16,10 @@
   font-weight: 700;
   font-family: var(--display);
 }
+.name {
+  text-decoration: none;
+  color: var(--color-text);
+}
 
 @media (max-width: 480px) {
     .brand {

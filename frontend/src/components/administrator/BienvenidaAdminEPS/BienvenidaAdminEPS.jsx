@@ -20,11 +20,7 @@ function BienvenidaAdminEPS() {
   } = useBienvenidaAdmin();
 
   return (
-    <div
-      className={`${styles.moduloBienvenidaAdmin} ${
-        darkMode ? styles.modoOscuro : ""
-      }`}
-    >
+    <div className={styles.moduloBienvenidaAdmin}>
       {/* Área de trabajo del panel */}
       <div className={styles.contenedorAreaTrabajo}>
         {/* Cabecera Superior */}

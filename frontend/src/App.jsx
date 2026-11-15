@@ -1,4 +1,5 @@
 import { lazy, Suspense } from "react";
+import { ThemeProvider } from "./context/ThemeContext.jsx";
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from "react-router-dom";
 
 import LandingPage from "./pages/Landingpage.jsx";
@@ -37,6 +38,7 @@ function AdminLayout() {
 
 function App() {
     return (
+        <ThemeProvider>
         <BrowserRouter>
             <Routes>
                 <Route path="/" element={<LandingPage />} />
@@ -77,6 +79,7 @@ function App() {
                 <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
         </BrowserRouter>
+        </ThemeProvider>
     );
 }
 

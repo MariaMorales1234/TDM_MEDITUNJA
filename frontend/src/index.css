@@ -18,22 +18,39 @@
     src: url("./fonts/Roboto-Regular.ttf") format("truetype");
 }
 
-/*Variables globales*/
-:root {
+:root, [data-theme="light"] {
     --color-bg: #fcfcfc;
+    --color-bg-card: #ffffff;
+    --color-bg-elevated: #fafaff;
     --color-primary: #6045f4;
     --color-secundary: #26fff0;
     --color-tertiary: #70ff9e;
     --color-text: #000f54;
-    --color-text-secundary: #9C9C9C;
+    --color-text-secundary: #717171;
     --color-border: #DBDBDB;
     --hover-primary: #300EF1;
     --hover-secundary: #F4F2FF;
+    --color-shadow: rgba(0, 15, 84, 0.10);
 
     --display: "Surgena", sans-serif;
     --heading: "Sora", sans-serif;
     --sm: "Gilroy", sans-serif;
     --text: "Roboto", sans-serif;
+}
+
+[data-theme="dark"] {
+    --color-bg: #141429;
+    --color-bg-card: #161628;
+    --color-bg-elevated: #0b0b15;
+    --color-primary: #7b61ff;
+    --color-secundary: #26fff0;
+    --color-tertiary: #70ff9e;
+    --color-text: #fcfcfc;
+    --color-text-secundary: #9ea3c8;
+    --color-border: #2a2a4a;
+    --hover-primary: #9b7fff;
+    --hover-secundary: #2a2050;
+    --color-shadow: rgba(0, 0, 0, 0.40);
 }
 
 * {
@@ -42,6 +59,12 @@
     box-sizing: border-box;
 }
 
+html {
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
 body {
-    background-color: var(--color-bg);
+    background-color: var(--color-bg-elevated);
+    color: var(--color-text);
+    transition: background-color 0.3s ease, color 0.3s ease;
 }

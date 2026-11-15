@@ -4,12 +4,13 @@
 import { useEffect, useState } from "react";
 import { useAdminAuth } from "../../../../auth/useAdminAuth.js";
 import { apiRequest, mensajeError } from "../../../../auth/api.js";
+import { useTheme } from "../../../../context/ThemeContext.jsx";
 import { INFO_PANEL } from "../data/bienvenidaData.js";
 
 export function useBienvenidaAdmin() {
   const { token, usuario } = useAdminAuth();
+  const { dark: darkMode, toggle: handleToggleDarkMode } = useTheme();
 
-  const [darkMode, setDarkMode] = useState(false);
   const [metricas, setMetricas] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState("");
@@ -49,10 +50,6 @@ export function useBienvenidaAdmin() {
   }, [token]);
 
   const nombreEps = usuario?.eps || INFO_PANEL.epsPredeterminada;
-
-  const handleToggleDarkMode = () => {
-    setDarkMode((prev) => !prev);
-  };
 
   const handleAyuda = () => {
     window.alert(

@@ -88,7 +88,7 @@ p {
     padding: 12px;
     border: 1px solid var(--color-border);
     border-radius: 8px;
-    background-color: var(--color-bg);
+    background-color: var(--color-bg-card);
     color: var(--color-text);
     box-sizing: border-box;
     font-family: var(--text);
@@ -112,7 +112,7 @@ p {
     padding: 12px 8px;
     border: 1px solid var(--color-border);
     border-radius: 8px;
-    background-color: var(--color-bg);
+    background-color: var(--color-bg-card);
     color: var(--color-text);
     font-family: var(--sm);
     cursor: pointer;
@@ -149,7 +149,7 @@ p {
     gap: 20px;
     padding: 30px;
     margin: 20px;
-    background-color: var(--color-text);
+    background-color: #000f54;
     border-radius: 30px;
     box-sizing: border-box;
 
@@ -167,7 +167,7 @@ p {
 .summaryContainer span {
     font-family: var(--heading);
     font-size: 30px;
-    color: var(--color-bg);
+    color: #fcfcfc;
 }
 
 .summaryContainer .divider {
@@ -182,7 +182,7 @@ p {
     border: none;
     border-radius: 8px;
     background-color: var(--color-secundary);
-    color: var(--color-text);
+    color: #000f54;
     font-family: var(--sm);
     font-size: 16px;
     cursor: pointer;
@@ -207,13 +207,13 @@ p {
 .summaryDetails span {
     font-family: var(--text);
     font-size: 14px;
-    color: var(--color-border);
+    color: #717171;
 }
 
 .summaryDetails strong {
     font-family: var(--sm);
     font-size: 16px;
-    color: var(--color-bg);
+    color: #fcfcfc;
 }
 
 @media (max-width: 600px) {

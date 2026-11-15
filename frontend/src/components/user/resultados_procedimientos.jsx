@@ -56,16 +56,6 @@ function ResultadosProcedimientos() {
                     Volver a mis citas
                 </Link>
 
-                <section className={styles.infoNotice} aria-label="Información importante">
-                    <span className={styles.infoIcon} aria-hidden="true">
-                        <Info size={20} />
-                    </span>
-                    <p>
-                        Aquí aparecen los resultados registrados para tu cuenta. Si necesitas
-                        aclaraciones sobre un informe, comunícate con la IPS que lo realizó.
-                    </p>
-                </section>
-
                 <section className={styles.resultsSection} aria-labelledby="listado-titulo">
                     <div className={styles.sectionHeading}>
                         <div>
