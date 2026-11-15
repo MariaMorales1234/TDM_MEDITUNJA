@@ -1,4 +1,4 @@
-import Logo from "../../assets/Logo.png"
+import Logo from "../../assets/Logo-192.png"
 import styles from "./Brand.module.css"
 
 function Brand(){

@@ -1,4 +1,4 @@
-import logo from "../../../assets/logo.png";
+import logo from "../../../assets/logo-192.png";
 import { NavLink } from "react-router-dom";
 import { House, CalendarDays, FileText, UserRound, UsersRound, Handshake, Wallet } from "lucide-react";
 import styles from "./NavbarAdminEPS.module.css";

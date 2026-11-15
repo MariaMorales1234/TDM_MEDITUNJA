@@ -1,4 +1,4 @@
-import logo from "../../../assets/logo.png";
+import logo from "../../../assets/logo-192.png";
 import { NavLink } from "react-router-dom";
 import { House, CalendarDays, MapPin, FileText, UserRound, Wallet } from "lucide-react";
 import { useAuth } from "../../../auth/useAuth.js";

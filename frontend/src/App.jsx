@@ -1,6 +1,7 @@
 import { lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from "react-router-dom";
 
+import LandingPage from "./pages/Landingpage.jsx";
 import HomeUserModule from "./pages/UserPages/HomeUserModule.jsx";
 import Login from "./pages/Login.jsx";
 import Register from "./pages/Register.jsx";
@@ -38,6 +39,8 @@ function App() {
     return (
         <BrowserRouter>
             <Routes>
+                <Route path="/" element={<LandingPage />} />
+                <Route path="/meditunja" element={<LandingPage />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/registro" element={<Register />} />
                 <Route path="/admin/login" element={<Navigate to="/login" replace />} />
@@ -60,10 +63,9 @@ function App() {
                     </Route>
                 </Route>
                 <Route element={<RequireAuth />}>
-                    <Route path="/" element={<HomeUserModule />} />
+                    <Route path="/home" element={<HomeUserModule />} />
                     <Route path="/citas" element={<AppointmentModule />} />
                     <Route path="/mis-citas" element={<MyAppoitmentModule />} />
-                    <Route path="/home" element={<HomeUserModule />} />
                     <Route path="/pagos" element={<PaymentModule />} />
                     <Route path="/recargar-saldo" element={<RechargeBalanceModule />} />
                     <Route path="/transporte" element={<TransportModule />} />
@@ -72,7 +74,7 @@ function App() {
                     <Route path="/mapa" element={<Suspense fallback={<p role="status">Cargando mapa...</p>}><Map /></Suspense>} />
                     <Route path="/resultados-procedimientos" element={<ProcedureResults />} />
                 </Route>
-                <Route path="*" element={<Navigate to="/login" replace />} />
+                <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
         </BrowserRouter>
     );

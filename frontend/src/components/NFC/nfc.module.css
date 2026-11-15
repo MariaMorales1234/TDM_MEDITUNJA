@@ -1,0 +1,252 @@
+.nfcSection {
+    width: 100%;
+    padding: 70px 32px 90px;
+    background-color: var(--color-bg);
+    box-sizing: border-box;
+}
+
+.container {
+    max-width: 1200px;
+    width: 100%;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 56px;
+    align-items: center;
+}
+
+.cardStageWrapper {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.cardStage {
+    width: 100%;
+    max-width: 480px;
+    background: linear-gradient(145deg, #f1eefe 0%, #e5faf7 100%);
+    border: 1px solid rgba(0, 15, 84, 0.08);
+    border-radius: 30px;
+    padding: 36px 28px 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    box-shadow: 0 12px 32px -8px rgba(0, 15, 84, 0.06);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.cardStage:hover {
+    box-shadow: 0 18px 40px -10px rgba(96, 69, 244, 0.15);
+}
+
+.cardPerspective {
+    perspective: 1200px;
+    width: 100%;
+    aspect-ratio: 1004 / 634;
+    cursor: pointer;
+    user-select: none;
+    position: relative;
+    outline: none;
+    filter: drop-shadow(0 14px 26px rgba(0, 15, 84, 0.16));
+    transition: filter 0.3s ease;
+}
+
+.cardPerspective:hover {
+    filter: drop-shadow(0 20px 34px rgba(96, 69, 244, 0.22));
+}
+
+.cardInner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transform-style: preserve-3d;
+    -webkit-transform-style: preserve-3d;
+    transition: transform 0.7s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.cardInner.flipped {
+    transform: rotateY(180deg);
+}
+
+.cardFront, .cardBack {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 20px;
+    overflow: hidden;
+}
+
+.cardFront {
+    transform: rotateY(0deg);
+    -webkit-transform: rotateY(0deg);
+    z-index: 2;
+}
+
+.cardBack {
+    transform: rotateY(180deg);
+    -webkit-transform: rotateY(180deg);
+    z-index: 1;
+}
+
+.cardInner.flipped .cardFront {
+    visibility: hidden;
+    transition: visibility 0s 0.35s;
+    z-index: 1;
+}
+
+.cardInner:not(.flipped) .cardBack {
+    visibility: hidden;
+    transition: visibility 0s 0.35s;
+}
+
+.cardInner.flipped .cardBack {
+    visibility: visible;
+    z-index: 2;
+}
+
+.cardFront img, .cardBack img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+    border-radius: 20px;
+}
+
+.flipButton {
+    margin-top: 18px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background-color: rgba(255, 255, 255, 0.85);
+    border: 1px solid rgba(0, 15, 84, 0.1);
+    color: var(--color-text);
+    font-family: var(--sm);
+    font-size: 13px;
+    font-weight: 600;
+    padding: 7px 16px;
+    border-radius: 9999px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    backdrop-filter: blur(6px);
+}
+
+.flipButton:hover {
+    background-color: #ffffff;
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(96, 69, 244, 0.15);
+}
+
+.flipIcon {
+    color: var(--color-primary);
+    transition: transform 0.4s ease;
+}
+
+.flipButton:hover .flipIcon {
+    transform: rotate(180deg);
+}
+
+.infoColumn {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.eyebrow {
+    font-family: var(--sm);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--color-primary);
+    margin-bottom: 12px;
+    display: inline-block;
+}
+
+.title {
+    font-family: var(--heading);
+    font-size: clamp(30px, 3.8vw, 44px);
+    font-weight: 800;
+    color: var(--color-text);
+    line-height: 1.18;
+    margin-bottom: 20px;
+    letter-spacing: -0.5px;
+}
+
+.description {
+    font-family: var(--text);
+    font-size: 17px;
+    line-height: 1.6;
+    color: #4b5563;
+    margin-bottom: 32px;
+    max-width: 500px;
+    font-weight: 400;
+}
+
+.ctaButton {
+    background-color: #030733;
+    color: #ffffff;
+    font-family: var(--sm);
+    font-size: 16px;
+    font-weight: 600;
+    padding: 14px 30px;
+    border-radius: 12px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 20px -4px rgba(3, 7, 51, 0.35);
+    transition: background-color 0.25s ease, transform 0.2s ease, box-shadow 0.25s ease;
+}
+
+.ctaButton:hover {
+    background-color: var(--color-primary);
+    transform: translateY(-2px);
+    box-shadow: 0 12px 24px -4px rgba(96, 69, 244, 0.45);
+}
+
+@media (max-width: 960px) {
+    .container {
+        grid-template-columns: 1fr;
+        gap: 44px;
+    }
+
+    .nfcSection {
+        padding: 50px 24px 70px;
+    }
+
+    .infoColumn {
+        align-items: center;
+        text-align: center;
+    }
+
+    .description {
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 500px) {
+    .cardStage {
+        padding: 24px 16px 18px;
+        border-radius: 22px;
+    }
+
+    .title {
+        font-size: 28px;
+    }
+
+    .ctaButton {
+        width: 100%;
+    }
+}
