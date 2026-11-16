@@ -1,5 +1,5 @@
-import metroData from "../../data/routes/metro_tunja.json" with { type: "json" };
-import busData from "../../data/routes/bus_tunja.json" with { type: "json" };
+import metroData from "../../../frontend/src/components/Map/Metro/metro_tunja.json" with { type: "json" };
+import busData from "../../../frontend/src/components/Map/Bus/bus_tunja.json" with { type: "json" };
 
 /**
  * Calcula la distancia ortodrómica en metros entre dos coordenadas (fórmula de Haversine).

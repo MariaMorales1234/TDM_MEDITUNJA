@@ -24,6 +24,9 @@ Requisitos: Node.js 22.9 o superior y npm.
    npm run dev
    ```
 
+   Para iniciar solo el backend desde la raíz, ejecuta `npm run start`.
+   Inicia el frontend por separado con `npm --prefix frontend run dev`.
+
 El backend escucha en `http://localhost:3001`; Vite suele usar
 `http://localhost:5173` y reenvía `/api` al backend. Para otro despliegue, define
 `VITE_API_URL` en el frontend. Presiona `Ctrl+C` para detener ambos procesos.
