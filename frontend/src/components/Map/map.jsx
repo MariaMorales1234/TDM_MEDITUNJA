@@ -16,10 +16,24 @@ const TUNJA = [5.548, -73.35];
 const ubicacionesIps = [
     {
         id: "san-rafael",
-        nombre: "Hospital Universitario San Rafael de Tunja",
+        nombre: "Hospital Universitario San Rafael de Tunja - Sede Principal",
         direccion: "Carrera 11 # 27-27",
         lat: 5.540422,
         lng: -73.361261,
+    },
+    {
+        id: "san-rafael-av-colon",
+        nombre: "Hospital Universitario San Rafael de Tunja - Sede Edificio Colón",
+        direccion: "Av. Colon, 27-87",
+        lat: 5.5398737,
+        lng: -73.3598501,
+    },
+    {
+        id: "materno-infantil-san-rafael",
+        nombre: "Hospital Universitario San Rafael - Sede Unidad Materno Infantil Maria Josefa Canelones",
+        direccion: "Av. Universitaria No. 51-60",
+        lat: 5.556623, 
+        lng: -73.344725,
     },
     {
         id: "santiago-tunja",
@@ -31,7 +45,7 @@ const ubicacionesIps = [
     {
         id: "clinica-medilaser",
         nombre: "Clínica Medilaser",
-        direccion: "Carrera 2 Este # 67b-90 Barrio Suamox",
+        direccion: "Carrera 2 Este # 67b-90",
         lat: 5.569604,
         lng: -73.33682,
     },
@@ -45,23 +59,51 @@ const ubicacionesIps = [
     {
         id: "clinica-chia",
         nombre: "Clínica de Chía S.A.",
-        direccion: "Carrera 1A # 46-08, Manzana 1, Sector Las Quintas, urbanización Manolete",
+        direccion: "Carrera 1A # 46-08",
         lat: 5.551633,
         lng: -73.346677,
     },
     {
         id: "cm-colsubsidio",
         nombre: "Centro Médico Colsubsidio",
-        direccion: "Diagonal 38 #12-192, Barrio La María",
+        direccion: "Diagonal 38 #12-192",
         lat: 5.549552,
         lng: -73.360060,
     },
     {
         id: "cm-sanitas",
         nombre: "Centro Médico Sanitas",
-        direccion: "Diagonal 38 # 12-160, Barrio La María",
+        direccion: "Diagonal 38 # 12-160",
         lat: 5.549351,
         lng: -73.359981,
+    },
+    {
+        id: "cm-sura",
+        nombre: "Centro Médico Sura",
+        direccion: "Cra. 6 # 44-22",
+        lat: 5.553052,
+        lng: -73.3522317,
+    },
+    {
+        id: "sireb",
+        nombre: "SIREB - Servicios Integrales de Rehabilitación en Boyacá",
+        direccion: "Cra. 11 #28-84",
+        lat: 5.542475,
+        lng: -73.360650,
+    },
+    {
+        id: "nueva-eps-1",
+        nombre: "Nueva EPS - Sede Pozo Donato",
+        direccion: "Cra 7 #44-57",
+        lat: 5.553828,
+        lng: -73.352013,
+    },
+    {
+        id: "nueva-eps-2",
+        nombre: "Nueva EPS - Sede Centro Histórico",
+        direccion: "Carrera 9 #24-93",
+        lat: 5.537177,
+        lng: -73.359672,
     },
 ];
 
