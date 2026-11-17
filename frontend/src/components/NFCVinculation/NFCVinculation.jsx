@@ -105,6 +105,7 @@ function NFCVinculation() {
     }
 
     async function desvincularTarjeta() {
+        if (!window.confirm("¿Seguro que quieres desvincular tu tarjeta?")) return;
         setMensaje("");
         setError("");
         setProcesando(true);
