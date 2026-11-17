@@ -2,6 +2,7 @@ import crypto from 'node:crypto';
 import { promisify } from 'node:util';
 import * as usuarios from '../repositories/usuarios.js';
 import * as sesiones from '../repositories/sesiones.js';
+import { tunjaRequest } from '../services/tunjaApi.js';
 
 const scrypt = promisify(crypto.scrypt);
 const tiposDocumentoPermitidos = new Set(['CC', 'TI', 'CE', 'PAS', 'NIT']);
@@ -55,7 +56,28 @@ async function procesarInicioSesion(req, res, soloAdministrador) {
 
   try {
     const usuario = await usuarios.buscarCredenciales(tipoDocumento, numeroDocumento);
-    if (!usuario || !(await verificarContrasena(contrasena, usuario.password_hash))) {
+
+    let contrasenaValida = false;
+    if (soloAdministrador) {
+      try {
+        const respuestaTunja = await tunjaRequest('/auth/login', {
+          method: 'POST',
+          body: {
+            email: usuario?.email || `admin.${usuario?.eps?.toLowerCase().replace(/\s+/g, '')}@meditunja.com`,
+            contrasena
+          }
+        });
+        if (respuestaTunja?.token || respuestaTunja?.usuario || respuestaTunja?.id) {
+          contrasenaValida = true;
+        }
+      } catch {
+        contrasenaValida = usuario && (await verificarContrasena(contrasena, usuario.password_hash));
+      }
+    } else {
+      contrasenaValida = usuario && (await verificarContrasena(contrasena, usuario.password_hash));
+    }
+
+    if (!usuario || !contrasenaValida) {
       return responderError(
         res,
         401,

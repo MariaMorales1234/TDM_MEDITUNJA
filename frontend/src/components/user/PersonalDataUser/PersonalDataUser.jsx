@@ -11,6 +11,7 @@ function PersonalDataUser() {
     const [actualizandoEstado, setActualizandoEstado] = useState(false);
     const [errorEstado, setErrorEstado] = useState("");
     const [tarjeta, setTarjeta] = useState(null);
+    const [saldo, setSaldo] = useState(null);
     const [errorTarjeta, setErrorTarjeta] = useState("");
     const usuario = sesion?.usuario || {};
     const estado = usuario.estado_afiliacion || "pendiente";
@@ -36,17 +37,35 @@ function PersonalDataUser() {
 
     useEffect(() => {
         let activa = true;
-        apiRequest("/nfc/tarjeta", {
-            headers: { Authorization: `Bearer ${sesion.accessToken}` },
-        }).then((respuesta) => {
-            if (activa) setTarjeta(respuesta.data.vinculada ? respuesta.data : null);
-        }).catch((error) => {
-            if (activa) setErrorTarjeta(mensajeError(error));
-        });
+        if (!sesion?.accessToken) return;
+        const headers = { Authorization: `Bearer ${sesion.accessToken}` };
+
+        apiRequest("/nfc/tarjeta", { headers })
+            .then(async (respuesta) => {
+                if (!activa) return;
+                if (respuesta.data.vinculada) {
+                    setTarjeta(respuesta.data);
+                    try {
+                        const respSaldo = await apiRequest("/wallet", { headers });
+                        if (activa) setSaldo(respSaldo.data.saldo);
+                    } catch (error) {
+                        if (activa) {
+                            setSaldo(null);
+                            setErrorTarjeta(mensajeError(error));
+                        }
+                    }
+                } else {
+                    setTarjeta(null);
+                    setSaldo(null);
+                }
+            })
+            .catch((error) => {
+                if (activa) setErrorTarjeta(mensajeError(error));
+            });
         return () => {
             activa = false;
         };
-    }, [sesion.accessToken]);
+    }, [sesion?.accessToken]);
 
     async function consultarEstado() {
         setActualizandoEstado(true);
@@ -134,9 +153,9 @@ function PersonalDataUser() {
                 {estado === "aprobado" && (
                     <fieldset>
                         <div>
-                            <h3>Tarjeta NFC</h3>
+                            <h3>Tarjeta NFC y Billetera</h3>
                             <div>
-                                <NfcStatus tarjeta={tarjeta} />
+                                <NfcStatus tarjeta={tarjeta} saldo={saldo} />
                                 {errorTarjeta && <p role="alert">{errorTarjeta}</p>}
                             </div>
                         </div>

@@ -9,7 +9,8 @@
   "scripts": {
     "test": "node --test",
     "start": "node --env-file-if-exists=.env server.js",
-    "provision:admins": "node --env-file-if-exists=.env scripts/provisionarAdministradoresEps.js"
+    "provision:admins": "node --env-file-if-exists=.env scripts/provisionarAdministradoresEps.js",
+    "provision:admins:api": "node --env-file-if-exists=.env scripts/crearAdminsTunjaApi.js"
   },
   "keywords": [],
   "author": "",

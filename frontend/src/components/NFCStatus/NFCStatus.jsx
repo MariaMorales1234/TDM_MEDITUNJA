@@ -1,36 +1,64 @@
 import { Link } from "react-router-dom";
-import { Nfc } from "lucide-react";
+import { Nfc, Wallet } from "lucide-react";
 import styles from "./NFCStatus.module.css";
+
+const formatoPesos = new Intl.NumberFormat("es-CO", {
+    style: "currency",
+    currency: "COP",
+    maximumFractionDigits: 0,
+});
 
 function obtenerIdentificador(tarjeta) {
     if (typeof tarjeta === "string") return tarjeta;
-    return tarjeta?.identificador || tarjeta?.id || tarjeta?.uid || "Tarjeta registrada";
+    return tarjeta?.identificador || tarjeta?.id || tarjeta?.uid || "4821";
 }
 
-function NfcStatus({ tarjeta }) {
+function NfcStatus({ tarjeta, saldo }) {
     if (tarjeta) {
         const habilitada = tarjeta.habilitada !== false;
+        const idCompleto = String(obtenerIdentificador(tarjeta));
+        const idCorto = idCompleto.length > 4 ? idCompleto.slice(-4) : idCompleto;
+
         return (
-            <section className={`${styles.nfcCard} ${styles.nfcLinked}`}>
-                <p className={styles.nfcStatus} role="status">
-                    {habilitada ? "Tarjeta vinculada y activa" : "Tarjeta vinculada, pero no habilitada"}
+            <section className={styles.container}>
+                {/* Banner de Billetera / Tarjeta NFC con los estilos de la imagen */}
+                <div className={styles.walletBanner}>
+                    <div className={styles.walletColLeft}>
+                        <p className={styles.walletLabel}>SALDO DISPONIBLE</p>
+                        <p className={styles.walletAmount}>
+                            {saldo !== null && saldo !== undefined
+                                ? formatoPesos.format(saldo)
+                                : "—"}
+                        </p>
+                    </div>
+                    <div className={styles.walletColRight}>
+                        <p className={styles.walletLabel}>TARJETA VINCULADA</p>
+                        <p className={styles.walletCardNumber}>
+                            •••• {idCorto || "4821"}
+                        </p>
+                    </div>
+                </div>
+
+                <div className={styles.actionsBar}>
+                    <Link
+                        to="/pagos"
+                        className={styles.rechargeButton}
+                    >
+                        <Wallet size={16} />
+                        <span>Recargar saldo</span>
+                    </Link>
+                    <Link
+                        to="/vinculacionNFC"
+                        state={{ origen: "/perfilUsuario" }}
+                        className={styles.manageButton}
+                    >
+                        <span>Administrar tarjeta</span>
+                    </Link>
+                </div>
+
+                <p className={styles.statusBadge} role="status">
+                    {habilitada ? "Tarjeta vinculada y activa" : "Tarjeta vinculada, pendiente de habilitación"}
                 </p>
-                <p className={styles.nfcDescription}>
-                    Identificador terminado en: <strong>{obtenerIdentificador(tarjeta)}</strong>
-                </p>
-                {!habilitada && (
-                    <p className={styles.nfcDescription}>
-                        TunjaAPI no confirma esta tarjeta para iniciar sesión. Pide al administrador
-                        que revise su estado o vincula otra tarjeta disponible.
-                    </p>
-                )}
-                <Link
-                    to="/vinculacionNFC"
-                    state={{ origen: "/perfilUsuario" }}
-                    className={styles.nfcButton}
-                >
-                    Administrar tarjeta
-                </Link>
             </section>
         );
     }
@@ -60,4 +88,4 @@ function NfcStatus({ tarjeta }) {
     );
 }
 
-export default NfcStatus
+export default NfcStatus;

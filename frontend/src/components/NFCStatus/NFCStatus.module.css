@@ -1,3 +1,165 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    width: 100%;
+}
+
+/* Banner de Billetera idéntico a la imagen */
+.walletBanner {
+    background: linear-gradient(135deg, #050b33 0%, #081145 50%, #060c3b 100%);
+    border-radius: 20px;
+    padding: 22px 26px;
+    color: #ffffff;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 20px;
+    box-shadow: 0 12px 30px rgba(5, 11, 51, 0.28);
+    position: relative;
+    overflow: hidden;
+}
+
+.walletBanner::after {
+    content: "";
+    position: absolute;
+    top: -40px;
+    right: -40px;
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(38, 255, 240, 0.12) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+.walletColLeft {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.walletColRight {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+}
+
+.walletLabel {
+    font-family: var(--sm);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    color: #8c9ac6;
+    text-transform: uppercase;
+    margin: 0;
+}
+
+.walletAmount {
+    font-family: var(--heading);
+    font-size: clamp(1.8rem, 3.5vw, 2.4rem);
+    font-weight: 800;
+    color: #26fff0; /* Cian característico de la captura */
+    margin: 0;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    text-shadow: 0 2px 14px rgba(38, 255, 240, 0.25);
+}
+
+.walletCardNumber {
+    font-family: var(--heading);
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin: 0;
+    letter-spacing: 0.06em;
+}
+
+.actionsBar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.rechargeButton {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    background-color: #5b3df5;
+    color: #ffffff;
+    border-radius: 12px;
+    font-family: var(--heading);
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+    box-shadow: 0 4px 14px rgba(91, 61, 245, 0.25);
+    transition: all 0.2s ease;
+}
+
+.rechargeButton:hover {
+    background-color: #4828e6;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(91, 61, 245, 0.35);
+}
+
+.manageButton {
+    display: inline-flex;
+    align-items: center;
+    padding: 12px 18px;
+    background-color: transparent;
+    color: var(--color-primary);
+    border: 1.5px solid var(--color-border);
+    border-radius: 12px;
+    font-family: var(--heading);
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.manageButton:hover {
+    background-color: var(--hover-secundary);
+    border-color: var(--color-primary);
+}
+
+.statusBadge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--sm);
+    font-size: 13px;
+    font-weight: 700;
+    color: #16a34a;
+    margin: 0;
+}
+
+.statusBadge::before {
+    content: "✓";
+    display: inline-grid;
+    place-items: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background-color: #dcfce7;
+    color: #16a34a;
+    font-size: 11px;
+}
+
+[data-theme="dark"] .statusBadge {
+    color: #4ade80;
+}
+
+[data-theme="dark"] .statusBadge::before {
+    background-color: #143522;
+    color: #4ade80;
+}
+
+/* =========================================
+   Tarjeta No Vinculada
+   ========================================= */
 .nfcCard {
     display: flex;
     flex-direction: column;
@@ -5,7 +167,7 @@
     width: 100%;
     padding: 24px;
     box-sizing: border-box;
-    background-color: var(--color-bg);
+    background-color: var(--color-bg-card, var(--color-bg));
     border: 1px solid var(--color-border);
     border-radius: 20px;
 }
@@ -25,53 +187,32 @@
     min-width: 0;
 }
 
-.nfcHeader {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.nfcStatus {
-    font-family: var(--heading);
-    font-size: 16px;
-    font-weight: 700;
-    color: var(--color-text);
-}
-
 .nfcDescription {
     margin: 0;
-    color: var(--color-text);
+    color: var(--color-text-secundary);
     font-family: var(--text);
     font-size: 14px;
     line-height: 1.6;
-}
-
-.nfcDescription strong {
-    font-weight: 600;
-}
-
-.nfcSeparator {
-    color: var(--color-border);
 }
 
 .nfcButton {
     align-self: flex-start;
     padding: 12px 20px;
     background-color: var(--color-primary);
-    color: var(--color-bg);
+    color: #ffffff;
     border: none;
-    border-radius: 10px;
-    font-family: var(--text);
+    border-radius: 12px;
+    font-family: var(--heading);
     font-size: 14px;
-    font-weight: 600;
+    font-weight: 700;
     text-decoration: none;
     cursor: pointer;
-    transition: background-color 0.2s ease;
+    transition: all 0.2s ease;
 }
 
 .nfcButton:hover {
-    background-color: var(--hover-secundary);
-    color: var(--color-primary);
+    background-color: var(--hover-primary);
+    transform: translateY(-1px);
 }
 
 .nfcIcon {
@@ -81,43 +222,34 @@
     width: 56px;
     height: 56px;
     flex-shrink: 0;
-    background-color: var(--color-secundary);
-    color: #000f54;
-    border-radius: 15px;
-}
-
-.nfcIcon svg {
-    display: block;
-    background: transparent;
-    color: inherit;
-    stroke: currentColor;
-}
-
-.nfcLinked {
-    border-color: var(--color-secundary);
-}
-
-.nfcLinked .nfcStatus::before {
-    content: "✓ ";
-    color: var(--color-tertiary);
+    background-color: var(--hover-secundary);
+    color: var(--color-primary);
+    border-radius: 16px;
 }
 
 @media (max-width: 600px) {
-    .nfcCard {
-        padding: 18px;
+    .walletBanner {
+        padding: 18px 16px;
+        grid-template-columns: 1fr;
         gap: 12px;
+    }
+
+    .walletColRight {
+        align-items: flex-start;
+    }
+
+    .actionsBar {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .rechargeButton,
+    .manageButton {
+        width: 100%;
+        justify-content: center;
     }
 
     .nfcUnlinked {
-        gap: 12px;
-    }
-
-    .nfcButton {
-        width: 100%;
-        text-align: center;
-    }
-
-    .nfcSeparator {
-        display: none;
+        grid-template-columns: 1fr;
     }
 }
