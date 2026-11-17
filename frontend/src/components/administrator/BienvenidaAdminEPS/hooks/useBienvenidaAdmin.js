@@ -4,12 +4,10 @@
 import { useEffect, useState } from "react";
 import { useAdminAuth } from "../../../../auth/useAdminAuth.js";
 import { apiRequest, mensajeError } from "../../../../auth/api.js";
-import { useTheme } from "../../../../context/ThemeContext.jsx";
 import { INFO_PANEL } from "../data/bienvenidaData.js";
 
 export function useBienvenidaAdmin() {
-  const { token, usuario } = useAdminAuth();
-  const { dark: darkMode, toggle: handleToggleDarkMode } = useTheme();
+  const { token} = useAdminAuth();
 
   const [metricas, setMetricas] = useState([]);
   const [cargando, setCargando] = useState(true);
@@ -49,23 +47,10 @@ export function useBienvenidaAdmin() {
     };
   }, [token]);
 
-  const nombreEps = usuario?.eps || INFO_PANEL.epsPredeterminada;
-
-  const handleAyuda = () => {
-    window.alert(
-      "Centro de Ayuda MediTunja - Administrador EPS\n\nSi necesitas soporte técnico o asistencia en la plataforma, comunícate con la mesa de ayuda de MediTunja."
-    );
-  };
-
   return {
-    usuario,
-    nombreEps,
     infoPanel: INFO_PANEL,
     metricas,
     cargando,
     error,
-    darkMode,
-    handleToggleDarkMode,
-    handleAyuda
   };
 }

@@ -1,6 +1,6 @@
 import { lazy, Suspense } from "react";
 import { ThemeProvider } from "./context/ThemeContext.jsx";
-import { BrowserRouter, Routes, Route, Navigate, Outlet } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 import LandingPage from "./pages/Landingpage.jsx";
 import HomeUserModule from "./pages/UserPages/HomeUserModule.jsx";
@@ -17,7 +17,7 @@ import RechargeBalanceModule from "./pages/UserPages/RechargeBalanceModule.jsx";
 import ProfileAdministrador from "./pages/AdministratorPages/ProfileAdministrator.jsx";
 import AppointmentManagementModule from "./pages/AdministratorPages/AppointmentManagementModule.jsx";
 import AdminRechargeModule from "./pages/AdministratorPages/AdminRechargeModule.jsx";
-import NavbarAdminEPS from "./components/administrator/NavbarAdminEPS/NavbarAdminEPS.jsx";
+import AdminLayout from "./components/administrator/AdminLayout/AdminLayout.jsx";
 import UserGestor from "./components/administrator/UserGestor/UserGestor.jsx";
 import ConveniosModule from "./pages/AdministratorPages/ConveniosModule.jsx";
 import BienvenidaAdminModule from "./pages/AdministratorPages/BienvenidaAdminModule.jsx";
@@ -26,15 +26,6 @@ import RequireAdmin from "./auth/RequireAdmin.jsx";
 import RequireAuth from "./auth/RequireAuth.jsx";
 
 const Map = lazy(() => import("./pages/UserPages/MapModules.jsx"));
-
-function AdminLayout() {
-    return (
-        <>
-            <NavbarAdminEPS />
-            <Outlet />
-        </>
-    );
-}
 
 function App() {
     return (

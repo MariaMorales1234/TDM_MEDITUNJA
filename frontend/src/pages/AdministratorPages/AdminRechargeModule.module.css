@@ -3,7 +3,6 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
     align-items: start;
     gap: 24px;
-    width: min(100% - 48px, 1240px);
     margin: 24px auto 48px;
     color: var(--color-text);
     font-family: var(--text);

@@ -1,11 +1,9 @@
 import logo from "../../../assets/logo-192.png";
 import { NavLink } from "react-router-dom";
-import { House, CalendarDays, FileText, UserRound, UsersRound, Handshake, Wallet, Moon, Sun } from "lucide-react";
-import { useTheme } from "../../../context/ThemeContext.jsx";
+import { House, CalendarDays, FileText, UserRound, UsersRound, Handshake, Wallet} from "lucide-react";
 import styles from "./NavbarAdminEPS.module.css";
 
 function NavbarAdminEPS() {
-    const { dark, toggle } = useTheme();
 
     return (
         <nav className={styles.navbar}>
@@ -50,14 +48,6 @@ function NavbarAdminEPS() {
                     </NavLink>
                 </li>
             </ul>
-            <button
-                className={styles.themeBtn}
-                onClick={toggle}
-                aria-label={dark ? "Activar modo claro" : "Activar modo oscuro"}
-                title={dark ? "Modo claro" : "Modo oscuro"}
-            >
-                {dark ? <Sun size={18} /> : <Moon size={18} />}
-            </button>
         </nav>
     );
 }

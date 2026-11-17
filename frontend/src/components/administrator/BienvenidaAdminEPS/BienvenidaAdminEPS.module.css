@@ -1,21 +1,9 @@
 .moduloBienvenidaAdmin {
   display: flex;
   min-height: calc(100vh - 111px);
-  width: 100%;
   box-sizing: border-box;
   background-color: var(--color-bg);
   transition: background-color 250ms ease;
-}
-
-.contenedorAreaTrabajo {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  position: relative;
-  width: min(1180px, 100%);
-  margin: 0 auto;
-  padding: 0 32px;
-  box-sizing: border-box;
 }
 
 .headerAdmin {
@@ -182,36 +170,6 @@
   font-weight: 600;
 }
 
-.btnAyudaFlotante {
-  position: fixed;
-  right: 24px;
-  bottom: 24px;
-  display: grid;
-  place-items: center;
-  width: 52px;
-  height: 52px;
-  border: none;
-  border-radius: 50%;
-  background-color: var(--color-primary);
-  box-shadow: 0 10px 24px var(--color-shadow);
-  color: var(--color-bg);
-  font-family: var(--heading);
-  font-size: 22px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: background-color 160ms ease, transform 160ms ease;
-}
-
-.btnAyudaFlotante:hover {
-  background-color: var(--hover-primary);
-  transform: translateY(-3px);
-}
-
-.btnAyudaFlotante:focus-visible {
-  outline: 3px solid var(--color-text);
-  outline-offset: 3px;
-}
-
 @keyframes entrada {
   from {
     opacity: 0;
@@ -245,11 +203,6 @@
 
   .tarjetaMetrica {
     padding: 24px 22px;
-  }
-
-  .btnAyudaFlotante {
-    right: 16px;
-    bottom: 16px;
   }
 }
 
