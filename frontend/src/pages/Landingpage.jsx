@@ -1,4 +1,4 @@
-import Navbar from "../components/Navabar/Navbar.jsx";
+import Navbar from "../components/Navbar/Navbar.jsx";
 import Red from "../components/Red/Red.jsx";
 import Services from "../components/Services/Services.jsx";
 import Nfc from "../components/NFC/nfc.jsx";
