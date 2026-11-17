@@ -108,7 +108,24 @@ export async function vincularTarjeta(req, res) {
     return responderError(res, 400, 'uid_invalido', 'El UID debe contener entre 4 y 40 caracteres hexadecimales.');
   }
 
+  const contrasena = typeof req.body?.contrasena === 'string' ? req.body.contrasena : '';
+  if (!contrasena || contrasena.length > 128) {
+    return responderError(res, 400, 'contrasena_requerida', 'Confirma tu contraseña para vincular la tarjeta.');
+  }
+
   try {
+    try {
+      await tunjaRequest('/auth/login', {
+        method: 'POST',
+        body: { email: req.usuarioCitas.email, contrasena }
+      });
+    } catch (error) {
+      if (error.status === 400 || error.status === 401 || error.status === 403) {
+        return responderError(res, 401, 'contrasena_incorrecta', 'La contraseña no es correcta.');
+      }
+      throw error;
+    }
+
     const existente = await tarjetas.buscarPorUid(uid);
     if (existente && existente.usuario_id !== req.usuarioCitas.id) {
       return responderError(res, 409, 'tarjeta_ya_vinculada', 'Esta tarjeta ya está asociada a otra cuenta.');

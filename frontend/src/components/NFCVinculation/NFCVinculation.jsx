@@ -17,6 +17,7 @@ function NFCVinculation() {
     const [procesando, setProcesando] = useState(false);
     const [leyendo, setLeyendo] = useState(false);
     const [uid, setUid] = useState("");
+    const [contrasena, setContrasena] = useState("");
     const [mensaje, setMensaje] = useState("");
     const [error, setError] = useState("");
 
@@ -84,7 +85,7 @@ function NFCVinculation() {
 
     async function vincularTarjeta(event) {
         event.preventDefault();
-        if (procesando || leyendo || cargando || !uid) return;
+        if (procesando || leyendo || cargando || !uid || !contrasena) return;
         setMensaje("");
         setError("");
         setProcesando(true);
@@ -92,10 +93,11 @@ function NFCVinculation() {
             const respuesta = await apiRequest("/nfc/tarjeta", {
                 method: "POST",
                 headers: { Authorization: `Bearer ${sesion.accessToken}` },
-                body: JSON.stringify({ uid }),
+                body: JSON.stringify({ uid, contrasena }),
             });
             setTarjeta(respuesta.data);
             setUid("");
+            setContrasena("");
             setMensaje(respuesta.mensaje);
         } catch (errorSolicitud) {
             setError(mensajeError(errorSolicitud));
@@ -211,7 +213,18 @@ function NFCVinculation() {
                         <small id="ayuda-uid-tarjeta">
                             El UID leído aparecerá aquí. También puedes ingresarlo manualmente.
                         </small>
-                        <button className={styles.primaryButton} type="submit" disabled={procesando || leyendo || cargando || !uid}>
+                        <label htmlFor="contrasena-tarjeta">Confirma tu contraseña</label>
+                        <input
+                            id="contrasena-tarjeta"
+                            name="contrasena"
+                            type="password"
+                            value={contrasena}
+                            onChange={(event) => setContrasena(event.target.value)}
+                            autoComplete="current-password"
+                            maxLength={128}
+                            required
+                        />
+                        <button className={styles.primaryButton} type="submit" disabled={procesando || leyendo || cargando || !uid || !contrasena}>
                             {procesando ? "Vinculando..." : tarjeta ? "Vincular y cambiar tarjeta" : "Vincular tarjeta"}
                         </button>
                     </form>
