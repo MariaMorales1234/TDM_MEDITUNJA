@@ -597,7 +597,7 @@ test('registro y sesiones cumplen controles de estado y confidencialidad', async
           Authorization: 'Bearer tunja-access-token',
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ uid: '04a1b2c3d4e5f6' })
+        body: JSON.stringify({ uid: '04a1b2c3d4e5f6', contrasena: 'clave Tunja segura' })
       });
       assert.equal(vinculacionNfc.status, 200);
       assert.deepEqual((await vinculacionNfc.json()).data, {
@@ -712,7 +712,7 @@ test('registro y sesiones cumplen controles de estado y confidencialidad', async
           Authorization: 'Bearer otro-usuario-token',
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ uid: '04A1B2C3D4E5F6' })
+        body: JSON.stringify({ uid: '04A1B2C3D4E5F6', contrasena: 'clave Tunja segura' })
       });
       assert.equal(uidDuplicado.status, 409, await uidDuplicado.clone().text());
       assert.equal((await uidDuplicado.json()).error, 'tarjeta_ya_vinculada');
@@ -733,7 +733,7 @@ test('registro y sesiones cumplen controles de estado y confidencialidad', async
           Authorization: 'Bearer tunja-access-token',
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ uid: 'AABBCCDDEEFF' })
+        body: JSON.stringify({ uid: 'AABBCCDDEEFF', contrasena: 'clave Tunja segura' })
       });
       assert.equal(vinculacionTarjetaNueva.status, 200);
       const sesionTarjetaAnterior = await fetchLocal(`${baseUrl}/api/tunja/auth/me`, {
