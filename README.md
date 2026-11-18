@@ -29,7 +29,13 @@ Requisitos: Node.js 22.9 o superior y npm.
 
 El backend escucha en `http://localhost:3001`; Vite suele usar
 `http://localhost:5173` y reenvía `/api` al backend. Para otro despliegue, define
-`VITE_API_URL` en el frontend. Presiona `Ctrl+C` para detener ambos procesos.
+`VITE_API_URL` en el frontend con la URL pública de la API, terminada en `/api`.
+En el backend configura `CORS_ORIGINS` con el origen exacto del frontend
+(por ejemplo, `https://tu-proyecto.vercel.app`, sin `/` al final). Se pueden
+indicar varios orígenes separados por comas. Si Vercel genera otra URL, agrega
+ese origen a la configuración del backend y vuelve a desplegarlo; no se permiten
+automáticamente todos los dominios `vercel.app`. La API también debe estar
+desplegada y accesible públicamente. Presiona `Ctrl+C` para detener ambos procesos.
 
 ## Flujos conectados
 
