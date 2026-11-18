@@ -12,24 +12,21 @@ function FormularioConvenio({
   setIpsId,
   ipsActual,
   ipsDisponibles,
-  portafolios,
   categorias,
-  portafolioId,
-  setPortafolioId,
   categoriaFiltro,
   setCategoriaFiltro,
   serviciosSeleccionados,
   serviciosFiltrados,
-  clausulaTransporte,
-  setClausulaTransporte,
+  convenioEditando,
   onToggleServicio,
   onSeleccionarTodosCategoria,
   onDeseleccionarCategoria,
   onRestablecer,
+  onCancelarEdicion,
   onSubmit
 }) {
   return (
-    <form onSubmit={onSubmit} className={styles.formularioConvenios}>
+    <form id="formulario-convenio" onSubmit={onSubmit} className={styles.formularioConvenios}>
       {/* 1. Identificación de Instituciones (IPS Prestadora y EPS Gestora en Tunja) */}
       <fieldset className={styles.seccionConvenio}>
         <legend className={styles.tituloSeccion}>
@@ -88,24 +85,6 @@ function FormularioConvenio({
         <p className={styles.descripcionSeccion}>
           Servicios de referencia para {ipsActual.nombre} — {ipsActual.sede}. Confirma disponibilidad y códigos con la IPS antes de formalizar.
         </p>
-
-        {/* Portafolio Asistencial Pactado */}
-        <div className={styles.filaFormulario}>
-          <div className={styles.campoFormulario}>
-            <label htmlFor="portafolioSelect">Portafolio Asistencial Pactado:</label>
-            <select
-              id="portafolioSelect"
-              value={portafolioId}
-              onChange={(e) => setPortafolioId(e.target.value)}
-            >
-              {portafolios.map((portafolio) => (
-                <option key={portafolio.id} value={portafolio.id}>
-                  {portafolio.nombre}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
 
         {/* Servicios Filtrados por Categorías */}
         <div className={styles.contenedorFiltroServicios}>
@@ -182,18 +161,14 @@ function FormularioConvenio({
         </div>
 
         {/* Cláusula Obligatoria de Transporte Preferencial Adaptado */}
-        <div
-          className={`${styles.cajaClausulaTransporte} ${
-            !clausulaTransporte ? styles.clausulaInactiva : ""
-          }`}
-        >
+        <div className={styles.cajaClausulaTransporte}>
           <label className={styles.controlClausula} htmlFor="checkClausulaTransporte">
             <input
               type="checkbox"
               id="checkClausulaTransporte"
               className={styles.checkClausula}
-              checked={clausulaTransporte}
-              onChange={(e) => setClausulaTransporte(e.target.checked)}
+              checked
+              disabled
             />
             <div className={styles.contenidoClausula}>
               <div className={styles.encabezadoClausula}>
@@ -201,11 +176,9 @@ function FormularioConvenio({
                   Cláusula Obligatoria de Transporte Preferencial Adaptado
                 </span>
                 <span
-                  className={`${styles.badgeClausula} ${
-                    clausulaTransporte ? styles.badgeIncluido : styles.badgeExcluido
-                  }`}
+                  className={`${styles.badgeClausula} ${styles.badgeIncluido}`}
                 >
-                  {clausulaTransporte ? "Incluido" : "Excluido"}
+                  Siempre activa
                 </span>
               </div>
               <p className={styles.descripcionClausula}>
@@ -225,8 +198,13 @@ function FormularioConvenio({
         >
           Restablecer
         </button>
+        {convenioEditando && (
+          <button type="button" className={styles.btnRestablecer} onClick={onCancelarEdicion}>
+            Cancelar edición
+          </button>
+        )}
         <button type="submit" className={styles.btnFormalizar}>
-          Formalizar y Activar Convenio
+          {convenioEditando ? "Guardar cambios" : "Actualizar convenio"}
         </button>
       </div>
     </form>

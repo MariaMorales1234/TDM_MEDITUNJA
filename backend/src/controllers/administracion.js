@@ -4,8 +4,7 @@ import * as usuariosTunja from '../repositories/usuariosTunja.js';
 import * as administracion from '../repositories/administracion.js';
 import { listarUsuariosTunja } from '../services/tunjaUsuarios.js';
 import {
-  CATEGORIAS_SERVICIOS, EPS_CATALOGO, IPS_CATALOGO,
-  PORTAFOLIOS_ASISTENCIALES, SERVICIOS_POR_CATEGORIA
+  CATEGORIAS_SERVICIOS, EPS_CATALOGO, IPS_CATALOGO, SERVICIOS_POR_CATEGORIA
 } from '../config/convenios.js';
 import fs from 'node:fs/promises';
 import path from 'node:path';
@@ -248,12 +247,15 @@ export async function descargarComprobanteAfiliacion(req, res) {
 export async function listarConvenios(req, res) {
   try {
     const data = await administracion.listarConvenios(req.usuario.eps);
+    const epsUnicas = EPS_CATALOGO.filter(({ nombre }, indice, lista) =>
+      mismaEps(nombre, req.usuario.eps) &&
+      lista.findIndex((opcion) => mismaEps(opcion.nombre, nombre)) === indice
+    );
     return res.status(200).json({
       data,
       catalogo: {
-        eps: EPS_CATALOGO.filter(({ nombre }) => mismaEps(nombre, req.usuario.eps)),
+        eps: epsUnicas,
         ips: IPS_CATALOGO,
-        portafolios: PORTAFOLIOS_ASISTENCIALES,
         categorias: CATEGORIAS_SERVICIOS,
         servicios: SERVICIOS_POR_CATEGORIA
       }
@@ -270,14 +272,16 @@ export async function crearConvenio(req, res) {
   if (!esTexto(datos.epsNombre, 100) || !mismaEps(datos.epsNombre, req.usuario.eps)) {
     return responderError(res, 403, 'EPS no autorizada', 'Solo puedes crear convenios para la EPS asignada a tu cuenta.');
   }
+  const ipsCatalogada = IPS_CATALOGO.find(({ id }) => id === datos.ipsId);
+  const servicioIdsValidos = new Set(SERVICIOS_POR_CATEGORIA.map(({ id }) => id));
   if (!esTexto(datos.epsId, 100) || !esTexto(datos.epsSede, 160) ||
       !esTexto(datos.epsDireccion, 240) || !esTexto(datos.ipsId, 100) ||
+      !ipsCatalogada || !ipsCatalogada.eps.some((eps) => mismaEps(eps, req.usuario.eps)) ||
       !esTexto(datos.ipsNombre, 160) || !esTexto(datos.ipsSede, 160) ||
-      !esTexto(datos.ipsDireccion, 240) || !esTexto(datos.portafolioId, 100) ||
-      !esTexto(datos.portafolioNombre, 200) ||
+      !esTexto(datos.ipsDireccion, 240) ||
       !Array.isArray(servicios) || servicios.length < 1 || servicios.length > 100 ||
-      !servicios.every((servicio) => esTexto(servicio, 100)) ||
-      typeof datos.clausulaTransporte !== 'boolean') {
+      !servicios.every((servicio) => esTexto(servicio, 100) &&
+        servicioIdsValidos.has(servicio) && ipsCatalogada.servicios.includes(servicio))) {
     return responderError(res, 400, 'Datos inválidos', 'Revisa la información del convenio y sus servicios.');
   }
 
@@ -291,10 +295,10 @@ export async function crearConvenio(req, res) {
     ipsNombre: datos.ipsNombre.trim(),
     ipsSede: datos.ipsSede.trim(),
     ipsDireccion: datos.ipsDireccion.trim(),
-    portafolioId: datos.portafolioId.trim(),
-    portafolioNombre: datos.portafolioNombre.trim(),
+    portafolioId: 'servicios',
+    portafolioNombre: 'Servicios autorizados',
     serviciosSeleccionados: [...new Set(servicios.map((servicio) => servicio.trim()))],
-    clausulaTransporte: datos.clausulaTransporte,
+    clausulaTransporte: true,
     fechaCreacion: new Date().toISOString().slice(0, 10)
   };
 
@@ -304,6 +308,35 @@ export async function crearConvenio(req, res) {
   } catch (error) {
     console.error('Error al crear convenio:', error.code || 'ERROR_INTERNO');
     return responderError(res, 500, 'Error interno del servidor', 'No fue posible guardar el convenio.');
+  }
+}
+
+export async function actualizarConvenio(req, res) {
+  const id = typeof req.params.id === 'string' ? req.params.id.trim() : '';
+  const servicios = req.body?.serviciosSeleccionados;
+  if (!id || id.length > 100 || !Array.isArray(servicios) || servicios.length < 1 || servicios.length > 100 ||
+      !servicios.every((servicio) => esTexto(servicio, 100))) {
+    return responderError(res, 400, 'Datos invÃ¡lidos', 'Selecciona uno o mÃ¡s servicios vÃ¡lidos para el convenio.');
+  }
+
+  try {
+    const convenios = await administracion.listarConvenios(req.usuario.eps);
+    const convenio = convenios.find((opcion) => opcion.id === id);
+    if (!convenio) return responderError(res, 404, 'Convenio no encontrado', 'No se encontrÃ³ el convenio de esta EPS.');
+    const ips = IPS_CATALOGO.find(({ id: ipsId }) => ipsId === convenio.ipsId);
+    const permitidos = new Set(ips?.servicios || []);
+    const serviciosUnicos = [...new Set(servicios.map((servicio) => servicio.trim()))];
+    if (serviciosUnicos.some((servicio) => !permitidos.has(servicio) ||
+        !SERVICIOS_POR_CATEGORIA.some(({ id: servicioId }) => servicioId === servicio))) {
+      return responderError(res, 400, 'Servicio no disponible', 'El convenio solo puede incluir servicios habilitados para esa IPS.');
+    }
+    const resultado = await administracion.actualizarServiciosConvenio(req.usuario.eps, id, serviciosUnicos);
+    if (!resultado.changes) return responderError(res, 404, 'Convenio no encontrado', 'No se encontrÃ³ el convenio de esta EPS.');
+    const actualizado = { ...convenio, serviciosSeleccionados: serviciosUnicos, clausulaTransporte: true, estado: 'Activo' };
+    return res.status(200).json({ mensaje: 'Convenio actualizado.', data: actualizado });
+  } catch (error) {
+    console.error('Error al actualizar convenio:', error.code || 'ERROR_INTERNO');
+    return responderError(res, 500, 'Error interno del servidor', 'No fue posible actualizar el convenio.');
   }
 }
 

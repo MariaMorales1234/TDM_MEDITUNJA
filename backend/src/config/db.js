@@ -3,6 +3,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sqlite3 from 'sqlite3';
 import { tarifaBaseCita, tarifaMaximaCita } from './tarifasCitas.js';
+import { EPS_AFILIACIONES, EPS_CATALOGO, IPS_CATALOGO } from './convenios.js';
 
 const carpetaModulo = path.dirname(fileURLToPath(import.meta.url));
 const rutaBaseDatos = path.resolve(
@@ -266,6 +267,61 @@ function actualizarAdjuntosResultados() {
   });
 }
 
+function normalizarNombre(valor) {
+  return valor.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+    .replace(/eps/g, '').replace(/[^a-z0-9]/g, '');
+}
+
+function sembrarConveniosBase() {
+  return new Promise((resolve, reject) => {
+    db.all('SELECT eps_nombre, ips_id FROM convenios', async (error, existentes) => {
+      if (error) return reject(error);
+      const ipsEquivalentes = new Map([
+        ['santiago-tunja', 'ese-san-antonio'],
+        ['clinica-medilaser', 'medilaser'],
+        ['clinica-andes', 'los-andes']
+      ]);
+      const paresExistentes = new Set(existentes.map(({ eps_nombre, ips_id }) =>
+        `${normalizarNombre(eps_nombre)}|${ipsEquivalentes.get(ips_id) || ips_id}`
+      ));
+      const fecha = new Date().toISOString().slice(0, 10);
+      try {
+        await new Promise((resolveActualizacion, rejectActualizacion) => {
+          db.run('UPDATE convenios SET clausula_transporte = 1', (fallo) =>
+            fallo ? rejectActualizacion(fallo) : resolveActualizacion()
+          );
+        });
+        for (const nombreEps of EPS_AFILIACIONES) {
+          const eps = EPS_CATALOGO.find(({ nombre }) => normalizarNombre(nombre) === normalizarNombre(nombreEps));
+          if (!eps) continue;
+          for (const ips of IPS_CATALOGO) {
+            if (!ips.eps.some((nombre) => normalizarNombre(nombre) === normalizarNombre(nombreEps))) continue;
+            const clavePar = `${normalizarNombre(nombreEps)}|${ips.id}`;
+            if (paresExistentes.has(clavePar)) continue;
+            const id = `BASE-${eps.id}-${ips.id}`;
+            await new Promise((resolveInsercion, rejectInsercion) => {
+              db.run(`INSERT OR IGNORE INTO convenios (
+                id, eps_id, eps_nombre, eps_sede, eps_direccion,
+                ips_id, ips_nombre, ips_sede, ips_direccion,
+                portafolio_id, portafolio_nombre, servicios_seleccionados,
+                clausula_transporte, estado, fecha_creacion
+              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'servicios', 'Servicios autorizados', ?, 1, 'Activo', ?)`, [
+                id, eps.id, nombreEps, eps.sede, eps.direccion,
+                ips.id, ips.nombre, ips.sede, ips.direccion,
+                JSON.stringify(ips.servicios), fecha
+              ], (fallo) => fallo ? rejectInsercion(fallo) : resolveInsercion());
+            });
+            paresExistentes.add(clavePar);
+          }
+        }
+        resolve();
+      } catch (fallo) {
+        reject(fallo);
+      }
+    });
+  });
+}
+
 export const ready = new Promise((resolve, reject) => {
   fs.readFile(rutaEsquema, 'utf8', (errorLectura, esquema) => {
     if (errorLectura) {
@@ -278,7 +334,11 @@ export const ready = new Promise((resolve, reject) => {
         reject(errorEsquema);
         return;
       }
-      actualizarEsquema().then(actualizarPagosCita).then(actualizarAdjuntosResultados).then(() => resolve(db), reject);
+      actualizarEsquema()
+        .then(actualizarPagosCita)
+        .then(actualizarAdjuntosResultados)
+        .then(sembrarConveniosBase)
+        .then(() => resolve(db), reject);
     });
   });
 });

@@ -1,90 +1,90 @@
 // Datos constantes y configuración para el Módulo de Convenios
 // MediTunja - Red de Salud de Tunja
 
-// 1. Catálogo de Instituciones Prestadoras de Salud (IPS) en Tunja
-const SERVICIOS_HOSPITAL_SAN_RAFAEL = [
-  "srv-med-gen", "srv-med-interna", "srv-pediatria", "srv-ginecologia",
-  "srv-obstetricia", "srv-dermatologia", "srv-cirugia-general",
-  "srv-anestesiologia", "srv-neurologia", "srv-oftalmologia", "srv-ortopedia",
-  "srv-otorrinolaringologia", "srv-oncologia", "srv-psiquiatria", "srv-nefrologia",
-  "srv-cardiologia", "srv-laboratorio-basico", "srv-rayos-x", "srv-gastroenterologia",
-  "srv-patologia"
+// 1. Prestadores, sedes, afiliaciones y servicios base para Tunja.
+export const EPS_AFILIACIONES = ["Nueva EPS", "Famisanar", "Sanitas", "Salud Total", "SURA"];
+const TODAS_LAS_EPS = EPS_AFILIACIONES;
+const SERVICIOS_SAN_RAFA_PRINCIPAL = [
+  "srv-med-gen", "srv-med-interna", "srv-cirugia-general", "srv-anestesiologia",
+  "srv-oncologia", "srv-nefrologia", "srv-cardiologia", "srv-laboratorio-basico",
+  "srv-rayos-x", "srv-patologia"
+];
+const SERVICIOS_SAN_RAFA_COLON = [
+  "srv-dermatologia", "srv-neurologia", "srv-oftalmologia", "srv-ortopedia",
+  "srv-otorrinolaringologia", "srv-psiquiatria", "srv-gastroenterologia"
+];
+const SERVICIOS_SAN_RAFA_MATERNO = ["srv-pediatria", "srv-ginecologia", "srv-obstetricia"];
+const SERVICIOS_ESE_SANTIAGO = [
+  "srv-med-interna", "srv-med-familiar", "srv-med-gen", "srv-ortopedia",
+  "srv-ginecologia", "srv-obstetricia", "srv-pediatria", "srv-urgenciologia", "srv-psicologia"
+];
+const SERVICIOS_MEDILASER = [
+  "srv-endocrinologia", "srv-gineco-obstetricia", "srv-neumologia", "srv-neurocirugia",
+  "srv-reumatologia", "srv-urologia", "srv-fisiatria", "srv-infectologia-pediatrica",
+  "srv-med-interna", "srv-cardiologia", "srv-geriatria", "srv-dermatologia",
+  "srv-med-materno-fetal", "srv-neuropediatria", "srv-nefrologia", "srv-oftalmologia-retina",
+  "srv-otorrinolaringologia", "srv-pediatria", "srv-gastroenterologia"
+];
+const SERVICIOS_LOS_ANDES = [
+  "srv-med-interna", "srv-med-gen", "srv-cardiologia", "srv-pediatria",
+  "srv-gineco-obstetricia", "srv-ortopedia", "srv-cirugia-general", "srv-neurocirugia",
+  "srv-urologia", "srv-oftalmologia", "srv-otorrinolaringologia", "srv-cirugia-plastica",
+  "srv-cirugia-vascular", "srv-anestesiologia"
+];
+const SERVICIOS_CHIA = [
+  "srv-med-gen", "srv-laboratorio-basico", "srv-ortopedia", "srv-med-interna",
+  "srv-gineco-obstetricia", "srv-pediatria", "srv-dermatologia", "srv-neumologia",
+  "srv-neurologia", "srv-nefrologia", "srv-psiquiatria", "srv-psicologia",
+  "srv-nutricion", "srv-rehabilitacion", "srv-odontologia", "srv-endodoncia",
+  "srv-cirugia-oral", "srv-enfermeria", "srv-vacunacion"
+];
+const SERVICIOS_COLSUBSIDIO = [
+  "srv-cardiologia", "srv-dermatologia", "srv-dolor-cuidados-paliativos", "srv-endodoncia",
+  "srv-enfermeria", "srv-gastroenterologia", "srv-gineco-obstetricia", "srv-med-familiar",
+  "srv-med-fisica-deporte", "srv-fisiatria", "srv-med-gen", "srv-med-interna",
+  "srv-neumologia", "srv-neurologia", "srv-nutricion", "srv-odontologia", "srv-oftalmologia",
+  "srv-optometria", "srv-ortodoncia", "srv-pediatria", "srv-psicologia", "srv-psiquiatria",
+  "srv-cardiologia-pediatrica", "srv-vacunacion", "srv-laboratorio-basico", "srv-fisioterapia",
+  "srv-fonoaudiologia", "srv-diagnostico-vascular", "srv-rayos-x", "srv-imagenes-no-ionizantes",
+  "srv-radiologia-odontologica", "srv-toma-muestras-ginecologicas"
+];
+const SERVICIOS_SANITAS = [
+  "srv-dermatologia", "srv-enfermeria", "srv-gineco-obstetricia", "srv-med-familiar",
+  "srv-fisiatria", "srv-med-gen", "srv-nutricion", "srv-pediatria", "srv-psicologia",
+  "srv-vacunacion", "srv-rayos-x", "srv-imagenes-no-ionizantes"
+];
+const SERVICIOS_SURA = [
+  "srv-med-gen", "srv-med-familiar", "srv-med-interna", "srv-cardiologia", "srv-dermatologia",
+  "srv-gineco-obstetricia", "srv-pediatria", "srv-psicologia", "srv-psiquiatria", "srv-nutricion",
+  "srv-enfermeria", "srv-vacunacion", "srv-laboratorio-basico", "srv-rayos-x",
+  "srv-imagenes-no-ionizantes", "srv-fisioterapia", "srv-farmacia"
+];
+const SERVICIOS_SIREB = [
+  "srv-cardiologia", "srv-dermatologia", "srv-endocrinologia", "srv-fisioterapia",
+  "srv-fonoaudiologia", "srv-med-familiar", "srv-fisiatria", "srv-med-gen", "srv-med-interna",
+  "srv-neumologia", "srv-neurologia", "srv-nutricion", "srv-otorrinolaringologia",
+  "srv-otras-consultas-especialidad", "srv-pediatria", "srv-psicologia", "srv-psiquiatria",
+  "srv-terapia-ocupacional", "srv-terapia-respiratoria"
+];
+const SERVICIOS_ADMIN_NUEVA_EPS = [
+  "srv-atencion-afiliado", "srv-autorizaciones", "srv-afiliaciones",
+  "srv-gestion-incapacidades", "srv-radicacion-pqrs", "srv-orientacion-usuario"
 ];
 
 export const IPS_CATALOGO = [
-  {
-    id: "san-rafael",
-    nombre: "Hospital San Rafael de Tunja",
-    sede: "Sede Principal",
-    direccion: "Carrera 11 # 27-27, Tunja",
-    servicios: SERVICIOS_HOSPITAL_SAN_RAFAEL
-  },
-  {
-    id: "san-rafael-colon",
-    nombre: "Hospital San Rafael de Tunja",
-    sede: "Sede Edificio Colón",
-    direccion: "Avenida Colón # 27-87, Tunja",
-    servicios: SERVICIOS_HOSPITAL_SAN_RAFAEL
-  },
-  {
-    id: "san-rafael-materno",
-    nombre: "Hospital San Rafael de Tunja",
-    sede: "Sede Materno Infantil",
-    direccion: "Avenida Universitaria (María Josefa Canelones), Tunja",
-    servicios: SERVICIOS_HOSPITAL_SAN_RAFAEL
-  },
-  {
-    id: "ese-san-antonio",
-    nombre: "E.S.E Santiago de Tunja (Hospital Metropolitano)",
-    sede: "Barrio San Antonio",
-    direccion: "Calle 8 # 2A-57 (Barrio San Antonio), Tunja",
-    servicios: [
-      "srv-med-interna", "srv-med-familiar", "srv-med-gen",
-      "srv-ortopedia", "srv-ginecologia", "srv-obstetricia", "srv-pediatria",
-      "srv-urgenciologia", "srv-psicologia"
-    ]
-  },
-  {
-    id: "medilaser",
-    nombre: "Clínica Medilaser",
-    sede: "Edificio Davinci (Barrio Las Quintas)",
-    direccion: "Carrera 1F # 39-76 (Barrio Las Quintas, Edificio Davinci), Tunja",
-    servicios: [
-      "srv-endocrinologia", "srv-gineco-obstetricia", "srv-neumologia",
-      "srv-neurocirugia", "srv-reumatologia", "srv-urologia", "srv-fisiatria",
-      "srv-infectologia-pediatrica", "srv-med-interna", "srv-cardiologia",
-      "srv-geriatria", "srv-dermatologia", "srv-med-materno-fetal",
-      "srv-neuropediatria", "srv-nefrologia", "srv-oftalmologia-retina",
-      "srv-otorrinolaringologia", "srv-pediatria", "srv-gastroenterologia"
-    ]
-  },
-  {
-    id: "los-andes",
-    nombre: "Clínica Los Andes",
-    sede: "Sede Principal",
-    direccion: "Transversal 11 # 30-61, Tunja",
-    servicios: [
-      "srv-med-interna", "srv-med-gen", "srv-cardiologia", "srv-pediatria",
-      "srv-gineco-obstetricia", "srv-ortopedia", "srv-cirugia-general",
-      "srv-neurocirugia", "srv-urologia", "srv-oftalmologia",
-      "srv-otorrinolaringologia", "srv-cirugia-plastica", "srv-cirugia-vascular",
-      "srv-anestesiologia"
-    ]
-  },
-  {
-    id: "clinica-chia",
-    nombre: "Clínica de Chía S.A. (Sede Tunja)",
-    sede: "Sector Pozo Donato / Las Quintas",
-    direccion: "Carrera 6 # 44-22 (Sector Pozo Donato / Las Quintas), Tunja",
-    servicios: [
-      "srv-med-gen", "srv-laboratorio-basico", "srv-ortopedia",
-      "srv-med-interna", "srv-gineco-obstetricia", "srv-pediatria",
-      "srv-dermatologia", "srv-neumologia", "srv-neurologia", "srv-nefrologia",
-      "srv-psiquiatria", "srv-psicologia", "srv-nutricion",
-      "srv-rehabilitacion", "srv-odontologia", "srv-endodoncia",
-      "srv-cirugia-oral", "srv-enfermeria", "srv-vacunacion"
-    ]
-  }
+  { id: "san-rafael", nombre: "Hospital San Rafael de Tunja", sede: "Sede Principal", direccion: "Carrera 11 # 27-27, Tunja", eps: TODAS_LAS_EPS, servicios: SERVICIOS_SAN_RAFA_PRINCIPAL },
+  { id: "san-rafael-colon", nombre: "Hospital San Rafael de Tunja", sede: "Sede Edificio Colón", direccion: "Avenida Colón # 27-87, Tunja", eps: TODAS_LAS_EPS, servicios: SERVICIOS_SAN_RAFA_COLON },
+  { id: "san-rafael-materno", nombre: "Hospital San Rafael de Tunja", sede: "Sede Maternoinfantil", direccion: "Avenida Universitaria, Tunja", eps: TODAS_LAS_EPS, servicios: SERVICIOS_SAN_RAFA_MATERNO },
+  { id: "ese-san-antonio", nombre: "E.S.E. Santiago de Tunja", sede: "Sede principal", direccion: "Barrio San Antonio, Tunja", eps: TODAS_LAS_EPS, servicios: SERVICIOS_ESE_SANTIAGO },
+  { id: "medilaser", nombre: "Clínica Medilaser", sede: "Edificio Davinci", direccion: "Carrera 1F # 39-76, Tunja", eps: TODAS_LAS_EPS, servicios: SERVICIOS_MEDILASER },
+  { id: "los-andes", nombre: "Clínica Los Andes", sede: "Sede principal", direccion: "Transversal 11 # 30-61, Tunja", eps: TODAS_LAS_EPS, servicios: SERVICIOS_LOS_ANDES },
+  { id: "clinica-chia", nombre: "Clínica de Chía", sede: "Sede Tunja", direccion: "Sector Pozo Donato, Tunja", eps: ["Nueva EPS", "Famisanar", "Sanitas", "Salud Total"], servicios: SERVICIOS_CHIA },
+  { id: "centro-colsubsidio", nombre: "Centro Médico Colsubsidio", sede: "Sede Tunja", direccion: "Tunja", eps: TODAS_LAS_EPS, servicios: SERVICIOS_COLSUBSIDIO },
+  { id: "centro-sanitas", nombre: "Centro Médico Sanitas", sede: "Sede Tunja", direccion: "Tunja", eps: ["Nueva EPS", "Famisanar", "Sanitas"], servicios: SERVICIOS_SANITAS },
+  { id: "centro-sura", nombre: "Centro Médico SURA", sede: "Sede Tunja", direccion: "Tunja", eps: ["Nueva EPS", "Famisanar", "SURA"], servicios: SERVICIOS_SURA },
+  { id: "sireb", nombre: "SIREB", sede: "Sede Tunja", direccion: "Tunja", eps: TODAS_LAS_EPS, servicios: SERVICIOS_SIREB },
+  { id: "nueva-eps-pozo", nombre: "Nueva EPS", sede: "Sede Pozo de Donato (administrativa)", direccion: "Sector Pozo de Donato, Tunja", eps: ["Nueva EPS"], servicios: SERVICIOS_ADMIN_NUEVA_EPS },
+  { id: "nueva-eps-centro", nombre: "Nueva EPS", sede: "Sede Centro Histórico (administrativa)", direccion: "Centro Histórico, Tunja", eps: ["Nueva EPS"], servicios: SERVICIOS_ADMIN_NUEVA_EPS }
 ];
 
 // 2. Catálogo de Entidades Promotoras de Salud (EPS - Oficinas de Atención en Tunja)
@@ -127,22 +127,14 @@ export const EPS_CATALOGO = [
   }
 ];
 
-// 3. Portafolios Asistenciales Pactados
-export const PORTAFOLIOS_ASISTENCIALES = [
-  { id: "integral", nombre: "Atención Integral (Consulta, Hospitalización y Terapias)" },
-  { id: "ambulatorio", nombre: "Atención Ambulatoria y Consulta Externa Especializada" },
-  { id: "rehabilitacion", nombre: "Rehabilitación Integral, Fisioterapia y Discapacidad" },
-  { id: "quirurgico", nombre: "Procedimientos Quirúrgicos y Apoyo Diagnóstico" },
-  { id: "prioritario", nombre: "Atención Prioritaria y Traslado Asistencial Preferencial" }
-];
-
 // 3. Categorías de servicios médicos
 export const CATEGORIAS_SERVICIOS = [
   { id: "todas", nombre: "Todas las Categorías" },
   { id: "consultas", nombre: "Consultas Médicas y Especialidades" },
   { id: "terapias", nombre: "Terapias y Rehabilitación" },
   { id: "diagnostico", nombre: "Apoyo Diagnóstico y Laboratorio" },
-  { id: "hospitalizacion", nombre: "Hospitalización y Procedimientos" }
+  { id: "hospitalizacion", nombre: "Hospitalización y Procedimientos" },
+  { id: "administrativo", nombre: "Atención y Trámites de EPS" }
 ];
 
 // 4. Catálogo de servicios médicos asociados a categorías
@@ -208,5 +200,24 @@ export const SERVICIOS_POR_CATEGORIA = [
   // Hospitalización y Procedimientos
   { id: "srv-hosp-general", categoria: "hospitalizacion", codigo: "991001", nombre: "Hospitalización Básica en Sala General" },
   { id: "srv-cirugia-ambulatoria", categoria: "hospitalizacion", codigo: "992002", nombre: "Cirugía Ambulatoria de Mediana Complejidad" },
-  { id: "srv-atencion-urgencias", categoria: "hospitalizacion", codigo: "993003", nombre: "Atención Médica en Unidad de Urgencias" }
+  { id: "srv-atencion-urgencias", categoria: "hospitalizacion", codigo: "993003", nombre: "Atención Médica en Unidad de Urgencias" },
+  { id: "srv-dolor-cuidados-paliativos", categoria: "consultas", nombre: "Clínica del Dolor y Cuidados Paliativos" },
+  { id: "srv-med-fisica-deporte", categoria: "terapias", nombre: "Medicina Física y del Deporte" },
+  { id: "srv-optometria", categoria: "consultas", nombre: "Optometría" },
+  { id: "srv-ortodoncia", categoria: "consultas", nombre: "Ortodoncia" },
+  { id: "srv-cardiologia-pediatrica", categoria: "consultas", nombre: "Cardiología Pediátrica" },
+  { id: "srv-fisioterapia", categoria: "terapias", nombre: "Fisioterapia" },
+  { id: "srv-diagnostico-vascular", categoria: "diagnostico", nombre: "Diagnóstico Vascular" },
+  { id: "srv-imagenes-no-ionizantes", categoria: "diagnostico", nombre: "Imágenes No Ionizantes" },
+  { id: "srv-radiologia-odontologica", categoria: "diagnostico", nombre: "Radiología Odontológica" },
+  { id: "srv-toma-muestras-ginecologicas", categoria: "diagnostico", nombre: "Toma de Muestras Ginecológicas" },
+  { id: "srv-farmacia", categoria: "administrativo", nombre: "Servicios de Farmacia" },
+  { id: "srv-otras-consultas-especialidad", categoria: "consultas", nombre: "Otras Consultas de Especialidad" },
+  { id: "srv-terapia-respiratoria", categoria: "terapias", nombre: "Terapia Respiratoria" },
+  { id: "srv-atencion-afiliado", categoria: "administrativo", nombre: "Atención al Afiliado" },
+  { id: "srv-autorizaciones", categoria: "administrativo", nombre: "Autorizaciones" },
+  { id: "srv-afiliaciones", categoria: "administrativo", nombre: "Afiliaciones" },
+  { id: "srv-gestion-incapacidades", categoria: "administrativo", nombre: "Gestión de Incapacidades" },
+  { id: "srv-radicacion-pqrs", categoria: "administrativo", nombre: "Radicación de PQRS" },
+  { id: "srv-orientacion-usuario", categoria: "administrativo", nombre: "Orientación al Usuario" }
 ];

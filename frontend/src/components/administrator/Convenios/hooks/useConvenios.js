@@ -1,150 +1,133 @@
-// Hook personalizado con la lógica de negocio del Módulo de Convenios
-// MediTunja - Separación de Lógica y Vista
-
-import { useState, useMemo, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { apiRequest, mensajeError } from "../../../../auth/api.js";
 import { useAdminAuth } from "../../../../auth/useAdminAuth.js";
-const catalogoVacio = { eps: [], ips: [], portafolios: [], categorias: [], servicios: [] };
+
+const catalogoVacio = { eps: [], ips: [], categorias: [], servicios: [] };
+const normalizar = (valor = "") => valor.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+  .toLocaleLowerCase("es").replace(/\beps\b/g, "").replace(/[^a-z0-9]/g, "");
+const mismaEps = (a, b) => normalizar(a) !== "" && normalizar(a) === normalizar(b);
 
 export function useConvenios() {
   const { token } = useAdminAuth();
-  const [catalogo, setCatalogo] = useState(null);
-  const { eps: epsDisponibles, ips: ipsDisponibles, portafolios, categorias, servicios } = catalogo || catalogoVacio;
+  const [catalogo, setCatalogo] = useState(catalogoVacio);
   const [convenios, setConvenios] = useState([]);
   const [cargando, setCargando] = useState(true);
-
-  // Estados del formulario de convenio: EPS Gestora e IPS Prestadora
   const [epsId, setEpsId] = useState("");
   const [ipsId, setIpsId] = useState("");
-  const [portafolioId, setPortafolioId] = useState("integral");
   const [categoriaFiltro, setCategoriaFiltro] = useState("todas");
-  const [serviciosSeleccionados, setServiciosSeleccionados] = useState([
-    "srv-med-gen",
-    "srv-cardiologia",
-    "srv-neurologia"
-  ]);
-  const [clausulaTransporte, setClausulaTransporte] = useState(true);
-
-  // Mensaje de retroalimentación
+  const [serviciosSeleccionados, setServiciosSeleccionados] = useState([]);
+  const [convenioEditandoId, setConvenioEditandoId] = useState("");
   const [notificacion, setNotificacion] = useState("");
+  const epsDisponibles = catalogo.eps;
+  const ipsCatalogo = catalogo.ips;
+  const { categorias, servicios } = catalogo;
 
   useEffect(() => {
     let activo = true;
-    apiRequest("/admin/convenios", {
-      headers: { Authorization: `Bearer ${token}` }
-    }).then((respuesta) => {
-      if (!activo) return;
-      setConvenios(respuesta.data);
-      setCatalogo(respuesta.catalogo);
-      setEpsId(respuesta.catalogo.eps[0]?.id || "");
-      setIpsId(respuesta.catalogo.ips[0]?.id || "");
-    }).catch((error) => {
-      if (activo) setNotificacion(mensajeError(error));
-    }).finally(() => {
-      if (activo) setCargando(false);
-    });
-
-    return () => {
-      activo = false;
-    };
+    apiRequest("/admin/convenios", { headers: { Authorization: `Bearer ${token}` } })
+      .then((respuesta) => {
+        if (!activo) return;
+        const epsInicial = respuesta.catalogo.eps[0];
+        const ipsInicial = respuesta.catalogo.ips.find(({ eps }) =>
+          eps.some((nombre) => mismaEps(nombre, epsInicial?.nombre))
+        );
+        const convenioInicial = respuesta.data.find((convenio) =>
+          convenio.ipsId === ipsInicial?.id && mismaEps(convenio.epsNombre, epsInicial?.nombre)
+        );
+        setConvenios(respuesta.data);
+        setCatalogo(respuesta.catalogo);
+        setEpsId(epsInicial?.id || "");
+        setIpsId(ipsInicial?.id || "");
+        setServiciosSeleccionados(convenioInicial?.serviciosSeleccionados || ipsInicial?.servicios || []);
+      })
+      .catch((error) => { if (activo) setNotificacion(mensajeError(error)); })
+      .finally(() => { if (activo) setCargando(false); });
+    return () => { activo = false; };
   }, [token]);
 
-  // Obtener datos de la EPS seleccionada actualmente
-  const epsActual = useMemo(() => {
-    return epsDisponibles.find((eps) => eps.id === epsId) || epsDisponibles[0] || null;
-  }, [epsDisponibles, epsId]);
-
-  // Obtener datos de la IPS seleccionada actualmente
-  const ipsActual = useMemo(() => {
-    return ipsDisponibles.find((ips) => ips.id === ipsId) || null;
-  }, [ipsDisponibles, ipsId]);
-
-  // Servicios filtrados según la categoría activa y la IPS seleccionada
+  const epsActual = useMemo(() => epsDisponibles.find((eps) => eps.id === epsId) || null,
+    [epsDisponibles, epsId]);
+  const ipsDisponibles = useMemo(() => ipsCatalogo.filter(({ eps }) =>
+    eps.some((nombre) => mismaEps(nombre, epsActual?.nombre))
+  ), [ipsCatalogo, epsActual]);
+  const ipsActual = useMemo(() => ipsDisponibles.find((ips) => ips.id === ipsId) || null,
+    [ipsDisponibles, ipsId]);
+  const convenioActual = useMemo(() => {
+    if (convenioEditandoId) return convenios.find(({ id }) => id === convenioEditandoId) || null;
+    return convenios.find((convenio) => convenio.ipsId === ipsId &&
+      mismaEps(convenio.epsNombre, epsActual?.nombre)) || null;
+  }, [convenios, convenioEditandoId, epsActual, ipsId]);
   const serviciosFiltrados = useMemo(() => {
-    const serviciosIps = Array.isArray(ipsActual?.servicios) ? ipsActual.servicios : [];
-    return servicios.filter(
-      (srv) =>
-        (serviciosIps.length === 0 || serviciosIps.includes(srv.id)) &&
-        (categoriaFiltro === "todas" || srv.categoria === categoriaFiltro)
-    );
+    const serviciosIps = ipsActual?.servicios || [];
+    return servicios.filter((servicio) => serviciosIps.includes(servicio.id) &&
+      (categoriaFiltro === "todas" || servicio.categoria === categoriaFiltro));
   }, [categoriaFiltro, ipsActual, servicios]);
 
-  // Cambiar EPS
   const handleCambiarEps = (valor) => {
-    const id = valor && typeof valor === "object" && valor.target ? valor.target.value : valor;
-    if (!epsDisponibles.some((eps) => eps.id === id)) return;
+    const id = valor?.target ? valor.target.value : valor;
+    const nuevaEps = epsDisponibles.find((eps) => eps.id === id);
+    if (!nuevaEps) return;
+    const nuevaIps = ipsCatalogo.find((ips) => ips.eps.some((nombre) => mismaEps(nombre, nuevaEps.nombre)));
+    const convenio = convenios.find((item) => item.ipsId === nuevaIps?.id && mismaEps(item.epsNombre, nuevaEps.nombre));
     setEpsId(id);
+    setIpsId(nuevaIps?.id || "");
+    setServiciosSeleccionados(convenio?.serviciosSeleccionados || nuevaIps?.servicios || []);
+    setConvenioEditandoId("");
+    setCategoriaFiltro("todas");
   };
 
-  // Cambiar IPS Prestadora y sincronizar servicios
   const handleCambiarIps = (valor) => {
-    const id = valor && typeof valor === "object" && valor.target ? valor.target.value : valor;
-    if (!id) return;
-
+    const id = valor?.target ? valor.target.value : valor;
     const nuevaIps = ipsDisponibles.find((ips) => ips.id === id);
     if (!nuevaIps) return;
-
+    const convenio = convenios.find((item) => item.ipsId === id && mismaEps(item.epsNombre, epsActual?.nombre));
     setIpsId(id);
+    setServiciosSeleccionados(convenio?.serviciosSeleccionados || nuevaIps.servicios || []);
+    setConvenioEditandoId(convenio?.id || "");
     setCategoriaFiltro("todas");
-    const listaServicios = Array.isArray(nuevaIps.servicios) ? nuevaIps.servicios : [];
-    setServiciosSeleccionados(listaServicios.slice(0, 3));
   };
 
-  // Conmutar selección de un servicio individual
-  const handleToggleServicio = (servicioId) => {
-    setServiciosSeleccionados((prev) => {
-      if (prev.includes(servicioId)) {
-        return prev.filter((id) => id !== servicioId);
-      } else {
-        return [...prev, servicioId];
-      }
-    });
+  const handleEditarConvenio = (convenio) => {
+    const eps = epsDisponibles.find((opcion) => mismaEps(opcion.nombre, convenio.epsNombre));
+    if (!eps) return;
+    setEpsId(eps.id);
+    setIpsId(convenio.ipsId);
+    setServiciosSeleccionados([...convenio.serviciosSeleccionados]);
+    setConvenioEditandoId(convenio.id);
+    setCategoriaFiltro("todas");
+    setNotificacion(`Editando el convenio con ${convenio.ipsNombre}.`);
+    document.getElementById("formulario-convenio")?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
-  // Seleccionar todos los servicios de la categoría actual
-  const handleSeleccionarTodosCategoria = () => {
-    const idsCategoria = serviciosFiltrados.map((s) => s.id);
-    setServiciosSeleccionados((prev) => {
-      const nuevoSet = new Set([...prev, ...idsCategoria]);
-      return Array.from(nuevoSet);
-    });
-  };
-
-  // Desmarcar todos los servicios de la categoría actual
+  const handleToggleServicio = (id) => setServiciosSeleccionados((actuales) =>
+    actuales.includes(id) ? actuales.filter((item) => item !== id) : [...actuales, id]
+  );
+  const handleSeleccionarTodosCategoria = () => setServiciosSeleccionados((actuales) =>
+    [...new Set([...actuales, ...serviciosFiltrados.map(({ id }) => id)])]
+  );
   const handleDeseleccionarCategoria = () => {
-    const idsCategoria = new Set(serviciosFiltrados.map((s) => s.id));
-    setServiciosSeleccionados((prev) => prev.filter((id) => !idsCategoria.has(id)));
+    const visibles = new Set(serviciosFiltrados.map(({ id }) => id));
+    setServiciosSeleccionados((actuales) => actuales.filter((id) => !visibles.has(id)));
   };
-
-  // Restablecer el formulario
   const handleRestablecer = () => {
-    setEpsId(epsDisponibles[0]?.id || "");
-    setIpsId(ipsDisponibles[0]?.id || "");
-    setPortafolioId("integral");
+    setServiciosSeleccionados(convenioActual?.serviciosSeleccionados || ipsActual?.servicios || []);
     setCategoriaFiltro("todas");
-    const serviciosDefecto = ipsDisponibles[0]?.servicios.slice(0, 3) || [];
-    setServiciosSeleccionados(serviciosDefecto);
-    setClausulaTransporte(true);
+    setNotificacion("");
+  };
+  const handleCancelarEdicion = () => {
+    setConvenioEditandoId("");
+    setServiciosSeleccionados(convenioActual?.serviciosSeleccionados || ipsActual?.servicios || []);
     setNotificacion("");
   };
 
-  // Enviar y formalizar convenio
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    if (serviciosSeleccionados.length === 0) {
-      alert("Por favor selecciona al menos un servicio médico para autorizar en el convenio.");
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    if (!serviciosSeleccionados.length || !epsActual || !ipsActual) {
+      setNotificacion("Selecciona al menos un servicio válido para el convenio.");
       return;
     }
-
-    if (!epsActual) {
-      setNotificacion("La EPS asignada a esta cuenta no coincide con el catálogo de EPS.");
-      return;
-    }
-    if (!ipsActual) return;
-    const portafolioObj = portafolios.find((p) => p.id === portafolioId);
-
-    const nuevoConvenio = {
+    const destino = convenioActual;
+    const payload = {
       epsId: epsActual.id,
       epsNombre: epsActual.nombre,
       epsSede: epsActual.sede,
@@ -153,74 +136,51 @@ export function useConvenios() {
       ipsNombre: ipsActual.nombre,
       ipsSede: ipsActual.sede,
       ipsDireccion: ipsActual.direccion,
-      portafolioId: portafolioId,
-      portafolioNombre: portafolioObj ? portafolioObj.nombre : portafolioId,
       serviciosSeleccionados: [...serviciosSeleccionados],
-      clausulaTransporte: clausulaTransporte,
-      estado: "Activo",
-      fechaCreacion: new Date().toISOString().split("T")[0]
+      clausulaTransporte: true
     };
-
     try {
-      const respuesta = await apiRequest("/admin/convenios", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-        body: JSON.stringify(nuevoConvenio)
-      });
-      setConvenios((prev) => [respuesta.data, ...prev]);
-      setNotificacion(`Convenio guardado entre ${epsActual.nombre} y ${ipsActual.nombre}.`);
+      if (destino) {
+        const respuesta = await apiRequest(`/admin/convenios/${encodeURIComponent(destino.id)}`, {
+          method: "PUT", headers: { Authorization: `Bearer ${token}` }, body: JSON.stringify(payload)
+        });
+        setConvenios((actuales) => actuales.map((item) => item.id === destino.id ? respuesta.data : item));
+        setNotificacion(`Convenio actualizado para ${ipsActual.nombre}.`);
+        setConvenioEditandoId(respuesta.data.id);
+      } else {
+        const respuesta = await apiRequest("/admin/convenios", {
+          method: "POST", headers: { Authorization: `Bearer ${token}` }, body: JSON.stringify(payload)
+        });
+        setConvenios((actuales) => [respuesta.data, ...actuales]);
+        setNotificacion(`Convenio creado para ${ipsActual.nombre}.`);
+        setConvenioEditandoId(respuesta.data.id);
+      }
     } catch (error) {
       setNotificacion(mensajeError(error));
     }
   };
 
-  // Eliminar o archivar un convenio
   const handleEliminarConvenio = async (id) => {
-    if (window.confirm("¿Seguro que deseas desactivar este convenio de la red en Tunja?")) {
-      try {
-        await apiRequest(`/admin/convenios/${encodeURIComponent(id)}/desactivar`, {
-          method: "PUT",
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        setConvenios((prev) => prev.map((convenio) =>
-          convenio.id === id ? { ...convenio, estado: "Inactivo" } : convenio
-        ));
-        setNotificacion("Convenio desactivado.");
-      } catch (error) {
-        setNotificacion(mensajeError(error));
-      }
+    if (!window.confirm("¿Seguro que deseas desactivar este convenio?")) return;
+    try {
+      await apiRequest(`/admin/convenios/${encodeURIComponent(id)}/desactivar`, {
+        method: "PUT", headers: { Authorization: `Bearer ${token}` }
+      });
+      setConvenios((actuales) => actuales.map((item) => item.id === id
+        ? { ...item, estado: "Inactivo", clausulaTransporte: true } : item));
+      setNotificacion("Convenio desactivado.");
+      if (convenioEditandoId === id) setConvenioEditandoId("");
+    } catch (error) {
+      setNotificacion(mensajeError(error));
     }
   };
 
   return {
-    convenios,
-    epsId,
-    epsDisponibles,
-    setEpsId: handleCambiarEps,
-    handleCambiarEps,
-    epsActual,
-    ipsId,
-    setIpsId: handleCambiarIps,
-    handleCambiarIps,
-    ipsActual,
-    ipsDisponibles,
-    portafolios,
-    categorias,
-    portafolioId,
-    setPortafolioId,
-    categoriaFiltro,
-    setCategoriaFiltro,
-    serviciosSeleccionados,
-    serviciosFiltrados,
-    clausulaTransporte,
-    setClausulaTransporte,
-    notificacion,
-    cargando,
-    handleToggleServicio,
-    handleSeleccionarTodosCategoria,
-    handleDeseleccionarCategoria,
-    handleRestablecer,
-    handleSubmit,
-    handleEliminarConvenio
+    convenios, epsId, epsDisponibles, handleCambiarEps, epsActual, ipsId, handleCambiarIps,
+    ipsActual, ipsDisponibles, categorias, categoriaFiltro, setCategoriaFiltro,
+    serviciosSeleccionados, serviciosFiltrados, convenioEditando: Boolean(convenioEditandoId),
+    convenioEditandoId, notificacion, cargando, handleToggleServicio,
+    handleSeleccionarTodosCategoria, handleDeseleccionarCategoria, handleRestablecer,
+    handleCancelarEdicion, handleEditarConvenio, handleSubmit, handleEliminarConvenio
   };
 }

@@ -5,9 +5,12 @@ import * as sesionesTarjeta from '../repositories/sesionesTarjeta.js';
 import { tunjaRequest } from '../services/tunjaApi.js';
 import { listarConvenios } from '../repositories/administracion.js';
 import { IPS_CATALOGO, SERVICIOS_POR_CATEGORIA } from '../config/convenios.js';
-import { tarifaBaseCita as costoCita } from '../config/tarifasCitas.js';
+import { duracionPorServicio, tarifaPorServicio } from '../config/tarifasCitas.js';
 
-const horarios = ['08:00', '09:30', '11:00', '12:30', '14:00', '15:30', '17:00', '17:30'];
+const horarios = Array.from({ length: 18 }, (_, indice) => {
+  const minutos = indice < 10 ? 8 * 60 + indice * 30 : 14 * 60 + (indice - 10) * 30;
+  return `${String(Math.floor(minutos / 60)).padStart(2, '0')}:${String(minutos % 60).padStart(2, '0')}`;
+});
 const anticipacionMinima = 24 * 60 * 60 * 1000;
 const aliasIps = new Map([
   ['ese-san-antonio', 'santiago-tunja'],
@@ -16,8 +19,7 @@ const aliasIps = new Map([
 ]);
 const idsServicioAnteriores = new Map([['cardio', 'srv-cardiologia'], ['radio', 'srv-rayos-x']]);
 const ipsCatalogo = new Map(IPS_CATALOGO.map((ips) => [aliasIps.get(ips.id) || ips.id, ips]));
-const serviciosCatalogo = new Map(SERVICIOS_POR_CATEGORIA.map(({ id, nombre }) => [id, nombre]));
-const modalidadesPermitidas = new Set(['presencial', 'telemedicina']);
+const serviciosCatalogo = new Map(SERVICIOS_POR_CATEGORIA.map((servicio) => [servicio.id, servicio]));
 const duracionSesionTarjetaMs = 15 * 60 * 1000;
 const condicionMismaEpsCita = `(
   lower(trim(u.eps)) = lower(trim(?)) OR
@@ -25,6 +27,44 @@ const condicionMismaEpsCita = `(
   lower(trim(replace(lower(u.eps), 'eps ', ''))) =
     lower(trim(replace(lower(?), 'eps ', '')))
 )`;
+
+function servicioPublico(id) {
+  const servicio = serviciosCatalogo.get(id);
+  if (!servicio) return { id, nombre: id, categoria: 'consultas', costo: 65000, duracionMinutos: 30 };
+  return {
+    id,
+    nombre: servicio.nombre,
+    categoria: servicio.categoria,
+    costo: tarifaPorServicio(servicio),
+    duracionMinutos: duracionPorServicio(servicio)
+  };
+}
+
+function minutosDelDia(hora) {
+  const [horas, minutos] = hora.split(':').map(Number);
+  return horas * 60 + minutos;
+}
+
+function generarHorarios(duracion) {
+  const tramos = [[8 * 60, 13 * 60], [14 * 60, 18 * 60]];
+  return tramos.flatMap(([inicio, cierre]) => {
+    const resultado = [];
+    for (let minuto = inicio; minuto + duracion <= cierre; minuto += duracion) {
+      resultado.push(`${String(Math.floor(minuto / 60)).padStart(2, '0')}:${String(minuto % 60).padStart(2, '0')}`);
+    }
+    return resultado;
+  });
+}
+
+function hayCruce(hora, duracion, citasExistentes) {
+  const inicio = minutosDelDia(hora);
+  return citasExistentes.some((cita) => {
+    const servicioExistente = SERVICIOS_POR_CATEGORIA.find(({ nombre }) => nombre === cita.servicio);
+    const duracionExistente = servicioExistente ? duracionPorServicio(servicioExistente) : 90;
+    const inicioExistente = minutosDelDia(cita.hora);
+    return inicio < inicioExistente + duracionExistente && inicioExistente < inicio + duracion;
+  });
+}
 
 function responderError(res, status, error, mensaje) {
   return res.status(status).json({ error, mensaje });
@@ -44,6 +84,11 @@ function textoValido(valor, maximo) {
     valor.trim().length <= maximo;
 }
 
+function normalizarEps(valor) {
+  return String(valor || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .toLocaleLowerCase('es').replace(/\beps\b/g, '').replace(/[^a-z0-9]/g, '');
+}
+
 function fechaHoyColombia() {
   return new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString().slice(0, 10);
 }
@@ -56,9 +101,11 @@ async function obtenerIpsEnConvenio(eps, { usarCatalogoBase = false } = {}) {
   if (!eps) return [];
   const convenios = await listarConvenios(eps);
   if (usarCatalogoBase && convenios.length === 0) {
-    return [...ipsCatalogo].map(([id, { nombre, sede, servicios }]) => ({
+    return [...ipsCatalogo].filter(([, ips]) =>
+      ips.eps?.some((epsIps) => normalizarEps(epsIps) === normalizarEps(eps))
+    ).map(([id, { nombre, sede, servicios }]) => ({
       id, nombre, sede,
-      servicios: servicios.map((idServicio) => ({ id: idServicio, nombre: serviciosCatalogo.get(idServicio) }))
+      servicios: servicios.map(servicioPublico)
     }));
   }
   const ipsPorId = new Map();
@@ -70,9 +117,7 @@ async function obtenerIpsEnConvenio(eps, { usarCatalogoBase = false } = {}) {
     };
     for (const servicio of convenio.serviciosSeleccionados) {
       const servicioId = idsServicioAnteriores.get(servicio) || servicio;
-      ips.servicios.set(servicioId, {
-        id: servicioId, nombre: serviciosCatalogo.get(servicioId) || servicioId
-      });
+      ips.servicios.set(servicioId, servicioPublico(servicioId));
     }
     if (ips.servicios.size) ipsPorId.set(id, ips);
   }
@@ -203,33 +248,40 @@ export async function autenticarUsuarioTunja(req, res, next) {
 
 export async function obtenerDisponibilidad(req, res) {
   const { ips, fecha } = req.query;
-  if (typeof ips !== 'string' || !fechaValida(fecha) || fecha < fechaHoyColombia()) {
+  const servicioId = idsServicioAnteriores.get(req.query.servicio) || req.query.servicio;
+  const servicio = serviciosCatalogo.get(servicioId);
+  if (typeof ips !== 'string' || !servicio || !fechaValida(fecha) || fecha < fechaHoyColombia()) {
     return responderError(res, 400, 'datos_invalidos', 'Selecciona una IPS y una fecha válida a partir de hoy.');
   }
 
   try {
     const opciones = await obtenerIpsEnConvenio(req.usuarioCitas.eps, { usarCatalogoBase: true });
-    if (!opciones.some((opcion) => opcion.id === ips)) {
+    const ipsSeleccionada = opciones.find((opcion) => opcion.id === ips);
+    if (!ipsSeleccionada) {
       return responderError(res, 400, 'ips_sin_convenio', 'Selecciona una IPS disponible para tu EPS.');
+    }
+    if (!ipsSeleccionada.servicios.some(({ id }) => id === servicioId)) {
+      return responderError(res, 400, 'servicio_sin_convenio', 'Ese servicio no estÃ¡ disponible en la IPS seleccionada para tu EPS.');
     }
     const ocupadas = await ejecutar(
       'all',
-      `SELECT hora FROM citas
+      `SELECT hora, servicio FROM citas
        WHERE ips = ? AND fecha = ? AND estado = 'confirmada'`,
       [ips, fecha]
     );
-    const horasOcupadas = new Set(ocupadas.map((cita) => cita.hora));
     const ahora = Date.now();
-    const datos = horarios.map((hora) => {
-      const disponible = !horasOcupadas.has(hora) && instanteCita(fecha, hora) >= ahora + anticipacionMinima;
+    const duracion = duracionPorServicio(servicio);
+    const datos = generarHorarios(duracion).map((hora) => {
+      const ocupada = hayCruce(hora, duracion, ocupadas);
+      const disponible = !ocupada && instanteCita(fecha, hora) >= ahora + anticipacionMinima;
       return {
         hora,
         disponible,
-        estado: horasOcupadas.has(hora) ? 'ocupado' : disponible ? 'disponible' : 'no_disponible'
+        estado: ocupada ? 'ocupado' : disponible ? 'disponible' : 'no_disponible'
       };
     });
 
-    return res.status(200).json({ ips, fecha, horarios: datos });
+    return res.status(200).json({ ips, servicio: servicioId, duracionMinutos: duracion, fecha, horarios: datos });
   } catch (error) {
     console.error('Error al consultar disponibilidad de citas:', error.code || 'ERROR_INTERNO');
     return responderError(res, 500, 'error_interno', 'No fue posible consultar la disponibilidad.');
@@ -431,11 +483,13 @@ export async function cancelarCitaAdministrador(req, res) {
 }
 
 export async function crearCita(req, res) {
-  const { ips, servicio, fecha, hora, modalidad = 'presencial' } = req.body || {};
+  const { ips, servicio, fecha, hora } = req.body || {};
+  const servicioId = idsServicioAnteriores.get(servicio) || servicio;
+  const servicioInfo = serviciosCatalogo.get(servicioId);
 
   if (!textoValido(ips, 100) || !textoValido(servicio, 100) || !fechaValida(fecha) ||
-      !horarios.includes(hora) || !modalidadesPermitidas.has(modalidad)) {
-    return responderError(res, 400, 'datos_invalidos', 'Revisa la IPS, el servicio, la fecha, el horario y la modalidad.');
+      !servicioInfo || !generarHorarios(duracionPorServicio(servicioInfo)).includes(hora)) {
+    return responderError(res, 400, 'datos_invalidos', 'Revisa el servicio, la IPS, la fecha y el horario.');
   }
   if (instanteCita(fecha, hora) - Date.now() < anticipacionMinima) {
     return responderError(res, 400, 'anticipacion_insuficiente', 'Agenda con al menos 24 horas de anticipación.');
@@ -444,11 +498,18 @@ export async function crearCita(req, res) {
   try {
     const opciones = await obtenerIpsEnConvenio(req.usuarioCitas.eps, { usarCatalogoBase: true });
     const ipsSeleccionada = opciones.find((opcion) => opcion.id === ips);
-    const servicioId = idsServicioAnteriores.get(servicio) || servicio;
     const servicioSeleccionado = ipsSeleccionada?.servicios.find((opcion) => opcion.id === servicioId);
     if (!servicioSeleccionado) {
       return responderError(res, 400, 'servicio_sin_convenio', 'Selecciona un servicio disponible en esa IPS para tu EPS.');
     }
+    const existentes = await ejecutar('all',
+      `SELECT hora, servicio FROM citas WHERE ips = ? AND fecha = ? AND estado = 'confirmada'`,
+      [ips, fecha]
+    );
+    if (hayCruce(hora, duracionPorServicio(servicioInfo), existentes)) {
+      return responderError(res, 409, 'horario_no_disponible', 'Ese horario acaba de ser ocupado. Selecciona otro.');
+    }
+    const costoCita = tarifaPorServicio(servicioInfo);
     const descuentoAplicado = Math.round(costoCita * req.usuarioCitas.descuento / 100);
     const codigoCita = `CITA-${new Date().getFullYear()}-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
     const { lastID } = await ejecutar(
@@ -465,7 +526,7 @@ export async function crearCita(req, res) {
         servicioSeleccionado.nombre,
         fecha,
         hora,
-        modalidad,
+        'presencial',
         costoCita,
         descuentoAplicado
       ]

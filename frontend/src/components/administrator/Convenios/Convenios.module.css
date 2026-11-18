@@ -450,6 +450,31 @@
   transition: background-color 160ms ease, color 160ms ease, transform 160ms ease;
 }
 
+.accionesConvenio {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.btnEditar {
+  min-height: 38px;
+  padding: 8px 12px;
+  border: 1px solid var(--color-primary);
+  border-radius: 9px;
+  background: var(--hover-secundary);
+  color: var(--color-primary);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btnEditar[aria-pressed="true"] {
+  background: var(--color-primary);
+  color: #fff;
+}
+
 .btnRestablecer {
   border-color: var(--color-border);
   background: var(--color-bg);
@@ -494,7 +519,7 @@
 
 .tablaConvenios {
   width: 100%;
-  min-width: 1050px;
+  min-width: 820px;
   border-collapse: separate;
   border-spacing: 0;
   color: var(--color-text);

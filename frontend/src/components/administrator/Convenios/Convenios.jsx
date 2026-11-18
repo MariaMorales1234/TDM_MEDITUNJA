@@ -13,27 +13,25 @@ function Convenios() {
     epsId,
     epsDisponibles,
     handleCambiarEps,
-    epsActual,
     ipsId,
     handleCambiarIps,
     ipsActual,
     ipsDisponibles,
-    portafolios,
     categorias,
-    portafolioId,
-    setPortafolioId,
     categoriaFiltro,
     setCategoriaFiltro,
     serviciosSeleccionados,
     serviciosFiltrados,
-    clausulaTransporte,
-    setClausulaTransporte,
+    convenioEditando,
+    convenioEditandoId,
     notificacion,
     cargando,
     handleToggleServicio,
     handleSeleccionarTodosCategoria,
     handleDeseleccionarCategoria,
     handleRestablecer,
+    handleCancelarEdicion,
+    handleEditarConvenio,
     handleSubmit,
     handleEliminarConvenio
   } = useConvenios();
@@ -64,21 +62,17 @@ function Convenios() {
           epsId={epsId}
           epsCatalogo={epsDisponibles}
           setEpsId={handleCambiarEps}
-          epsActual={epsActual}
           ipsId={ipsId}
           setIpsId={handleCambiarIps}
           ipsActual={ipsActual}
           ipsDisponibles={ipsDisponibles}
-          portafolios={portafolios}
           categorias={categorias}
-          portafolioId={portafolioId}
-          setPortafolioId={setPortafolioId}
           categoriaFiltro={categoriaFiltro}
           setCategoriaFiltro={setCategoriaFiltro}
           serviciosSeleccionados={serviciosSeleccionados}
           serviciosFiltrados={serviciosFiltrados}
-          clausulaTransporte={clausulaTransporte}
-          setClausulaTransporte={setClausulaTransporte}
+          convenioEditando={convenioEditando}
+          onCancelarEdicion={handleCancelarEdicion}
           onToggleServicio={handleToggleServicio}
           onSeleccionarTodosCategoria={handleSeleccionarTodosCategoria}
           onDeseleccionarCategoria={handleDeseleccionarCategoria}
@@ -90,6 +84,8 @@ function Convenios() {
         <ListaConvenios
           convenios={convenios}
           onEliminarConvenio={handleEliminarConvenio}
+          onEditarConvenio={handleEditarConvenio}
+          convenioEditandoId={convenioEditandoId}
         />
       </div>
     </div>

@@ -15,6 +15,7 @@ import {
   actualizarAfiliado,
   actualizarEstadoAfiliado,
   actualizarEstadoSolicitudAfiliacion,
+  actualizarConvenio,
   crearConvenio,
   descargarComprobanteAfiliacion,
   desactivarConvenio,
@@ -170,6 +171,7 @@ router.put('/admin/afiliados/:id', exigirAdministrador, actualizarAfiliado);
 router.put('/admin/afiliados/:id/estado', exigirAdministrador, actualizarEstadoAfiliado);
 router.get('/admin/convenios', exigirAdministrador, listarConvenios);
 router.post('/admin/convenios', exigirAdministrador, crearConvenio);
+router.put('/admin/convenios/:id', exigirAdministrador, actualizarConvenio);
 router.put('/admin/convenios/:id/desactivar', exigirAdministrador, desactivarConvenio);
 router.get('/admin/resultados', exigirAdministrador, listarResultadosAdministrador);
 router.get('/admin/resultados/afiliados', exigirAdministrador, listarAfiliadosResultados);

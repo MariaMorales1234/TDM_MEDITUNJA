@@ -56,6 +56,16 @@ export async function crearConvenio(convenio) {
   );
 }
 
+export async function actualizarServiciosConvenio(eps, id, servicios) {
+  return ejecutar(
+    'run',
+    `UPDATE convenios
+     SET servicios_seleccionados = ?, clausula_transporte = 1, estado = 'Activo'
+     WHERE id = ? AND ${condicionMismaEps}`,
+    [JSON.stringify(servicios), id, eps, eps, eps]
+  );
+}
+
 export async function desactivarConvenio(eps, id) {
   return ejecutar(
     'run',

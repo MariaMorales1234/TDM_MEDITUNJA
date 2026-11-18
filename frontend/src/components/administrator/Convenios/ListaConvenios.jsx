@@ -4,7 +4,7 @@
 
 import styles from "./Convenios.module.css";
 
-function ListaConvenios({ convenios, onEliminarConvenio }) {
+function ListaConvenios({ convenios, onEliminarConvenio, onEditarConvenio, convenioEditandoId }) {
   return (
     <section className={styles.seccionListado}>
       <h3 className={styles.tituloSeccion}>
@@ -18,11 +18,8 @@ function ListaConvenios({ convenios, onEliminarConvenio }) {
         <table className={styles.tablaConvenios} aria-label="Tabla de convenios vigentes">
           <thead>
             <tr>
-              <th>Código</th>
-              <th>EPS Gestora</th>
               <th>Prestador (IPS)</th>
               <th>Sede y Dirección IPS</th>
-              <th>Portafolio Pactado</th>
               <th>Servicios</th>
               <th>Transporte Preferencial</th>
               <th>Estado</th>
@@ -33,30 +30,19 @@ function ListaConvenios({ convenios, onEliminarConvenio }) {
           <tbody>
             {convenios.length === 0 ? (
               <tr>
-                <td colSpan="10" className={styles.mensajeVacio}>
+                <td colSpan="7" className={styles.mensajeVacio}>
                   No hay convenios registrados actualmente.
                 </td>
               </tr>
             ) : (
               convenios.map((c) => (
                 <tr key={c.id}>
-                  <td><strong>{c.id}</strong></td>
-                  <td>
-                    <strong>{c.epsNombre || "EPS Tunja"}</strong>
-                    {c.epsSede && (
-                      <>
-                        <br />
-                        <small style={{ color: "#718096" }}>{c.epsSede}</small>
-                      </>
-                    )}
-                  </td>
                   <td>{c.ipsNombre}</td>
                   <td>
                     <strong>{c.ipsSede || "Sede no especificada"}</strong>
                     <br />
                     <small style={{ color: "#718096" }}>{c.ipsDireccion || "Dirección no disponible"}</small>
                   </td>
-                  <td>{c.portafolioNombre}</td>
                   <td>
                     <span>{c.serviciosSeleccionados.length} autorizados</span>
                   </td>
@@ -84,18 +70,26 @@ function ListaConvenios({ convenios, onEliminarConvenio }) {
                   </td>
                   <td>{c.fechaCreacion}</td>
                   <td>
-                    {c.estado === "Activo" ? (
+                    <div className={styles.accionesConvenio}>
                       <button
                         type="button"
-                        className={styles.btnDesactivar}
-                        onClick={() => onEliminarConvenio(c.id)}
-                        title="Desactivar convenio"
+                        className={styles.btnEditar}
+                        onClick={() => onEditarConvenio(c)}
+                        aria-pressed={convenioEditandoId === c.id}
                       >
-                        Desactivar
+                        Editar
                       </button>
-                    ) : (
-                      <span>Desactivado</span>
-                    )}
+                      {c.estado === "Activo" ? (
+                        <button
+                          type="button"
+                          className={styles.btnDesactivar}
+                          onClick={() => onEliminarConvenio(c.id)}
+                          title="Desactivar convenio"
+                        >
+                          Desactivar
+                        </button>
+                      ) : <span>Desactivado</span>}
+                    </div>
                   </td>
                 </tr>
               ))

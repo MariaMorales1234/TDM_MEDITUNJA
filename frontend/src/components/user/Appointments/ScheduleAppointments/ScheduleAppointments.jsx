@@ -12,14 +12,13 @@ function ScheduleAppointment() {
     const [ips, setIps] = useState("");
     const [servicio, setServicio] = useState("");
     const [fecha, setFecha] = useState("");
-    const [modalidad, setModalidad] = useState("presencial");
     const [hora, setHora] = useState("");
     const [disponibilidad, setDisponibilidad] = useState({ clave: "", horarios: [], error: "" });
     const [enviando, setEnviando] = useState(false);
     const [error, setError] = useState("");
     const [actualizacion, setActualizacion] = useState(0);
-    const claveDisponibilidad = fecha && ips
-        ? `${sesion?.accessToken}|${ips}|${fecha}|${actualizacion}`
+    const claveDisponibilidad = fecha && ips && servicio
+        ? `${sesion?.accessToken}|${ips}|${servicio}|${fecha}|${actualizacion}`
         : "";
     const cargandoHorarios = Boolean(claveDisponibilidad) &&
         disponibilidad.clave !== claveDisponibilidad;
@@ -46,7 +45,7 @@ function ScheduleAppointment() {
         let activa = true;
         if (!sesion?.accessToken || !claveDisponibilidad) return undefined;
 
-        apiRequest(`/citas/disponibilidad?ips=${encodeURIComponent(ips)}&fecha=${encodeURIComponent(fecha)}`, {
+        apiRequest(`/citas/disponibilidad?ips=${encodeURIComponent(ips)}&servicio=${encodeURIComponent(servicio)}&fecha=${encodeURIComponent(fecha)}`, {
             headers: { Authorization: `Bearer ${sesion.accessToken}` },
         }).then((respuesta) => {
             if (activa) setDisponibilidad({
@@ -65,7 +64,7 @@ function ScheduleAppointment() {
         return () => {
             activa = false;
         };
-    }, [sesion?.accessToken, ips, fecha, actualizacion, claveDisponibilidad]);
+    }, [sesion?.accessToken, ips, servicio, fecha, actualizacion, claveDisponibilidad]);
 
     async function confirmarCita(event) {
         event.preventDefault();
@@ -77,7 +76,7 @@ function ScheduleAppointment() {
             const respuesta = await apiRequest("/citas", {
                 method: "POST",
                 headers: { Authorization: `Bearer ${sesion.accessToken}` },
-                body: JSON.stringify({ ips, servicio, fecha, hora, modalidad }),
+                body: JSON.stringify({ ips, servicio, fecha, hora }),
             });
             window.dispatchEvent(new Event("citas-actualizadas"));
             navigate(`/transporte?cita=${respuesta.cita.id_cita}`);
@@ -89,11 +88,18 @@ function ScheduleAppointment() {
         }
     }
 
-    const ipsDisponibles = catalogo?.data || [];
+    const ipsPorAfiliacion = catalogo?.data || [];
+    const serviciosDisponibles = [...new Map(
+        ipsPorAfiliacion.flatMap((opcion) => opcion.servicios).map((opcion) => [opcion.id, opcion])
+    ).values()];
+    const ipsDisponibles = servicio
+        ? ipsPorAfiliacion.filter((opcion) => opcion.servicios.some((item) => item.id === servicio))
+        : [];
     const ipsSeleccionada = ipsDisponibles.find((opcion) => opcion.id === ips);
     const ipsNombre = ipsSeleccionada?.nombre;
-    const serviciosDisponibles = ipsSeleccionada?.servicios || [];
-    const servicioNombre = serviciosDisponibles.find((opcion) => opcion.id === servicio)?.nombre;
+    const servicioSeleccionado = serviciosDisponibles.find((opcion) => opcion.id === servicio);
+    const servicioNombre = servicioSeleccionado?.nombre;
+    const formatoPesos = new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 });
 
     return (
         <div className={styles.appointmentContainer}>
@@ -103,28 +109,32 @@ function ScheduleAppointment() {
                         <h3><span className={styles.Number}>1</span>Información de la cita</h3>
                         {errorCatalogo && <p role="alert">{errorCatalogo}</p>}
                         {!catalogo && !errorCatalogo && <p role="status">Consultando convenios de tu EPS…</p>}
-                        {catalogo && !ipsDisponibles.length && <p>No hay servicios en convenios activos de tu EPS.</p>}
+                        {catalogo && !ipsPorAfiliacion.length && <p>No hay servicios en convenios activos de tu EPS.</p>}
                         <div className={styles.formGrid}>
                             <div className={styles.formGroup}>
-                                <label htmlFor="ips">IPS</label>
-                                <select id="ips" value={ips} onChange={(event) => {
-                                    setIps(event.target.value);
-                                    setServicio("");
+                                <label htmlFor="especialidad">Servicio que necesitas</label>
+                                <select id="especialidad" value={servicio} onChange={(event) => {
+                                    setServicio(event.target.value);
+                                    setIps("");
                                     setHora("");
                                     setError("");
-                                }} required disabled={!ipsDisponibles.length}>
-                                    <option value="">Selecciona una IPS</option>
-                                    {ipsDisponibles.map((opcion) => (
-                                        <option key={opcion.id} value={opcion.id}>{opcion.nombre} · {opcion.sede}</option>
+                                }} required disabled={!serviciosDisponibles.length}>
+                                    <option value="">Selecciona un servicio</option>
+                                    {serviciosDisponibles.map((opcion) => (
+                                        <option key={opcion.id} value={opcion.id}>{opcion.nombre}</option>
                                     ))}
                                 </select>
                             </div>
                             <div className={styles.formGroup}>
-                                <label htmlFor="especialidad">Servicio</label>
-                                <select id="especialidad" value={servicio} onChange={(event) => setServicio(event.target.value)} required disabled={!ipsSeleccionada}>
-                                    <option value="">Selecciona un servicio</option>
-                                    {serviciosDisponibles.map((opcion) => (
-                                        <option key={opcion.id} value={opcion.id}>{opcion.nombre}</option>
+                                <label htmlFor="ips">Lugar de atención (IPS)</label>
+                                <select id="ips" value={ips} onChange={(event) => {
+                                    setIps(event.target.value);
+                                    setHora("");
+                                    setError("");
+                                }} required disabled={!servicio || !ipsDisponibles.length}>
+                                    <option value="">{servicio ? "Selecciona un lugar" : "Primero selecciona el servicio"}</option>
+                                    {ipsDisponibles.map((opcion) => (
+                                        <option key={opcion.id} value={opcion.id}>{opcion.nombre} · {opcion.sede}</option>
                                     ))}
                                 </select>
                             </div>
@@ -143,20 +153,13 @@ function ScheduleAppointment() {
                                     required
                                 />
                             </div>
-                            <div className={styles.formGroup}>
-                                <label htmlFor="modalidad">Modalidad</label>
-                                <select id="modalidad" value={modalidad} onChange={(event) => setModalidad(event.target.value)}>
-                                    <option value="presencial">Presencial</option>
-                                    <option value="telemedicina">Telemedicina</option>
-                                </select>
-                            </div>
                         </div>
                     </fieldset>
 
                     <fieldset>
                         <h3><span className={styles.Number}>2</span>Horarios disponibles</h3>
-                        <p>Las citas se agendan con al menos 24 horas de anticipación. Última cita del día: 5:30 p. m.</p>
-                        {(!ips || !fecha) && <p>Selecciona una IPS y una fecha para consultar los horarios.</p>}
+                        <p>Los horarios y la duración dependen del servicio elegido. Agenda con al menos 24 horas de anticipación.</p>
+                        {(!servicio || !ips || !fecha) && <p>Selecciona un servicio, un lugar de atención y una fecha para consultar los horarios.</p>}
                         {cargandoHorarios && <p role="status">Consultando disponibilidad...</p>}
                         {errorDisponibilidad && <p role="alert">{errorDisponibilidad}</p>}
                         {!cargandoHorarios && ips && fecha && !horarios.some((opcion) => opcion.disponible) && !errorDisponibilidad && (
@@ -186,12 +189,18 @@ function ScheduleAppointment() {
                 <div className={styles.summaryContainer}>
                     <h4>Resumen de tu cita</h4>
                     <span>{servicioNombre}</span>
+                    {servicioSeleccionado && (
+                        <div className={styles.summaryDetails}>
+                            <div><span>Atención</span><strong>Presencial</strong></div>
+                            <div><span>Duración estimada</span><strong>{servicioSeleccionado.duracionMinutos} minutos</strong></div>
+                            <div><span>Tarifa base</span><strong>{formatoPesos.format(servicioSeleccionado.costo)}</strong></div>
+                        </div>
+                    )}
                     <hr className={styles.divider} />
                     <div className={styles.summaryDetails}>
                         <div><span>IPS</span><strong>{ipsNombre}</strong></div>
                         <div><span>Fecha</span><strong>{fecha || "Selecciona una fecha"}</strong></div>
                         <div><span>Hora</span><strong>{hora || "Selecciona un horario"}</strong></div>
-                        <div><span>Modalidad</span><strong>{modalidad === "telemedicina" ? "Telemedicina" : "Presencial"}</strong></div>
                     </div>
                     <button
                         type="button"
