@@ -60,8 +60,7 @@
 .pasoSecuencia { min-height: 44px; }
 .enlacePasoSecuencia { min-height: 44px; }
 .pasoActivo,
-.pasoCompletado a,
-.enlacePasoSecuencia:hover {
+.pasoCompletado a {
   color: var(--transporte-enlace);
 }
 
@@ -160,10 +159,6 @@
   font-weight: 600;
   text-decoration: none;
   cursor: pointer;
-}
-
-.moduloTransporte a:hover {
-  text-decoration: underline;
 }
 
 .btnLimpiar,
