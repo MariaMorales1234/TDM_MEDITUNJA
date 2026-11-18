@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { apiRequest, mensajeError } from "../../../../auth/api.js";
 import { useAdminAuth } from "../../../../auth/useAdminAuth.js";
+import { nombreIpsComoEnMapa } from "../ipsNombresMapa.js";
 
 const catalogoVacio = { eps: [], ips: [], categorias: [], servicios: [] };
 const normalizar = (valor = "") => valor.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
@@ -49,7 +50,8 @@ export function useConvenios() {
     [epsDisponibles, epsId]);
   const ipsDisponibles = useMemo(() => ipsCatalogo.filter(({ eps }) =>
     eps.some((nombre) => mismaEps(nombre, epsActual?.nombre))
-  ), [ipsCatalogo, epsActual]);
+  ).sort((a, b) => nombreIpsComoEnMapa(a).localeCompare(nombreIpsComoEnMapa(b), "es", { sensitivity: "base" })),
+  [ipsCatalogo, epsActual]);
   const ipsActual = useMemo(() => ipsDisponibles.find((ips) => ips.id === ipsId) || null,
     [ipsDisponibles, ipsId]);
   const convenioActual = useMemo(() => {

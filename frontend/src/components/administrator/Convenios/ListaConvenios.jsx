@@ -6,6 +6,15 @@ import styles from "./Convenios.module.css";
 import { direccionIpsComoEnMapa, nombreIpsComoEnMapa } from "./ipsNombresMapa.js";
 
 function ListaConvenios({ convenios, onEliminarConvenio, onEditarConvenio, convenioEditandoId }) {
+  const conveniosOrdenados = [...convenios].sort((a, b) =>
+    nombreIpsComoEnMapa({ id: a.ipsId, nombre: a.ipsNombre, sede: a.ipsSede })
+      .localeCompare(
+        nombreIpsComoEnMapa({ id: b.ipsId, nombre: b.ipsNombre, sede: b.ipsSede }),
+        "es",
+        { sensitivity: "base" }
+      )
+  );
+
   return (
     <section className={styles.seccionListado}>
       <h3 className={styles.tituloSeccion}>
@@ -29,14 +38,14 @@ function ListaConvenios({ convenios, onEliminarConvenio, onEditarConvenio, conve
             </tr>
           </thead>
           <tbody>
-            {convenios.length === 0 ? (
+            {conveniosOrdenados.length === 0 ? (
               <tr>
                 <td colSpan="7" className={styles.mensajeVacio}>
                   No hay convenios registrados actualmente.
                 </td>
               </tr>
             ) : (
-              convenios.map((c) => (
+              conveniosOrdenados.map((c) => (
                 <tr key={c.id}>
                   <td>{nombreIpsComoEnMapa({ id: c.ipsId, nombre: c.ipsNombre, sede: c.ipsSede })}</td>
                   <td>
