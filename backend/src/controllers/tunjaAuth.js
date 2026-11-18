@@ -178,8 +178,7 @@ export async function registrarEnTunja(req, res) {
       (nombres !== undefined && (typeof nombres !== 'string' || !nombres.trim() || nombres.trim().length > 80)) ||
       (apellidos !== undefined && (typeof apellidos !== 'string' || !apellidos.trim() || apellidos.trim().length > 80)) ||
       (telefono !== undefined && telefono !== '' &&
-        (typeof telefono !== 'string' || telefono.length > 30 ||
-          !/^\+?[0-9\s()-]{7,30}$/.test(telefono.trim()))) ||
+        (typeof telefono !== 'string' || !/^\d{10}$/.test(telefono.trim()))) ||
       numeroDocumento.length === 0 || numeroDocumento.length > 40 ||
       (registroConTipoDocumento &&
         (!tiposDocumentoPermitidos.has(tipoDocumento) ||

@@ -194,7 +194,23 @@ function RegisterForm() {
                     </div>
                     <div className={styles.field}>
                         <label htmlFor="telefono-registro">Teléfono</label>
-                        <input type="tel" id="telefono-registro" name="telefono" autoComplete="tel" maxLength="30" pattern="\+?[0-9\s()-]{7,30}" placeholder="Ej.: 3185777316" />
+                        <input
+                            type="tel"
+                            id="telefono-registro"
+                            name="telefono"
+                            autoComplete="tel"
+                            inputMode="numeric"
+                            maxLength="10"
+                            pattern="[0-9]{10}"
+                            onChange={(evento) => {
+                                evento.target.value = evento.target.value.replace(/\D/g, "").slice(0, 10);
+                            }}
+                            placeholder="Ej.: 3185777316"
+                            aria-describedby="ayuda-telefono-registro"
+                        />
+                        <small className={styles.fieldHint} id="ayuda-telefono-registro">
+                            Ingresa 10 dígitos, sin espacios ni indicativo de país.
+                        </small>
                     </div>
                     <div className={styles.field}>
                         <label htmlFor="contrasena-registro">Contraseña</label>

@@ -38,9 +38,9 @@ export async function registrarUsuario(req, res) {
     return responderError(res, 400, 'Datos inválidos', 'Revisa los campos obligatorios y sus longitudes.');
   }
 
-  if (telefono !== undefined && telefono !== null &&
-      (typeof telefono !== 'string' || telefono.length > 30)) {
-    return responderError(res, 400, 'Datos inválidos', 'El teléfono debe ser texto de máximo 30 caracteres.');
+  if (telefono !== undefined && telefono !== null && telefono !== '' &&
+      (typeof telefono !== 'string' || !/^\d{10}$/.test(telefono.trim()))) {
+    return responderError(res, 400, 'Datos inválidos', 'El teléfono debe tener exactamente 10 dígitos.');
   }
 
   if ((fecha_nacimiento !== undefined && fecha_nacimiento !== null &&
@@ -67,7 +67,7 @@ export async function registrarUsuario(req, res) {
   if (!tiposDocumentoPermitidos.has(tipoDocumento) ||
       !documentoValido ||
       !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo) ||
-      (telefonoNormalizado && !/^\+?[0-9\s()-]{7,30}$/.test(telefonoNormalizado))) {
+      (telefonoNormalizado && !/^\d{10}$/.test(telefonoNormalizado))) {
     return responderError(res, 400, 'Datos inválidos', 'Revisa el tipo y número de documento, correo y teléfono.');
   }
 
