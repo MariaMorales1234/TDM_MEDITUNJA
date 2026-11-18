@@ -247,12 +247,22 @@ export async function descargarComprobanteAfiliacion(req, res) {
 export async function listarConvenios(req, res) {
   try {
     const data = await administracion.listarConvenios(req.usuario.eps);
+    const ipsPorId = new Map(IPS_CATALOGO.map((ips) => [ips.id, ips]));
+    const conveniosNormalizados = data.map((convenio) => {
+      const ips = ipsPorId.get(convenio.ipsId);
+      return ips ? {
+        ...convenio,
+        ipsNombre: ips.nombre,
+        ipsSede: ips.sede,
+        ipsDireccion: ips.direccion
+      } : convenio;
+    });
     const epsUnicas = EPS_CATALOGO.filter(({ nombre }, indice, lista) =>
       mismaEps(nombre, req.usuario.eps) &&
       lista.findIndex((opcion) => mismaEps(opcion.nombre, nombre)) === indice
     );
     return res.status(200).json({
-      data,
+      data: conveniosNormalizados,
       catalogo: {
         eps: epsUnicas,
         ips: IPS_CATALOGO,

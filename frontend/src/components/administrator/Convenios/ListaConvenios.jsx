@@ -3,6 +3,7 @@
 // Maquetación limpia en HTML semántico dentro de JSX
 
 import styles from "./Convenios.module.css";
+import { direccionIpsComoEnMapa, nombreIpsComoEnMapa } from "./ipsNombresMapa.js";
 
 function ListaConvenios({ convenios, onEliminarConvenio, onEditarConvenio, convenioEditandoId }) {
   return (
@@ -37,9 +38,9 @@ function ListaConvenios({ convenios, onEliminarConvenio, onEditarConvenio, conve
             ) : (
               convenios.map((c) => (
                 <tr key={c.id}>
-                  <td>{c.ipsNombre}{c.ipsSede ? ` - ${c.ipsSede}` : ""}</td>
+                  <td>{nombreIpsComoEnMapa({ id: c.ipsId, nombre: c.ipsNombre, sede: c.ipsSede })}</td>
                   <td>
-                    <small style={{ color: "#718096" }}>{c.ipsDireccion || "Dirección no disponible"}</small>
+                    <small style={{ color: "#718096" }}>{direccionIpsComoEnMapa({ id: c.ipsId, direccion: c.ipsDireccion })}</small>
                   </td>
                   <td>
                     <span>{c.serviciosSeleccionados.length} autorizados</span>

@@ -72,19 +72,19 @@ const SERVICIOS_ADMIN_NUEVA_EPS = [
 ];
 
 export const IPS_CATALOGO = [
-  { id: "san-rafael", nombre: "Hospital Universitario San Rafael de Tunja", sede: "Sede Principal", direccion: "Carrera 11 # 27-27, Tunja", eps: TODAS_LAS_EPS, servicios: SERVICIOS_SAN_RAFA_PRINCIPAL },
-  { id: "san-rafael-colon", nombre: "Hospital Universitario San Rafael de Tunja", sede: "Sede Edificio Colón", direccion: "Avenida Colón # 27-87, Tunja", eps: TODAS_LAS_EPS, servicios: SERVICIOS_SAN_RAFA_COLON },
-  { id: "san-rafael-materno", nombre: "Hospital Universitario San Rafael", sede: "Sede Unidad Materno Infantil Maria Josefa Canelones", direccion: "Avenida Universitaria, Tunja", eps: TODAS_LAS_EPS, servicios: SERVICIOS_SAN_RAFA_MATERNO },
-  { id: "ese-san-antonio", nombre: "E.S.E. Santiago de Tunja", sede: "", direccion: "Barrio San Antonio, Tunja", eps: TODAS_LAS_EPS, servicios: SERVICIOS_ESE_SANTIAGO },
-  { id: "medilaser", nombre: "Clínica Medilaser", sede: "", direccion: "Carrera 1F # 39-76, Tunja", eps: TODAS_LAS_EPS, servicios: SERVICIOS_MEDILASER },
-  { id: "los-andes", nombre: "Clínica Los Andes", sede: "", direccion: "Transversal 11 # 30-61, Tunja", eps: TODAS_LAS_EPS, servicios: SERVICIOS_LOS_ANDES },
-  { id: "clinica-chia", nombre: "Clínica de Chía S.A.", sede: "", direccion: "Sector Pozo Donato, Tunja", eps: ["Nueva EPS", "Famisanar", "Sanitas", "Salud Total"], servicios: SERVICIOS_CHIA },
-  { id: "centro-colsubsidio", nombre: "Centro Médico Colsubsidio", sede: "", direccion: "Tunja", eps: TODAS_LAS_EPS, servicios: SERVICIOS_COLSUBSIDIO },
-  { id: "centro-sanitas", nombre: "Centro Médico Sanitas", sede: "", direccion: "Tunja", eps: ["Nueva EPS", "Famisanar", "Sanitas"], servicios: SERVICIOS_SANITAS },
-  { id: "centro-sura", nombre: "Centro Médico Sura", sede: "", direccion: "Tunja", eps: ["Nueva EPS", "Famisanar", "SURA"], servicios: SERVICIOS_SURA },
-  { id: "sireb", nombre: "SIREB - Servicios Integrales de Rehabilitación en Boyacá", sede: "", direccion: "Tunja", eps: TODAS_LAS_EPS, servicios: SERVICIOS_SIREB },
-  { id: "nueva-eps-pozo", nombre: "Nueva EPS - Sede Pozo Donato", sede: "", direccion: "Sector Pozo de Donato, Tunja", eps: ["Nueva EPS"], servicios: SERVICIOS_ADMIN_NUEVA_EPS },
-  { id: "nueva-eps-centro", nombre: "Nueva EPS - Sede Centro Histórico", sede: "", direccion: "Centro Histórico, Tunja", eps: ["Nueva EPS"], servicios: SERVICIOS_ADMIN_NUEVA_EPS }
+  { id: "san-rafael", nombre: "Hospital Universitario San Rafael de Tunja", sede: "Sede Principal", direccion: "Carrera 11 # 27-27", eps: TODAS_LAS_EPS, servicios: SERVICIOS_SAN_RAFA_PRINCIPAL },
+  { id: "san-rafael-colon", nombre: "Hospital Universitario San Rafael de Tunja", sede: "Sede Edificio Colón", direccion: "Av. Colon, 27-87", eps: TODAS_LAS_EPS, servicios: SERVICIOS_SAN_RAFA_COLON },
+  { id: "san-rafael-materno", nombre: "Hospital Universitario San Rafael", sede: "Sede Unidad Materno Infantil Maria Josefa Canelones", direccion: "Av. Universitaria No. 51-60", eps: TODAS_LAS_EPS, servicios: SERVICIOS_SAN_RAFA_MATERNO },
+  { id: "ese-san-antonio", nombre: "E.S.E. Santiago de Tunja", sede: "", direccion: "Calle 16 N.\u00b0 9-41", eps: TODAS_LAS_EPS, servicios: SERVICIOS_ESE_SANTIAGO },
+  { id: "medilaser", nombre: "Clínica Medilaser", sede: "", direccion: "Carrera 2 Este # 67b-90", eps: TODAS_LAS_EPS, servicios: SERVICIOS_MEDILASER },
+  { id: "los-andes", nombre: "Clínica Los Andes", sede: "", direccion: "Transversal 11 # 30-61", eps: TODAS_LAS_EPS, servicios: SERVICIOS_LOS_ANDES },
+  { id: "clinica-chia", nombre: "Clínica de Chía S.A.", sede: "", direccion: "Carrera 1A # 46-08", eps: ["Nueva EPS", "Famisanar", "Sanitas", "Salud Total"], servicios: SERVICIOS_CHIA },
+  { id: "centro-colsubsidio", nombre: "Centro Médico Colsubsidio", sede: "", direccion: "Diagonal 38 #12-192", eps: TODAS_LAS_EPS, servicios: SERVICIOS_COLSUBSIDIO },
+  { id: "centro-sanitas", nombre: "Centro Médico Sanitas", sede: "", direccion: "Diagonal 38 # 12-160", eps: ["Nueva EPS", "Famisanar", "Sanitas"], servicios: SERVICIOS_SANITAS },
+  { id: "centro-sura", nombre: "Centro Médico Sura", sede: "", direccion: "Cra. 6 # 44-22", eps: ["Nueva EPS", "Famisanar", "SURA"], servicios: SERVICIOS_SURA },
+  { id: "sireb", nombre: "SIREB - Servicios Integrales de Rehabilitación en Boyacá", sede: "", direccion: "Cra. 11 #28-84", eps: TODAS_LAS_EPS, servicios: SERVICIOS_SIREB },
+  { id: "nueva-eps-pozo", nombre: "Nueva EPS - Sede Pozo Donato", sede: "", direccion: "Cra 7 #44-57", eps: ["Nueva EPS"], servicios: SERVICIOS_ADMIN_NUEVA_EPS },
+  { id: "nueva-eps-centro", nombre: "Nueva EPS - Sede Centro Histórico", sede: "", direccion: "Carrera 9 #24-93", eps: ["Nueva EPS"], servicios: SERVICIOS_ADMIN_NUEVA_EPS }
 ];
 
 // 2. Catálogo de Entidades Promotoras de Salud (EPS - Oficinas de Atención en Tunja)

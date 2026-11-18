@@ -296,9 +296,9 @@ function sembrarConveniosBase() {
             .filter(([, destino]) => destino === ips.id)
             .map(([alias]) => alias)];
           await new Promise((resolveActualizacion, rejectActualizacion) => {
-            db.run(`UPDATE convenios SET ips_nombre = ?, ips_sede = ?
+            db.run(`UPDATE convenios SET ips_nombre = ?, ips_sede = ?, ips_direccion = ?
               WHERE ips_id IN (${idsIps.map(() => '?').join(', ')})`,
-            [ips.nombre, ips.sede, ...idsIps], (fallo) =>
+            [ips.nombre, ips.sede, ips.direccion, ...idsIps], (fallo) =>
               fallo ? rejectActualizacion(fallo) : resolveActualizacion()
             );
           });
