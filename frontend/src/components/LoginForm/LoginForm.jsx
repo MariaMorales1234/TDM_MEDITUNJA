@@ -283,7 +283,7 @@ function LoginForm() {
                             {tipoDocumento === "PAS"
                                 ? "Dos letras al inicio seguidas de 6 números (ej.: AB123456)."
                                 : tipoDocumento === "NIT"
-                                    ? "9 números, guion y dígito de verificación (ej.: 900156264-2)."
+                                    ? "Formato: 9 dígitos, guion y dígito de verificación (ej.: 123456789-0)."
                                     : "Solo números, máximo 10 dígitos."}
                         </small>
                     </div>

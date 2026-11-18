@@ -205,7 +205,7 @@ function RegisterForm() {
                             onChange={(evento) => {
                                 evento.target.value = evento.target.value.replace(/\D/g, "").slice(0, 10);
                             }}
-                            placeholder="Ej.: 3185777316"
+                            placeholder="Ej.: 3000000000"
                             aria-describedby="ayuda-telefono-registro"
                         />
                         <small className={styles.fieldHint} id="ayuda-telefono-registro">
