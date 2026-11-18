@@ -4,12 +4,22 @@
 // Integración de secuencia de flujo: Agendamiento -> Transporte -> Pagos -> Mapa
 
 import { Link } from "react-router-dom";
+import { Accessibility, Ambulance, Dog, DoorOpen, ShieldCheck, Wind } from "lucide-react";
 import ThemeToggle from "../../ThemeToggle/ThemeToggle.jsx";
 import styles from "./TransportePreferencial.module.css";
 import { TIPOS_DISCAPACIDAD, REQUERIMIENTOS_VEHICULO } from "./data/transporteData";
 import { useTransporte } from "./hooks/useTransporte";
 import ModalConfirmacion from "./ModalConfirmacion";
 import ResumenExito from "./ResumenExito";
+
+const ICONOS_REQUERIMIENTO = {
+  rampa: Accessibility,
+  anclaje: ShieldCheck,
+  "piso-bajo": DoorOpen,
+  oxigeno: Wind,
+  "perro-guia": Dog,
+  camilla: Ambulance,
+};
 
 function TransportePreferencial({ citaId }) {
   const {
@@ -321,6 +331,7 @@ function TransportePreferencial({ citaId }) {
                   {REQUERIMIENTOS_VEHICULO.map((req) => {
                     const isChecked = requerimientosSeleccionados.includes(req.id);
                     const isRecommended = requerimientosRecomendados.includes(req.id);
+                    const Icono = ICONOS_REQUERIMIENTO[req.id];
 
                     return (
                       <label
@@ -334,7 +345,9 @@ function TransportePreferencial({ citaId }) {
                           onChange={() => handleToggleRequerimiento(req.id)}
                         />
                         <span className={styles.opcionContenido}>
-                          <span className={styles.iconoAdaptacion} aria-hidden="true">{req.icono}</span>
+                          <span className={styles.iconoAdaptacion} aria-hidden="true">
+                            <Icono size={20} strokeWidth={2} />
+                          </span>
                           <span>
                             <strong>
                               {req.titulo}{" "}

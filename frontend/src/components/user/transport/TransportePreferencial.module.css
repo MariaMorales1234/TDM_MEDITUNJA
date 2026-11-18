@@ -336,8 +336,10 @@
 
 .iconoAdaptacion {
   flex: 0 0 auto;
-  line-height: 1.4;
-  font-size: 1.25rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
 }
 
 .opcionContenido small {

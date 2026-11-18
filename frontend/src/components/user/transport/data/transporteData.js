@@ -17,37 +17,31 @@ export const TIPOS_DISCAPACIDAD = [
 export const REQUERIMIENTOS_VEHICULO = [
   {
     id: "rampa",
-    icono: "🦼",
     titulo: "Rampa o elevador hidráulico",
     descripcion: "Para subir al vehículo sin bajarse de la silla de ruedas."
   },
   {
     id: "anclaje",
-    icono: "🔒",
     titulo: "Anclaje y cinturón de 4 puntos",
     descripcion: "Fijación segura de la silla dentro de la cabina."
   },
   {
     id: "piso-bajo",
-    icono: "🚪",
     titulo: "Vehículo de piso bajo o estribo abatible",
     descripcion: "Fácil abordaje sin escalones altos."
   },
   {
     id: "oxigeno",
-    icono: "🫁",
     titulo: "Soporte para bala de oxígeno",
     descripcion: "Espacio seguro para equipo respiratorio portátil."
   },
   {
     id: "perro-guia",
-    icono: "🦮",
     titulo: "Perro guía o de asistencia",
     descripcion: "Viaja con animal de compañía certificado."
   },
   {
     id: "camilla",
-    icono: "🚑",
     titulo: "Traslado en camilla / TAB",
     descripcion: "Traslado asistencial básico con camillero."
   }
