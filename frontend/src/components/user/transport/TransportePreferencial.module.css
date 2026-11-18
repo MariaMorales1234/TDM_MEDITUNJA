@@ -31,7 +31,7 @@
 .moduloTransporte :global(.modal-contenido) {
   background: var(--color-bg-card);
   border: 1px solid var(--color-border);
-  border-radius: 16px;
+  border-radius: 20px;
   padding: clamp(16px, 3vw, 28px);
 }
 
@@ -84,13 +84,15 @@
 }
 
 .cabeceraTransporte {
-  background: var(--marca-fondo-destacado);
-  border-top: 4px solid var(--marca-cian);
-  box-shadow: 0 14px 36px var(--color-shadow);
+  border-left: 5px solid var(--color-primary);
+  background:
+    radial-gradient(ellipse at top right, rgba(96, 69, 244, 0.09), transparent 55%),
+    var(--color-bg-card, var(--color-bg));
+  box-shadow: 0 16px 40px var(--color-shadow);
 }
 
 .cabeceraTransporte h1 {
-  color: var(--marca-blanco);
+  color: var(--color-text);
   font-family: var(--heading);
   font-size: clamp(1.65rem, 4vw, 2.3rem);
   line-height: 1.2;
@@ -108,21 +110,20 @@
   display: grid;
   place-items: center;
   height: 44px;
-  border: 1px solid var(--marca-blanco);
+  border: 1px solid var(--color-border);
   border-radius: 50%;
-  background: transparent;
-  color: var(--marca-blanco);
+  background: var(--hover-secundary);
+  color: var(--color-primary);
   cursor: pointer;
 }
 
 .botonTema:hover {
-  background: var(--marca-cian);
-  border-color: var(--marca-cian);
-  color: var(--marca-azul);
+  background: var(--color-border);
+  border-color: var(--color-primary);
 }
 
 .descripcionCabecera {
-  color: var(--marca-blanco);
+  color: var(--color-text-secundary);
   margin-top: 8px;
   max-width: 62ch;
 }
@@ -177,19 +178,19 @@
 }
 
 .cabeceraTransporte .enlaceVolver {
-  background: transparent;
-  color: var(--marca-blanco);
-  border-color: var(--marca-blanco);
+  background: var(--color-bg-card);
+  color: var(--transporte-enlace);
+  border-color: var(--transporte-borde);
 }
 
 .cabeceraTransporte .enlaceSaltarPagos {
-  color: var(--marca-azul);
-  background: var(--marca-cian);
-  border-color: var(--marca-cian);
+  color: var(--color-text);
+  background: var(--hover-secundary);
+  border-color: var(--color-border);
 }
 
 .cabeceraTransporte :focus-visible {
-  outline-color: var(--marca-cian);
+  outline-color: var(--color-primary);
 }
 
 .btnSolicitarTransporte:hover { background: #3928aa; }
