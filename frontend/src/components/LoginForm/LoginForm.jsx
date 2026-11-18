@@ -216,7 +216,7 @@ function LoginForm() {
                         </button>
                     </div>
                 ) : (
-                    <div className={styles.documentRow}>
+                    <div className={`${styles.documentRow} ${esLoginSuperadministrador ? styles.singleDocumentRow : ""}`}>
                     {!esLoginSuperadministrador && (
                         <div className={`${styles.formGroup} ${styles.documentType}`}>
                             <label htmlFor="tipo-documento">Tipo de documento</label>

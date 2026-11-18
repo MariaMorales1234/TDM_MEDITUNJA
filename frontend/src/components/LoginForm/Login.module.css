@@ -48,6 +48,10 @@
     gap: 20px;
 }
 
+.singleDocumentRow {
+    grid-template-columns: minmax(0, 1fr);
+}
+
 .documentType, .documentNumber {
     min-width: 0;
 }
