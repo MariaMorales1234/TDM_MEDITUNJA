@@ -75,8 +75,13 @@ test('resultados se guardan y solo se exponen al afiliado y administrador de su 
 
     const sinSesion = await fetchOriginal(`${baseUrl}/api/admin/resultados`);
     assert.equal(sinSesion.status, 401);
+    const afiliados = await fetchOriginal(`${baseUrl}/api/admin/resultados/afiliados`, { headers: { Authorization: authAdmin } });
+    const opciones = await afiliados.json();
+    assert.deepEqual(opciones.data.map(({ numeroDocumento }) => numeroDocumento), ['8000000002']);
+    assert.ok(opciones.ips.some(({ id }) => id === 'san-rafael'));
 
-    const resultadoDisponible = await post('/api/admin/resultados', {
+    const formulario = new FormData();
+    for (const [campo, valor] of Object.entries({
       tipoDocumento: 'CC',
       numeroDocumento: '8000000002',
       procedimiento: 'Prueba de integración',
@@ -84,7 +89,12 @@ test('resultados se guardan y solo se exponen al afiliado y administrador de su 
       proveedor: 'IPS de prueba',
       estado: 'Disponible',
       informe: 'Informe de prueba para validar el acceso.'
-    }, authAdmin);
+    })) formulario.set(campo, valor);
+    const pdf = '%PDF-1.7\nInforme privado de prueba';
+    formulario.set('adjunto', new Blob([pdf], { type: 'application/pdf' }), 'informe.pdf');
+    const resultadoDisponible = await fetchOriginal(`${baseUrl}/api/admin/resultados`, {
+      method: 'POST', headers: { Authorization: authAdmin }, body: formulario
+    });
     assert.equal(resultadoDisponible.status, 201);
     const datosDisponible = await resultadoDisponible.json();
 
@@ -98,6 +108,9 @@ test('resultados se guardan y solo se exponen al afiliado y administrador de su 
       informe: 'Este informe no se debe entregar mientras está en proceso.'
     }, authAdmin);
     assert.equal(resultadoEnProceso.status, 201);
+    const { id: idPendiente } = await resultadoEnProceso.json();
+    await ejecutar('run', 'UPDATE resultados_procedimientos SET adjunto_nombre = ?, adjunto_contenido = ? WHERE id_resultado = ?',
+      ['pendiente.pdf', Buffer.from(pdf), idPendiente]);
 
     const resultadoOtraEps = await ejecutar(
       'run',
@@ -149,7 +162,7 @@ test('resultados se guardan y solo se exponen al afiliado y administrador de su 
         const token = options?.headers?.Authorization?.replace(/^Bearer\s+/i, '');
         const email = token === 'paciente-token'
           ? 'paciente@example.test'
-          : 'pendiente@example.test';
+          : token === 'otro-eps-token' ? 'otro-eps@example.test' : 'pendiente@example.test';
         return new Response(JSON.stringify({
           usuario: { id: email, email, descuento: 0 }
         }), {
@@ -169,6 +182,26 @@ test('resultados se guardan y solo se exponen al afiliado y administrador de su 
     assert.equal(datosPaciente.data.find((resultado) => resultado.status === 'Disponible').informe,
       'Informe de prueba para validar el acceso.');
     assert.equal(datosPaciente.data.find((resultado) => resultado.status === 'En proceso').informe, null);
+    assert.equal(datosPaciente.data.find((resultado) => resultado.status === 'En proceso').adjunto, null);
+    assert.equal(datosPaciente.data.find((resultado) => resultado.status === 'Disponible').adjunto, 'informe.pdf');
+    const descargar = (id, token) => fetchOriginal(`${baseUrl}/api/resultados/${id}/adjunto`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {}
+    });
+    const adjunto = await descargar(datosDisponible.id, 'paciente-token');
+    assert.equal(adjunto.status, 200);
+    assert.match(adjunto.headers.get('content-disposition'), /^attachment/);
+    assert.equal(await adjunto.text(), pdf);
+    assert.equal((await descargar(datosDisponible.id, 'otro-eps-token')).status, 404);
+    assert.equal((await descargar(idPendiente, 'paciente-token')).status, 404);
+    assert.equal((await descargar(datosDisponible.id)).status, 401);
+    const publicar = (id) => fetchOriginal(`${baseUrl}/api/admin/resultados/${id}/publicar`, {
+      method: 'PUT', headers: { Authorization: authAdmin }
+    });
+    assert.equal((await publicar(resultadoOtraEps.lastID)).status, 404);
+    const publicado = await publicar(idPendiente);
+    assert.equal(publicado.status, 200);
+    assert.equal((await publicado.json()).data.status, 'Disponible');
+    assert.equal(await (await descargar(idPendiente, 'paciente-token')).text(), pdf);
 
     const resultadosSinSesion = await fetchOriginal(`${baseUrl}/api/resultados`);
     assert.equal(resultadosSinSesion.status, 401);

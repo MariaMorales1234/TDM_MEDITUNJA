@@ -60,6 +60,7 @@ export function responderFalloTunja(res, error) {
 }
 
 export async function obtenerSaldo(req, res) {
+  res.set('Cache-Control', 'private, no-store');
   try {
     const ruta = req.sesionTarjeta
       ? `/users/${encodeURIComponent(req.usuarioCitas.id)}/wallet`

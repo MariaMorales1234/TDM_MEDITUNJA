@@ -13,6 +13,7 @@ function PersonalDataUser() {
     const [tarjeta, setTarjeta] = useState(null);
     const [saldo, setSaldo] = useState(null);
     const [errorTarjeta, setErrorTarjeta] = useState("");
+    const [reintentoSaldo, setReintentoSaldo] = useState(0);
     const usuario = sesion?.usuario || {};
     const estado = usuario.estado_afiliacion || "pendiente";
     const nombre = (usuario.nombres || usuario.nombre || "").trim();
@@ -40,14 +41,21 @@ function PersonalDataUser() {
         if (!sesion?.accessToken) return;
         const headers = { Authorization: `Bearer ${sesion.accessToken}` };
 
-        apiRequest("/nfc/tarjeta", { headers })
+        apiRequest("/nfc/tarjeta", { headers, cache: "no-store" })
             .then(async (respuesta) => {
                 if (!activa) return;
                 if (respuesta.data.vinculada) {
                     setTarjeta(respuesta.data);
                     try {
-                        const respSaldo = await apiRequest("/wallet", { headers });
-                        if (activa) setSaldo(respSaldo.data.saldo);
+                        const respuestaSaldo = await apiRequest("/wallet", { headers, cache: "no-store" });
+                        const saldoDisponible = respuestaSaldo?.data?.saldo;
+                        if (!Number.isSafeInteger(saldoDisponible) || saldoDisponible < 0) {
+                            throw new Error("La API no devolvió un saldo válido.");
+                        }
+                        if (activa) {
+                            setSaldo(saldoDisponible);
+                            setErrorTarjeta("");
+                        }
                     } catch (error) {
                         if (activa) {
                             setSaldo(null);
@@ -57,6 +65,7 @@ function PersonalDataUser() {
                 } else {
                     setTarjeta(null);
                     setSaldo(null);
+                    setErrorTarjeta("");
                 }
             })
             .catch((error) => {
@@ -65,7 +74,7 @@ function PersonalDataUser() {
         return () => {
             activa = false;
         };
-    }, [sesion?.accessToken]);
+    }, [sesion?.accessToken, reintentoSaldo]);
 
     async function consultarEstado() {
         setActualizandoEstado(true);
@@ -155,8 +164,16 @@ function PersonalDataUser() {
                         <div>
                             <h3>Tarjeta NFC y Billetera</h3>
                             <div>
-                                <NfcStatus tarjeta={tarjeta} saldo={saldo} />
-                                {errorTarjeta && <p role="alert">{errorTarjeta}</p>}
+                                <NfcStatus tarjeta={tarjeta} saldo={saldo} errorSaldo={Boolean(errorTarjeta)} />
+                                {errorTarjeta && (
+                                    <div>
+                                        <p role="alert">{errorTarjeta}</p>
+                                        <button type="button" onClick={() => {
+                                            setErrorTarjeta("");
+                                            setReintentoSaldo((actual) => actual + 1);
+                                        }}>Volver a consultar saldo</button>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </fieldset>

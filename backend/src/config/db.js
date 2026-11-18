@@ -251,6 +251,21 @@ async function actualizarPagosCita() {
   [tarifaBaseCita, tarifaBaseCita, tarifaBaseCita, tarifaMaximaCita]);
 }
 
+function actualizarAdjuntosResultados() {
+  return new Promise((resolve, reject) => {
+    db.all('PRAGMA table_info(resultados_procedimientos)', (error, columnas) => {
+      if (error) return reject(error);
+      const cambios = [
+        ['adjunto_nombre', 'TEXT'],
+        ['adjunto_contenido', 'BLOB']
+      ].filter(([nombre]) => !columnas.some(({ name }) => name === nombre));
+      db.exec(cambios.map(([nombre, tipo]) =>
+        `ALTER TABLE resultados_procedimientos ADD COLUMN ${nombre} ${tipo};`
+      ).join(' '), (fallo) => fallo ? reject(fallo) : resolve());
+    });
+  });
+}
+
 export const ready = new Promise((resolve, reject) => {
   fs.readFile(rutaEsquema, 'utf8', (errorLectura, esquema) => {
     if (errorLectura) {
@@ -263,7 +278,7 @@ export const ready = new Promise((resolve, reject) => {
         reject(errorEsquema);
         return;
       }
-      actualizarEsquema().then(actualizarPagosCita).then(() => resolve(db), reject);
+      actualizarEsquema().then(actualizarPagosCita).then(actualizarAdjuntosResultados).then(() => resolve(db), reject);
     });
   });
 });

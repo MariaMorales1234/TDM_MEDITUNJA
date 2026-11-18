@@ -23,7 +23,8 @@ export async function listarPorUsuario(tipoDocumento, numeroDocumento, eps) {
     'all',
     `SELECT id_resultado AS id, procedimiento, fecha_procedimiento AS fecha,
             ips AS proveedor, estado AS status,
-            CASE WHEN estado = 'Disponible' THEN informe ELSE NULL END AS informe
+            CASE WHEN estado = 'Disponible' THEN informe ELSE NULL END AS informe,
+            CASE WHEN estado = 'Disponible' THEN adjunto_nombre END AS adjunto
      FROM resultados_procedimientos r
      WHERE tipo_documento = ? AND numero_documento = ? AND ${condicionMismaEps}
      ORDER BY fecha_procedimiento DESC, id_resultado DESC`,
@@ -42,7 +43,7 @@ export async function listarPorEps(eps) {
             r.fecha_procedimiento AS date,
             r.ips AS provider,
             r.estado AS status,
-            r.informe AS report
+            r.informe AS report, r.adjunto_nombre AS adjunto
      FROM resultados_procedimientos r
      JOIN usuarios_tunja u
        ON u.tipo_documento = r.tipo_documento
@@ -60,8 +61,8 @@ export async function crear(datos) {
     'run',
     `INSERT INTO resultados_procedimientos (
        tipo_documento, numero_documento, eps, procedimiento,
-       fecha_procedimiento, ips, estado, informe, creado_por
-     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       fecha_procedimiento, ips, estado, informe, creado_por, adjunto_nombre, adjunto_contenido
+     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       datos.tipoDocumento,
       datos.numeroDocumento,
@@ -71,10 +72,21 @@ export async function crear(datos) {
       datos.proveedor,
       datos.estado,
       datos.informe,
-      datos.creadoPor
+      datos.creadoPor,
+      datos.adjunto?.nombre ?? null,
+      datos.adjunto?.contenido ?? null
     ]
   );
   return lastID;
+}
+
+export function buscarAdjunto(id, eps, afiliado) {
+  const filtro = afiliado ? "AND estado = 'Disponible' AND tipo_documento = ? AND numero_documento = ?" : '';
+  return ejecutar('get', `
+    SELECT adjunto_nombre AS nombre, adjunto_contenido AS contenido
+    FROM resultados_procedimientos r
+    WHERE id_resultado = ? AND ${condicionMismaEps} AND adjunto_contenido IS NOT NULL ${filtro}`,
+  [id, eps, eps, eps, ...(afiliado ? [afiliado.tipo_documento, afiliado.numero_documento] : [])]);
 }
 
 export async function eliminarPorEps(eps, id) {
@@ -84,4 +96,16 @@ export async function eliminarPorEps(eps, id) {
      WHERE id_resultado = ? AND ${condicionMismaEpsEliminar}`,
     [id, eps, eps, eps]
   );
+}
+
+export function publicarPorEps(eps, id) {
+  return ejecutar('run', `
+    UPDATE resultados_procedimientos AS r SET estado = 'Disponible'
+    WHERE r.id_resultado = ? AND ${condicionMismaEps}
+      AND EXISTS (
+        SELECT 1 FROM usuarios_tunja u
+        WHERE u.tipo_documento = r.tipo_documento AND u.numero_documento = r.numero_documento
+          AND u.estado_afiliacion = 'aprobado' AND ${condicionMismaEpsUsuario}
+      )`,
+  [id, eps, eps, eps, eps, eps, eps]);
 }

@@ -13,7 +13,7 @@ function obtenerIdentificador(tarjeta) {
     return tarjeta?.identificador || tarjeta?.id || tarjeta?.uid || "4821";
 }
 
-function NfcStatus({ tarjeta, saldo }) {
+function NfcStatus({ tarjeta, saldo, errorSaldo }) {
     if (tarjeta) {
         const habilitada = tarjeta.habilitada !== false;
         const idCompleto = String(obtenerIdentificador(tarjeta));
@@ -25,10 +25,10 @@ function NfcStatus({ tarjeta, saldo }) {
                 <div className={styles.walletBanner}>
                     <div className={styles.walletColLeft}>
                         <p className={styles.walletLabel}>SALDO DISPONIBLE</p>
-                        <p className={styles.walletAmount}>
+                        <p className={saldo == null ? styles.walletLabel : styles.walletAmount} aria-live="polite">
                             {saldo !== null && saldo !== undefined
                                 ? formatoPesos.format(saldo)
-                                : "—"}
+                                : errorSaldo ? "Saldo temporalmente no disponible" : "Consultando saldo…"}
                         </p>
                     </div>
                     <div className={styles.walletColRight}>
@@ -41,7 +41,7 @@ function NfcStatus({ tarjeta, saldo }) {
 
                 <div className={styles.actionsBar}>
                     <Link
-                        to="/pagos"
+                        to="/recargar-saldo"
                         className={styles.rechargeButton}
                     >
                         <Wallet size={16} />

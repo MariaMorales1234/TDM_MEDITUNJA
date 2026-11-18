@@ -152,6 +152,8 @@ CREATE TABLE IF NOT EXISTS resultados_procedimientos (
     ips VARCHAR(120) NOT NULL,
     estado TEXT NOT NULL CHECK (estado IN ('En proceso', 'Disponible')),
     informe TEXT NOT NULL,
+    adjunto_nombre TEXT,
+    adjunto_contenido BLOB,
     creado_por INTEGER NOT NULL,
     creado_en TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_resultado_administrador FOREIGN KEY (creado_por)

@@ -734,6 +734,17 @@ main:has(#acciones-resultados) td button:hover:not(:disabled) {
     filter: brightness(0.94);
 }
 
+main:has(#acciones-resultados) td .resultado-publicar {
+    margin-block-end: 6px;
+    border-color: var(--marca-violeta);
+    background: var(--marca-violeta);
+    color: var(--marca-blanco);
+}
+
+main:has(#acciones-resultados) td .resultado-publicar:hover:not(:disabled) {
+    background: var(--marca-azul);
+}
+
 main:has(#acciones-resultados) td button:disabled {
     cursor: progress;
     opacity: 0.6;

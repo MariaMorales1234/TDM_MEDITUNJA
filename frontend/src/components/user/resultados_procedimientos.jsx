@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { FileSearch, Info, MoveLeft } from "lucide-react";
 import { Link } from "react-router-dom";
 import { apiRequest } from "../../auth/api.js";
+import { descargarArchivo } from "../../auth/descargarArchivo.js";
 import { useAuth } from "../../auth/useAuth.js";
 import Hero from "../Hero/Hero.jsx";
 import NavbarUser from "./NavbarUser/NavbarUser.jsx";
@@ -12,6 +13,7 @@ function ResultadosProcedimientos() {
     const [resultados, setResultados] = useState([]);
     const [cargando, setCargando] = useState(true);
     const [error, setError] = useState("");
+    const [errorAdjunto, setErrorAdjunto] = useState("");
 
     useEffect(() => {
         let activo = true;
@@ -68,6 +70,7 @@ function ResultadosProcedimientos() {
                     </div>
 
                     {error && <p className={styles.errorMessage} role="alert">{error}</p>}
+                    {errorAdjunto && <p className={styles.errorMessage} role="alert">{errorAdjunto}</p>}
 
                     {cargando ? (
                         <p className={styles.loadingState} role="status">Cargando tus resultados...</p>
@@ -102,6 +105,13 @@ function ResultadosProcedimientos() {
                                         <div className={styles.report}>
                                             <h4>Informe</h4>
                                             <p>{resultado.informe}</p>
+                                            {resultado.adjunto && (
+                                                <button type="button" className={styles.appointmentsLink} onClick={() => {
+                                                    setErrorAdjunto("");
+                                                    descargarArchivo(`/resultados/${resultado.id}/adjunto`, sesion.accessToken, resultado.adjunto)
+                                                        .catch((fallo) => setErrorAdjunto(fallo.message));
+                                                }}>Descargar {resultado.adjunto}</button>
+                                            )}
                                         </div>
                                     ) : (
                                         <p className={styles.pendingMessage}>

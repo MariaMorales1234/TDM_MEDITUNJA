@@ -36,8 +36,12 @@ import {
 } from '../controllers/citas.js';
 import {
   crearResultado,
+  descargarAdjuntoResultado,
   eliminarResultado,
   listarResultadosAdministrador,
+  listarAfiliadosResultados,
+  recibirAdjuntoResultado,
+  publicarResultado,
   listarResultadosUsuario
 } from '../controllers/resultados.js';
 import {
@@ -102,6 +106,7 @@ router.get('/citas/:id/pago', autenticarUsuarioTunja, exigirTarjetaVinculada, co
 router.post('/citas/:id/pago', autenticarUsuarioTunja, exigirTarjetaVinculada, pagarCita);
 router.put('/citas/:id/cancelar', autenticarUsuarioTunja, cancelarCita);
 router.get('/resultados', autenticarUsuarioTunja, listarResultadosUsuario);
+router.get('/resultados/:id/adjunto', autenticarUsuarioTunja, descargarAdjuntoResultado);
 router.get('/nfc/tarjeta', autenticarUsuarioTunja, obtenerTarjeta);
 router.post('/nfc/tarjeta', autenticarUsuarioTunja, vincularTarjeta);
 router.delete('/nfc/tarjeta', autenticarUsuarioTunja, desvincularTarjeta);
@@ -167,7 +172,10 @@ router.get('/admin/convenios', exigirAdministrador, listarConvenios);
 router.post('/admin/convenios', exigirAdministrador, crearConvenio);
 router.put('/admin/convenios/:id/desactivar', exigirAdministrador, desactivarConvenio);
 router.get('/admin/resultados', exigirAdministrador, listarResultadosAdministrador);
-router.post('/admin/resultados', exigirAdministrador, crearResultado);
+router.get('/admin/resultados/afiliados', exigirAdministrador, listarAfiliadosResultados);
+router.get('/admin/resultados/:id/adjunto', exigirAdministrador, descargarAdjuntoResultado);
+router.post('/admin/resultados', exigirAdministrador, recibirAdjuntoResultado, crearResultado);
+router.put('/admin/resultados/:id/publicar', exigirAdministrador, publicarResultado);
 router.delete('/admin/resultados/:id', exigirAdministrador, eliminarResultado);
 router.post('/logout', async (req, res, next) => {
   try {

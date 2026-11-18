@@ -170,6 +170,7 @@ test('consulta saldo y acredita recargas usando la clave solo en el backend', as
     headers: autorizacion
   });
   assert.equal(consulta.status, 200);
+  assert.equal(consulta.headers.get('cache-control'), 'private, no-store');
   assert.deepEqual(await consulta.json(), { data: { saldo: 25000 } });
 
   const recarga = await fetchOriginal(`${baseUrl}/api/wallet/topup`, {

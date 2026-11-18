@@ -173,9 +173,6 @@ function FormularioConvenio({
                     onChange={() => onToggleServicio(srv.id)}
                   />
                   <div className={styles.infoServicio}>
-                    {srv.codigo && (
-                      <span className={styles.codigoServicio}>CUPS: {srv.codigo}</span>
-                    )}
                     <span className={styles.nombreServicio}>{srv.nombre}</span>
                   </div>
                 </label>

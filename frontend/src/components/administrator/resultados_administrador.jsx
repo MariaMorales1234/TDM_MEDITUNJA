@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { apiRequest, mensajeError } from "../../auth/api.js";
 import { useAdminAuth } from "../../auth/useAdminAuth.js";
 import Filter from "../Filter/Filter.jsx";
+import { descargarArchivo } from "../../auth/descargarArchivo.js";
 
 function ResultadosAdministrador() {
     const { token } = useAdminAuth();
@@ -9,11 +10,15 @@ function ResultadosAdministrador() {
     const [search, setSearch] = useState("");
     const [statusFilter, setStatusFilter] = useState("todos");
     const [showForm, setShowForm] = useState(false);
+    const [afiliados, setAfiliados] = useState(null);
+    const [ipsDisponibles, setIpsDisponibles] = useState([]);
+    const [errorAfiliados, setErrorAfiliados] = useState("");
     const [message, setMessage] = useState("");
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [deletingId, setDeletingId] = useState(null);
+    const [publishingId, setPublishingId] = useState(null);
 
     const loadResults = useCallback(async () => {
         setLoading(true);
@@ -29,6 +34,20 @@ function ResultadosAdministrador() {
             setLoading(false);
         }
     }, [token]);
+
+    useEffect(() => {
+        if (!showForm) return undefined;
+        const solicitud = new AbortController();
+        apiRequest("/admin/resultados/afiliados", { headers: { Authorization: `Bearer ${token}` }, signal: solicitud.signal })
+            .then(({ data, ips }) => {
+                if (solicitud.signal.aborted) return;
+                setAfiliados(data);
+                setIpsDisponibles(ips);
+            }).catch((fallo) => {
+                if (!solicitud.signal.aborted) setErrorAfiliados(mensajeError(fallo));
+            });
+        return () => solicitud.abort();
+    }, [showForm, token]);
 
     useEffect(() => {
         let active = true;
@@ -75,15 +94,21 @@ function ResultadosAdministrador() {
         event.preventDefault();
         const form = event.currentTarget;
         const formData = new FormData(form);
+        const [tipoDocumento, numeroDocumento] = String(formData.get("afiliado") || "").split(":");
+        if (!numeroDocumento) return;
         const resultado = {
-            tipoDocumento: formData.get("tipoDocumento"),
-            numeroDocumento: formData.get("document").trim(),
+            tipoDocumento,
+            numeroDocumento,
             procedimiento: formData.get("procedure").trim(),
             fecha: formData.get("date"),
             proveedor: formData.get("provider").trim(),
             estado: formData.get("status"),
             informe: formData.get("report").trim(),
         };
+        const payload = new FormData();
+        for (const [clave, valor] of Object.entries(resultado)) payload.set(clave, valor);
+        const adjunto = formData.get("adjunto");
+        if (adjunto?.size) payload.set("adjunto", adjunto);
 
         setSaving(true);
         setMessage("");
@@ -92,7 +117,7 @@ function ResultadosAdministrador() {
             await apiRequest("/admin/resultados", {
                 method: "POST",
                 headers: { Authorization: `Bearer ${token}` },
-                body: JSON.stringify(resultado),
+                body: payload,
             });
             form.reset();
             setShowForm(false);
@@ -102,6 +127,24 @@ function ResultadosAdministrador() {
             setError(mensajeError(errorSolicitud));
         } finally {
             setSaving(false);
+        }
+    }
+
+    async function publicarResultado(result) {
+        if (!window.confirm(`¿Publicar el resultado de ${result.patient}? El afiliado podrá ver la nota y descargar el adjunto.`)) return;
+        setPublishingId(result.id);
+        setMessage("");
+        setError("");
+        try {
+            const { data, mensaje } = await apiRequest(`/admin/resultados/${result.id}/publicar`, {
+                method: "PUT", headers: { Authorization: `Bearer ${token}` },
+            });
+            setResults((actuales) => actuales.map((item) => item.id === data.id ? { ...item, status: data.status } : item));
+            setMessage(mensaje);
+        } catch (fallo) {
+            setError(mensajeError(fallo));
+        } finally {
+            setPublishingId(null);
         }
     }
 
@@ -153,6 +196,8 @@ function ResultadosAdministrador() {
                     aria-controls="formulario-resultado"
                     onClick={() => {
                         setShowForm((isVisible) => !isVisible);
+                        setAfiliados(null);
+                        setErrorAfiliados("");
                         setError("");
                         setMessage("");
                     }}
@@ -165,28 +210,18 @@ function ResultadosAdministrador() {
                         <fieldset>
                             <legend>Afiliado</legend>
                             <div>
-                                <label htmlFor="tipo-documento-paciente">Tipo de documento</label>
-                                <select
-                                    id="tipo-documento-paciente"
-                                    name="tipoDocumento"
-                                    defaultValue="CC"
-                                    required
-                                >
-                                    <option value="CC">Cédula de ciudadanía</option>
-                                    <option value="TI">Tarjeta de identidad</option>
-                                    <option value="CE">Cédula de extranjería</option>
-                                    <option value="PAS">Pasaporte</option>
+                                <label htmlFor="afiliado-resultado">Afiliado de la EPS</label>
+                                <select id="afiliado-resultado" name="afiliado" defaultValue="" required disabled={!afiliados?.length}>
+                                    <option value="" disabled>Selecciona un afiliado</option>
+                                    {afiliados?.map(({ tipoDocumento, numeroDocumento, nombre }) => (
+                                        <option key={`${tipoDocumento}:${numeroDocumento}`} value={`${tipoDocumento}:${numeroDocumento}`}>
+                                            {nombre} · {tipoDocumento} {numeroDocumento}
+                                        </option>
+                                    ))}
                                 </select>
-                            </div>
-                            <div>
-                                <label htmlFor="documento-paciente">Número de documento</label>
-                                <input
-                                    id="documento-paciente"
-                                    name="document"
-                                    type="text"
-                                    maxLength={30}
-                                    required
-                                />
+                                {errorAfiliados && <p role="alert">{errorAfiliados}</p>}
+                                {!errorAfiliados && !afiliados && <p role="status">Cargando afiliados…</p>}
+                                {afiliados?.length === 0 && <p>No hay afiliados aprobados en esta EPS.</p>}
                             </div>
                         </fieldset>
 
@@ -214,13 +249,12 @@ function ResultadosAdministrador() {
                             </div>
                             <div>
                                 <label htmlFor="ips-procedimiento">IPS prestadora</label>
-                                <input
-                                    id="ips-procedimiento"
-                                    name="provider"
-                                    type="text"
-                                    maxLength={120}
-                                    required
-                                />
+                                <select id="ips-procedimiento" name="provider" defaultValue="" required disabled={!ipsDisponibles.length}>
+                                    <option value="" disabled>Selecciona una IPS</option>
+                                    {ipsDisponibles.map(({ id, nombre, sede }) => (
+                                        <option key={id} value={`${nombre} · ${sede}`}>{nombre} · {sede}</option>
+                                    ))}
+                                </select>
                             </div>
                             <div>
                                 <label htmlFor="estado-resultado">Estado del resultado</label>
@@ -240,8 +274,13 @@ function ResultadosAdministrador() {
                                     required
                                 />
                             </div>
+                            <div>
+                                <label htmlFor="adjunto-resultado">Archivo adjunto (opcional)</label>
+                                <input id="adjunto-resultado" name="adjunto" type="file" aria-describedby="ayuda-adjunto-resultado" />
+                                <small id="ayuda-adjunto-resultado">Un archivo de hasta 10 MB.</small>
+                            </div>
                         </fieldset>
-                        <button type="submit" disabled={saving}>
+                        <button type="submit" disabled={saving || !afiliados?.length || !ipsDisponibles.length}>
                             {saving ? "Guardando..." : "Guardar resultado"}
                         </button>
                     </form>
@@ -271,7 +310,7 @@ function ResultadosAdministrador() {
 
                 {loading ? (
                     <p role="status">Cargando resultados...</p>
-                ) : error ? null : visibleResults.length > 0 ? (
+                ) : visibleResults.length > 0 ? (
                     <div>
                         <table>
                             <caption>Resultados de afiliados aprobados de tu EPS</caption>
@@ -296,12 +335,26 @@ function ResultadosAdministrador() {
                                         <td>{result.date}</td>
                                         <td>{result.provider}</td>
                                         <td>{result.status}</td>
-                                        <td>{result.report}</td>
                                         <td>
+                                            {result.report}
+                                            {result.adjunto && (
+                                                <button type="button" onClick={() =>
+                                                    descargarArchivo(`/admin/resultados/${result.id}/adjunto`, token, result.adjunto)
+                                                        .catch((fallo) => setError(mensajeError(fallo)))
+                                                }>Descargar {result.adjunto}</button>
+                                            )}
+                                        </td>
+                                        <td>
+                                            {result.status === "En proceso" && (
+                                                <button type="button" className="resultado-publicar" onClick={() => publicarResultado(result)}
+                                                    disabled={publishingId !== null || deletingId !== null}>
+                                                    {publishingId === result.id ? "Publicando…" : "Publicar resultado"}
+                                                </button>
+                                            )}
                                             <button
                                                 type="button"
                                                 onClick={() => removeResult(result.id, result.patient)}
-                                                disabled={deletingId === result.id}
+                                                disabled={deletingId !== null || publishingId !== null}
                                                 aria-label={`Eliminar resultado de ${result.patient}`}
                                             >
                                                 {deletingId === result.id ? "Eliminando..." : "Eliminar"}
