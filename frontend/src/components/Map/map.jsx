@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { TrainFront, Bus } from "lucide-react";
-import styles from "./map.module.css";
+import styles from "./Map.module.css";
 import {
     MetroComponent,
     BusComponent,
