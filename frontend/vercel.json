@@ -1,8 +1,8 @@
 {
   "rewrites": [
     {
-      "source": "/api/(.*)",
-      "destination": "https://tdm-meditunja.vercel.app/"
+      "source": "/api/:path*",
+      "destination": "https://tdm-meditunja.vercel.app/api/:path*"
     }
   ]
 }
