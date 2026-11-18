@@ -457,6 +457,17 @@
   align-items: center;
 }
 
+.accionesConvenio > button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 108px;
+  min-height: 38px;
+  padding: 8px 10px;
+  white-space: nowrap;
+}
+
 .btnEditar {
   min-height: 38px;
   padding: 8px 12px;
