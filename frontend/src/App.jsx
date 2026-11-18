@@ -17,6 +17,7 @@ import RechargeBalanceModule from "./pages/UserPages/RechargeBalanceModule.jsx";
 import ProfileAdministrador from "./pages/AdministratorPages/ProfileAdministrator.jsx";
 import AppointmentManagementModule from "./pages/AdministratorPages/AppointmentManagementModule.jsx";
 import AdminRechargeModule from "./pages/AdministratorPages/AdminRechargeModule.jsx";
+import AdminNfcCardsModule from "./pages/AdministratorPages/AdminNfcCardsModule.jsx";
 import AdminLayout from "./components/administrator/AdminLayout/AdminLayout.jsx";
 import UserGestor from "./components/administrator/UserGestor/UserGestor.jsx";
 import ConveniosModule from "./pages/AdministratorPages/ConveniosModule.jsx";
@@ -47,6 +48,7 @@ function App() {
                         <Route path="/admin/inicio" element={<BienvenidaAdminModule />} />
                         <Route path="/resultados-administrador" element={<ResultadosAdministrador />} />
                         <Route path="/admin/recargas" element={<AdminRechargeModule />} />
+                        <Route path="/admin/tarjetas-nfc" element={<AdminNfcCardsModule />} />
                         <Route path="/perfilAdministrador" element={<ProfileAdministrador />} />
                         <Route path="/perfilAdiminEPS" element={<Navigate to="/perfilAdministrador" replace />} />
                         <Route path="/gestionCitas" element={<AppointmentManagementModule />} />

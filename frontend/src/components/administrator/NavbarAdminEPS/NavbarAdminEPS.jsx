@@ -1,6 +1,6 @@
 import logo from "../../../assets/logo-192.png";
 import { NavLink } from "react-router-dom";
-import { House, CalendarDays, FileText, UserRound, UsersRound, Handshake, Wallet} from "lucide-react";
+import { House, CalendarDays, FileText, UserRound, UsersRound, Handshake, Wallet, Nfc } from "lucide-react";
 import styles from "./NavbarAdminEPS.module.css";
 
 function NavbarAdminEPS() {
@@ -40,6 +40,11 @@ function NavbarAdminEPS() {
                 <li>
                     <NavLink to="/admin/recargas" className={({ isActive }) => isActive ? styles.active : styles.link}>
                         <Wallet className={styles.mobileIcon} size={22} />Recargar saldo
+                    </NavLink>
+                </li>
+                <li>
+                    <NavLink to="/admin/tarjetas-nfc" className={({ isActive }) => isActive ? styles.active : styles.link}>
+                        <Nfc className={styles.mobileIcon} size={22} />Tarjetas NFC
                     </NavLink>
                 </li>
                 <li>

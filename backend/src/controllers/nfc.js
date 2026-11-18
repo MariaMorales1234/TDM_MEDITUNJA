@@ -6,7 +6,7 @@ function responderError(res, status, error, mensaje) {
   return res.status(status).json({ error, mensaje });
 }
 
-function responderFalloTarjeta(res, error) {
+export function responderFalloTarjeta(res, error) {
   if (error.code === 'SQLITE_CONSTRAINT' || error.code === 'SQLITE_CONSTRAINT_UNIQUE') {
     return responderError(res, 409, 'tarjeta_ya_vinculada', 'Esta tarjeta ya está asociada a otra cuenta.');
   }

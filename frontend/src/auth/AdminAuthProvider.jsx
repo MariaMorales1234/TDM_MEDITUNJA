@@ -49,6 +49,17 @@ function AdminAuthProvider({ children }) {
         return respuesta;
     }, []);
 
+    const iniciarSesionTarjeta = useCallback(async (uid) => {
+        const respuesta = await apiRequest("/admin/card-login", {
+            method: "POST",
+            body: JSON.stringify({ uid }),
+        });
+        window.localStorage.setItem(claveToken, respuesta.token);
+        setToken(respuesta.token);
+        setUsuario(respuesta.data);
+        return respuesta;
+    }, []);
+
     const cerrarSesion = useCallback(async () => {
         window.localStorage.removeItem(claveToken);
         setToken(null);
@@ -69,8 +80,8 @@ function AdminAuthProvider({ children }) {
     }, [token]);
 
     const valor = useMemo(
-        () => ({ token, usuario, cargando, iniciarSesion, cerrarSesion }),
-        [token, usuario, cargando, iniciarSesion, cerrarSesion],
+        () => ({ token, usuario, cargando, iniciarSesion, iniciarSesionTarjeta, cerrarSesion }),
+        [token, usuario, cargando, iniciarSesion, iniciarSesionTarjeta, cerrarSesion],
     );
 
     return (

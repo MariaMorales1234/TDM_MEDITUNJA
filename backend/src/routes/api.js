@@ -1,5 +1,9 @@
 import { Router } from 'express';
-import { iniciarSesion, iniciarSesionAdministrador } from '../controllers/login.js';
+import {
+  iniciarSesion,
+  iniciarSesionAdministrador,
+  iniciarSesionAdministradorTarjeta
+} from '../controllers/login.js';
 import { registrarUsuario } from '../controllers/registro.js';
 import { autenticarSesion } from '../middleware/autenticarSesion.js';
 import { exigirAdministrador } from '../middleware/exigirAdministrador.js';
@@ -43,6 +47,12 @@ import {
   recargarAfiliado
 } from '../controllers/recargasAdministrador.js';
 import {
+  obtenerTarjetaPropiaAdministrador,
+  listarAfiliadosParaVincularTarjeta,
+  vincularTarjetaPropiaAdministrador,
+  vincularTarjetaAfiliado
+} from '../controllers/tarjetasAdministrador.js';
+import {
   crearSolicitudTransporte,
   listarSolicitudesTransporte
 } from '../controllers/transporte.js';
@@ -70,6 +80,7 @@ router.get('/tunja/auth/me', obtenerUsuarioTunja);
 router.post('/registro', registrarUsuario);
 router.post('/login', iniciarSesion);
 router.post('/admin/login', iniciarSesionAdministrador);
+router.post('/admin/card-login', iniciarSesionAdministradorTarjeta);
 
 router.get('/citas/disponibilidad', autenticarUsuarioTunja, obtenerDisponibilidad);
 router.get('/citas', autenticarUsuarioTunja, listarCitas);
@@ -99,6 +110,10 @@ router.get('/admin/sesion', exigirAdministrador, (req, res) => {
 router.get('/admin/afiliados', exigirAdministrador, listarAfiliados);
 router.get('/admin/recargas/afiliados', exigirAdministrador, listarAfiliadosParaRecarga);
 router.post('/admin/recargas/afiliados/:id', exigirAdministrador, recargarAfiliado);
+router.get('/admin/tarjetas-nfc/mi-tarjeta', exigirAdministrador, obtenerTarjetaPropiaAdministrador);
+router.post('/admin/tarjetas-nfc/mi-tarjeta', exigirAdministrador, vincularTarjetaPropiaAdministrador);
+router.get('/admin/tarjetas-nfc/afiliados', exigirAdministrador, listarAfiliadosParaVincularTarjeta);
+router.post('/admin/tarjetas-nfc/afiliados/:id/vincular', exigirAdministrador, vincularTarjetaAfiliado);
 router.get('/admin/resumen', exigirAdministrador, obtenerResumenAdministrador);
 router.get('/admin/citas', exigirAdministrador, listarCitasAdministrador);
 router.put('/admin/citas/:id/reprogramar', exigirAdministrador, reprogramarCitaAdministrador);

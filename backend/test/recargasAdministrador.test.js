@@ -47,6 +47,7 @@ await ejecutar(
 );
 
 const llamadasTunja = [];
+let tarjetaAdministradorCreada = false;
 const fetchOriginal = globalThis.fetch;
 globalThis.fetch = async (input, opciones = {}) => {
   const url = new URL(input);
@@ -63,9 +64,9 @@ globalThis.fetch = async (input, opciones = {}) => {
 
   if (url.pathname === '/api/v1/users' && (!opciones.method || opciones.method === 'GET')) {
     const desde = Number(url.searchParams.get('desde') || 0);
-    if (desde > 0) return Response.json({ total: 4, limite: 200, desde, usuarios: [] });
+    if (desde > 0) return Response.json({ total: 5, limite: 200, desde, usuarios: [] });
     return Response.json({
-      total: 4,
+      total: 5,
       limite: 200,
       desde: 0,
       usuarios: [
@@ -100,6 +101,14 @@ globalThis.fetch = async (input, opciones = {}) => {
           documento: '5555555555',
           email: 'pendiente@sura.test',
           saldo: 0
+        },
+        {
+          id: 99,
+          nombre: 'Administradora Sura',
+          activo: true,
+          documento: '900111111-1',
+          email: 'admin@sura.test',
+          saldo: 0
         }
       ]
     });
@@ -133,6 +142,41 @@ globalThis.fetch = async (input, opciones = {}) => {
       email: 'sin-tarjeta@sura.test',
       saldo: 9000
     });
+  }
+  if (url.pathname === '/api/v1/users/99') {
+    return Response.json({
+      id: 99,
+      nombre: 'Administradora Sura',
+      activo: true,
+      documento: '900111111-1',
+      email: 'admin@sura.test',
+      saldo: 0
+    });
+  }
+  if (/^\/api\/v1\/cards\/[A-F0-9]+$/i.test(url.pathname) && (!opciones.method || opciones.method === 'GET')) {
+    if (tarjetaAdministradorCreada && url.pathname.endsWith('/DEADBEEF')) {
+      return Response.json({
+        uid: 'DEADBEEF',
+        activa: true,
+        usuario: { id: 99, email: 'admin@sura.test' }
+      });
+    }
+    return Response.json({ error: 'tarjeta_no_encontrada' }, { status: 404 });
+  }
+  if (url.pathname === '/api/v1/cards' && opciones.method === 'POST') {
+    const body = JSON.parse(opciones.body);
+    if (body.uid === 'DEADBEEF') tarjetaAdministradorCreada = true;
+    const emailsPorId = new Map([
+      [17, 'afiliado@sura.test'],
+      [18, 'afiliado@otra.test'],
+      [20, 'sin-tarjeta@sura.test'],
+      [99, 'admin@sura.test']
+    ]);
+    return Response.json({
+      uid: body.uid,
+      activa: true,
+      usuario: { id: body.usuario_id, email: emailsPorId.get(body.usuario_id) }
+    }, { status: 201 });
   }
   if (url.pathname === '/api/v1/users/17/wallet/topup' && opciones.method === 'POST') {
     return Response.json({
@@ -258,4 +302,158 @@ test('rechaza recargar afiliados ajenos o medios inválidos sin acreditar saldo'
     llamadasTunja.filter((llamada) => llamada.path.endsWith('/wallet/topup')).length,
     cantidadRecargas
   );
+});
+
+test('lista afiliados activos aprobados de la EPS para vincular tarjetas', async () => {
+  const token = await iniciarSesionAdministrador();
+  const respuesta = await fetchOriginal(`${baseUrl}/api/admin/tarjetas-nfc/afiliados`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+
+  assert.equal(respuesta.status, 200);
+  assert.deepEqual((await respuesta.json()).data, [
+    {
+      id: 17,
+      nombre: 'Afiliado Sura',
+      tipoDocumento: 'CC',
+      numeroDocumento: '1234567890',
+      email: 'afiliado@sura.test',
+      tarjetaIdentificador: 'CC17'
+    },
+    {
+      id: 20,
+      nombre: 'Sin Tarjeta Sura',
+      tipoDocumento: 'CC',
+      numeroDocumento: '1234567891',
+      email: 'sin-tarjeta@sura.test',
+      tarjetaIdentificador: null
+    }
+  ]);
+});
+
+test('vincula una tarjeta al afiliado activo y guarda la asociación local y en TunjaAPI', async () => {
+  const token = await iniciarSesionAdministrador();
+  const respuesta = await fetchOriginal(`${baseUrl}/api/admin/tarjetas-nfc/afiliados/20/vincular`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ uid: 'abcdef01' })
+  });
+
+  assert.equal(respuesta.status, 200);
+  assert.deepEqual((await respuesta.json()).data, {
+    vinculada: true,
+    identificador: 'EF01'
+  });
+  assert.deepEqual(
+    await ejecutar('get', 'SELECT usuario_id, email, uid FROM tarjetas_nfc WHERE uid = ?', ['ABCDEF01']),
+    { usuario_id: '20', email: 'sin-tarjeta@sura.test', uid: 'ABCDEF01' }
+  );
+  const creacionTarjeta = llamadasTunja.find((llamada) =>
+    llamada.path === '/api/v1/cards' && llamada.method === 'POST'
+  );
+  assert.deepEqual(JSON.parse(creacionTarjeta.body), {
+    uid: 'ABCDEF01',
+    usuario_id: 20
+  });
+});
+
+test('rechaza vincular tarjetas a afiliados de otra EPS o con UID inválido', async () => {
+  const token = await iniciarSesionAdministrador();
+  const autorizacion = {
+    Authorization: `Bearer ${token}`,
+    'Content-Type': 'application/json'
+  };
+  const cantidadCreaciones = llamadasTunja.filter((llamada) =>
+    llamada.path === '/api/v1/cards' && llamada.method === 'POST'
+  ).length;
+
+  const afiliadoAjeno = await fetchOriginal(`${baseUrl}/api/admin/tarjetas-nfc/afiliados/18/vincular`, {
+    method: 'POST',
+    headers: autorizacion,
+    body: JSON.stringify({ uid: 'AABBCCDD' })
+  });
+  assert.equal(afiliadoAjeno.status, 404);
+
+  const uidInvalido = await fetchOriginal(`${baseUrl}/api/admin/tarjetas-nfc/afiliados/20/vincular`, {
+    method: 'POST',
+    headers: autorizacion,
+    body: JSON.stringify({ uid: 'not-a-uid' })
+  });
+  assert.equal(uidInvalido.status, 400);
+  assert.equal(
+    llamadasTunja.filter((llamada) =>
+      llamada.path === '/api/v1/cards' && llamada.method === 'POST'
+    ).length,
+    cantidadCreaciones
+  );
+});
+
+test('el administrador puede consultar y vincular su propia tarjeta', async () => {
+  const token = await iniciarSesionAdministrador();
+  const autorizacion = { Authorization: `Bearer ${token}` };
+
+  const estadoInicial = await fetchOriginal(`${baseUrl}/api/admin/tarjetas-nfc/mi-tarjeta`, {
+    headers: autorizacion
+  });
+  assert.equal(estadoInicial.status, 200);
+  assert.deepEqual((await estadoInicial.json()).data, {
+    vinculada: false,
+    identificador: null
+  });
+
+  const vinculacion = await fetchOriginal(`${baseUrl}/api/admin/tarjetas-nfc/mi-tarjeta`, {
+    method: 'POST',
+    headers: {
+      ...autorizacion,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ uid: 'deadbeef' })
+  });
+  assert.equal(vinculacion.status, 200);
+  assert.deepEqual((await vinculacion.json()).data, {
+    vinculada: true,
+    identificador: 'BEEF'
+  });
+  assert.deepEqual(
+    await ejecutar('get', 'SELECT usuario_id, email, uid FROM tarjetas_nfc WHERE uid = ?', ['DEADBEEF']),
+    { usuario_id: '99', email: 'admin@sura.test', uid: 'DEADBEEF' }
+  );
+  const creacionTarjeta = llamadasTunja.find((llamada) =>
+    llamada.path === '/api/v1/cards' && llamada.method === 'POST' &&
+    JSON.parse(llamada.body).uid === 'DEADBEEF'
+  );
+  assert.deepEqual(JSON.parse(creacionTarjeta.body), {
+    uid: 'DEADBEEF',
+    usuario_id: 99
+  });
+});
+
+test('el administrador puede iniciar sesión con su propia tarjeta y se rechazan tarjetas de afiliados', async () => {
+  const respuestaAdmin = await fetchOriginal(`${baseUrl}/api/admin/card-login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ uid: 'deadbeef' })
+  });
+  assert.equal(respuestaAdmin.status, 200);
+  const sesionAdmin = await respuestaAdmin.json();
+  assert.equal(sesionAdmin.data.rol, 'administrador');
+  assert.equal(sesionAdmin.data.eps, 'Sura');
+  assert.equal(sesionAdmin.tipo_token, 'Bearer');
+
+  const sesionValidada = await fetchOriginal(`${baseUrl}/api/admin/sesion`, {
+    headers: { Authorization: `Bearer ${sesionAdmin.token}` }
+  });
+  assert.equal(sesionValidada.status, 200);
+  assert.equal((await sesionValidada.json()).data.rol, 'administrador');
+
+  const tarjetaAfiliado = await fetchOriginal(`${baseUrl}/api/admin/card-login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ uid: 'AABBCC17' })
+  });
+  assert.equal(tarjetaAfiliado.status, 404);
+  assert.equal((await tarjetaAfiliado.json()).error, 'tarjeta_no_administrativa');
 });

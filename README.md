@@ -41,6 +41,8 @@ El backend escucha en `http://localhost:3001`; Vite suele usar
   o rechazar solicitudes de transporte, sin que eso asigne automáticamente un vehículo.
 - No existe un rol de operador en la API; las rutas antiguas de operador están
   deshabilitadas en lugar de mostrar métricas de demostración.
+- Los administradores de EPS pueden vincular su propia tarjeta NFC y asignar
+  tarjetas a afiliados activos y aprobados de su EPS desde **Tarjetas NFC**.
 - Las solicitudes de transporte se asocian a una cita confirmada y quedan
   pendientes de confirmación operativa.
 - El ACR122U se integra mediante el puente local de `nfc-bridge/`. Ejecuta

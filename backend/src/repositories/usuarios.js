@@ -16,6 +16,27 @@ export async function buscarPorEmail(email) {
   );
 }
 
+export async function buscarAdministradorPorId(idUsuario) {
+  return ejecutar(
+    'get',
+    `SELECT id_usuario, email, eps
+     FROM usuarios
+     WHERE id_usuario = ? AND rol = 'administrador' AND estado_registro = 'aprobado'`,
+    [idUsuario]
+  );
+}
+
+export async function buscarAdministradorPorEmail(email) {
+  return ejecutar(
+    'get',
+    `SELECT id_usuario, nombres, apellidos, tipo_documento, numero_documento,
+            estado_registro, rol, eps
+     FROM usuarios
+     WHERE lower(trim(email)) = lower(trim(?)) AND rol = 'administrador'`,
+    [email]
+  );
+}
+
 export async function buscarCredenciales(tipoDocumento, numeroDocumento) {
   return ejecutar(
     'get',

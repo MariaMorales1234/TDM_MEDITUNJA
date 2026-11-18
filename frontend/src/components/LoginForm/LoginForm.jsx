@@ -11,7 +11,11 @@ const PUENTE_NFC_URL = "http://127.0.0.1:8765";
 
 function LoginForm() {
     const { sesion, iniciarSesion, iniciarSesionTarjeta } = useAuth();
-    const { usuario, iniciarSesion: iniciarSesionAdmin } = useAdminAuth();
+    const {
+        usuario,
+        iniciarSesion: iniciarSesionAdmin,
+        iniciarSesionTarjeta: iniciarSesionAdminTarjeta,
+    } = useAdminAuth();
     const navigate = useNavigate();
     const location = useLocation();
     const [tipoDocumento, setTipoDocumento] = useState("CC");
@@ -53,8 +57,7 @@ function LoginForm() {
         const datos = new FormData(event.currentTarget);
         try {
             if (modoTarjeta) {
-                await iniciarSesionTarjeta(uidTarjeta.trim());
-                navigate(location.state?.from?.pathname || "/home", { replace: true });
+                await iniciarSesionConUid(uidTarjeta.trim());
             } else if (tipoDocumento === "NIT") {
                 await iniciarSesionAdmin({
                     tipo_documento: tipoDocumento,
@@ -86,17 +89,19 @@ function LoginForm() {
     }
 
     async function iniciarSesionConUid(uid) {
-        setError("");
         setEnviando(true);
         try {
+            try {
+                await iniciarSesionAdminTarjeta(uid);
+                navigate(location.state?.from?.pathname || "/perfilAdministrador", { replace: true });
+                return;
+            } catch (errorSolicitud) {
+                if (errorSolicitud?.code !== "tarjeta_no_administrativa") {
+                    throw errorSolicitud;
+                }
+            }
             await iniciarSesionTarjeta(uid);
             navigate(location.state?.from?.pathname || "/home", { replace: true });
-        } catch (errorSolicitud) {
-            setError(mensajeError(errorSolicitud));
-            const segundos = Number(errorSolicitud?.retryAfter);
-            if (errorSolicitud?.status === 429 && Number.isFinite(segundos) && segundos > 0) {
-                setEsperaReintento(Math.ceil(segundos));
-            }
         } finally {
             setEnviando(false);
         }

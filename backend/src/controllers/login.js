@@ -2,7 +2,9 @@ import crypto from 'node:crypto';
 import { promisify } from 'node:util';
 import * as usuarios from '../repositories/usuarios.js';
 import * as sesiones from '../repositories/sesiones.js';
+import * as tarjetasNfc from '../repositories/tarjetasNfc.js';
 import { tunjaRequest } from '../services/tunjaApi.js';
+import { responderFalloTarjeta } from './nfc.js';
 
 const scrypt = promisify(crypto.scrypt);
 const tiposDocumentoPermitidos = new Set(['CC', 'TI', 'CE', 'PAS', 'NIT']);
@@ -142,4 +144,100 @@ export function iniciarSesion(req, res) {
 
 export function iniciarSesionAdministrador(req, res) {
   return procesarInicioSesion(req, res, true);
+}
+
+export async function iniciarSesionAdministradorTarjeta(req, res) {
+  const uid = typeof req.body?.uid === 'string'
+    ? req.body.uid.trim().toUpperCase()
+    : '';
+  if (!/^(?:[A-F0-9]{2}){2,20}$/.test(uid)) {
+    return responderError(res, 400, 'uid_invalido', 'El UID debe contener entre 4 y 40 caracteres hexadecimales.');
+  }
+
+  try {
+    const tarjetaLocal = await tarjetasNfc.buscarPorUid(uid);
+    const administrador = tarjetaLocal
+      ? await usuarios.buscarAdministradorPorEmail(tarjetaLocal.email)
+      : null;
+    if (!tarjetaLocal || !administrador) {
+      return responderError(
+        res,
+        404,
+        'tarjeta_no_administrativa',
+        'Esta tarjeta no corresponde a una cuenta administradora.'
+      );
+    }
+
+    if (administrador.estado_registro !== 'aprobado') {
+      return responderError(
+        res,
+        403,
+        'cuenta_no_disponible',
+        'La cuenta administradora debe estar aprobada para iniciar sesión.'
+      );
+    }
+    if (typeof administrador.eps !== 'string' || !administrador.eps.trim()) {
+      return responderError(
+        res,
+        403,
+        'eps_no_asignada',
+        'La cuenta administradora debe tener una EPS asignada.'
+      );
+    }
+
+    let tarjetaTunja;
+    try {
+      tarjetaTunja = await tunjaRequest(`/cards/${encodeURIComponent(uid)}`, {
+        requiresKey: true
+      });
+    } catch (error) {
+      if (error.status === 404) {
+        return responderError(res, 401, 'tarjeta_no_valida', 'La tarjeta no está activa en TunjaAPI.');
+      }
+      return responderFalloTarjeta(res, error);
+    }
+
+    const usuarioTarjeta = tarjetaTunja?.usuario;
+    const asociacionValida = tarjetaTunja?.activa === true &&
+      String(usuarioTarjeta?.id) === String(tarjetaLocal.usuario_id) &&
+      typeof usuarioTarjeta?.email === 'string' &&
+      usuarioTarjeta.email.trim().toLowerCase() === tarjetaLocal.email.trim().toLowerCase();
+    if (!asociacionValida) {
+      return responderError(
+        res,
+        401,
+        tarjetaTunja?.activa === true ? 'tarjeta_asociacion_inconsistente' : 'tarjeta_inactiva',
+        tarjetaTunja?.activa === true
+          ? 'La asociación de esta tarjeta no coincide con la cuenta administradora.'
+          : 'La tarjeta está desactivada en TunjaAPI.'
+      );
+    }
+
+    const token = crypto.randomBytes(32).toString('hex');
+    const ahora = Date.now();
+    const expiraEn = ahora + duracionSesionMs;
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+    await sesiones.crear(administrador.id_usuario, tokenHash, ahora, expiraEn);
+
+    return res.status(200).json({
+      mensaje: 'Inicio de sesión exitoso.',
+      token,
+      tipo_token: 'Bearer',
+      expira_en: new Date(expiraEn).toISOString(),
+      expira_en_segundos: duracionSesionMs / 1000,
+      data: {
+        id_usuario: administrador.id_usuario,
+        nombres: administrador.nombres,
+        apellidos: administrador.apellidos,
+        tipo_documento: administrador.tipo_documento,
+        numero_documento: administrador.numero_documento,
+        estado_registro: administrador.estado_registro,
+        rol: administrador.rol,
+        eps: administrador.eps
+      }
+    });
+  } catch (error) {
+    console.error('Error al iniciar sesión administrativa con tarjeta NFC:', error.code || 'ERROR_INTERNO');
+    return responderError(res, 500, 'Error interno del servidor', 'Ocurrió un error al iniciar sesión.');
+  }
 }
