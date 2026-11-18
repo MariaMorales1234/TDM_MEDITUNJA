@@ -291,6 +291,18 @@ function sembrarConveniosBase() {
             fallo ? rejectActualizacion(fallo) : resolveActualizacion()
           );
         });
+        for (const ips of IPS_CATALOGO) {
+          const idsIps = [ips.id, ...[...ipsEquivalentes]
+            .filter(([, destino]) => destino === ips.id)
+            .map(([alias]) => alias)];
+          await new Promise((resolveActualizacion, rejectActualizacion) => {
+            db.run(`UPDATE convenios SET ips_nombre = ?, ips_sede = ?
+              WHERE ips_id IN (${idsIps.map(() => '?').join(', ')})`,
+            [ips.nombre, ips.sede, ...idsIps], (fallo) =>
+              fallo ? rejectActualizacion(fallo) : resolveActualizacion()
+            );
+          });
+        }
         for (const nombreEps of EPS_AFILIACIONES) {
           const eps = EPS_CATALOGO.find(({ nombre }) => normalizarNombre(nombre) === normalizarNombre(nombreEps));
           if (!eps) continue;

@@ -64,11 +64,11 @@ function Red() {
                                 <div className={styles.ipsBox}>
                                     <h4 className={styles.boxTitle}>IPS</h4>
                                     <ul className={styles.entityList}>
-                                        <li className={styles.entityItem}>Hospital San Rafael</li>
+                                        <li className={styles.entityItem}>Hospital Universitario San Rafael de Tunja - Sede Principal</li>
                                         <li className={styles.entityItem}>E.S.E. Santiago de Tunja</li>
-                                        <li className={styles.entityItem}>Clínica Mediláser</li>
-                                        <li className={styles.entityItem}>Clínica de Los Andes</li>
-                                        <li className={styles.entityItem}>Clínica Chía</li>
+                                        <li className={styles.entityItem}>Clínica Medilaser</li>
+                                        <li className={styles.entityItem}>Clínica Los Andes</li>
+                                        <li className={styles.entityItem}>Clínica de Chía S.A.</li>
                                     </ul>
                                 </div>
                             </div>

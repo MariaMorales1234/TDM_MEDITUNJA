@@ -38,7 +38,7 @@ const ubicacionesIps = [
     {
         id: "santiago-tunja",
         nombre: "E.S.E. Santiago de Tunja",
-        direccion: "Calle 16 N.° 9-41",
+        direccion: "Calle 16 N.\u00b0 9-41",
         lat: 5.528524,
         lng: -73.362395,
     },

@@ -252,7 +252,7 @@ function ResultadosAdministrador() {
                                 <select id="ips-procedimiento" name="provider" defaultValue="" required disabled={!ipsDisponibles.length}>
                                     <option value="" disabled>Selecciona una IPS</option>
                                     {ipsDisponibles.map(({ id, nombre, sede }) => (
-                                        <option key={id} value={`${nombre} · ${sede}`}>{nombre} · {sede}</option>
+                                        <option key={id} value={`${nombre}${sede ? ` - ${sede}` : ""}`}>{nombre}{sede ? ` - ${sede}` : ""}</option>
                                     ))}
                                 </select>
                             </div>

@@ -19,7 +19,7 @@ function ListaConvenios({ convenios, onEliminarConvenio, onEditarConvenio, conve
           <thead>
             <tr>
               <th>Prestador (IPS)</th>
-              <th>Sede y Dirección IPS</th>
+              <th>Dirección IPS</th>
               <th>Servicios</th>
               <th>Transporte Preferencial</th>
               <th>Estado</th>
@@ -37,10 +37,8 @@ function ListaConvenios({ convenios, onEliminarConvenio, onEditarConvenio, conve
             ) : (
               convenios.map((c) => (
                 <tr key={c.id}>
-                  <td>{c.ipsNombre}</td>
+                  <td>{c.ipsNombre}{c.ipsSede ? ` - ${c.ipsSede}` : ""}</td>
                   <td>
-                    <strong>{c.ipsSede || "Sede no especificada"}</strong>
-                    <br />
                     <small style={{ color: "#718096" }}>{c.ipsDireccion || "Dirección no disponible"}</small>
                   </td>
                   <td>

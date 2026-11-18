@@ -134,7 +134,7 @@ function ScheduleAppointment() {
                                 }} required disabled={!servicio || !ipsDisponibles.length}>
                                     <option value="">{servicio ? "Selecciona un lugar" : "Primero selecciona el servicio"}</option>
                                     {ipsDisponibles.map((opcion) => (
-                                        <option key={opcion.id} value={opcion.id}>{opcion.nombre} · {opcion.sede}</option>
+                                        <option key={opcion.id} value={opcion.id}>{opcion.nombre}{opcion.sede ? ` - ${opcion.sede}` : ""}</option>
                                     ))}
                                 </select>
                             </div>

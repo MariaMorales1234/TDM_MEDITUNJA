@@ -36,7 +36,7 @@ function ModifyAppointment({ cita, opcionesIps, horarios, enviando, error, onSub
                         <select id="admin-ips" name="ips" defaultValue={cita?.ips} required>
                             {!ipsActualEnCatalogo && <option value={cita.ips}>{cita.ips_nombre}</option>}
                             {opcionesIps.map(({ id, nombre, sede }) => (
-                                <option key={id} value={id}>{nombre} · {sede}</option>
+                                <option key={id} value={id}>{nombre}{sede ? ` - ${sede}` : ""}</option>
                             ))}
                         </select>
                     </div>

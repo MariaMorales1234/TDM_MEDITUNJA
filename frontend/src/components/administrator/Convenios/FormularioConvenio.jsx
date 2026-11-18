@@ -3,6 +3,7 @@
 // Maquetación limpia en HTML semántico dentro de JSX con CSS Modules
 
 import styles from "./Convenios.module.css";
+import { nombreIpsComoEnMapa } from "./ipsNombresMapa.js";
 
 function FormularioConvenio({
   epsId,
@@ -47,7 +48,7 @@ function FormularioConvenio({
             >
               {ipsDisponibles.map((ips) => (
                 <option key={ips.id} value={ips.id}>
-                  {ips.nombre} — {ips.sede}
+                  {nombreIpsComoEnMapa(ips)}
                 </option>
               ))}
             </select>
@@ -83,7 +84,7 @@ function FormularioConvenio({
           <span className={styles.numeroPaso}>2</span> Alcance de Servicios y Cobertura
         </legend>
         <p className={styles.descripcionSeccion}>
-          Servicios de referencia para {ipsActual.nombre} — {ipsActual.sede}. Confirma disponibilidad y códigos con la IPS antes de formalizar.
+          Servicios de referencia para {nombreIpsComoEnMapa(ipsActual)}. Confirma disponibilidad y códigos con la IPS antes de formalizar.
         </p>
 
         {/* Servicios Filtrados por Categorías */}

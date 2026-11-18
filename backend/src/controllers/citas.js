@@ -4,7 +4,7 @@ import * as usuariosTunja from '../repositories/usuariosTunja.js';
 import * as sesionesTarjeta from '../repositories/sesionesTarjeta.js';
 import { tunjaRequest } from '../services/tunjaApi.js';
 import { listarConvenios } from '../repositories/administracion.js';
-import { IPS_CATALOGO, SERVICIOS_POR_CATEGORIA } from '../config/convenios.js';
+import { IPS_CATALOGO, SERVICIOS_POR_CATEGORIA, nombreCompletoIps } from '../config/convenios.js';
 import { duracionPorServicio, tarifaPorServicio } from '../config/tarifasCitas.js';
 
 const horarios = Array.from({ length: 18 }, (_, indice) => {
@@ -304,7 +304,7 @@ export async function listarCitas(req, res) {
     );
     const ipsPorId = new Map((await obtenerIpsEnConvenio(req.usuarioCitas.eps)).map((ips) => [ips.id, ips]));
     return res.status(200).json({ data: citas.map((cita) => ({
-      ...cita, ips_nombre: ipsPorId.get(cita.ips)?.nombre || ipsCatalogo.get(cita.ips)?.nombre || cita.ips
+      ...cita, ips_nombre: nombreCompletoIps(ipsPorId.get(cita.ips) || ipsCatalogo.get(cita.ips)) || cita.ips
     })) });
   } catch (error) {
     console.error('Error al listar citas:', error.code || 'ERROR_INTERNO');
@@ -330,7 +330,7 @@ export async function listarCitasAdministrador(req, res) {
     const ips = new Map(ipsCatalogo);
     for (const convenio of await obtenerIpsEnConvenio(req.usuario.eps)) ips.set(convenio.id, convenio);
     return res.status(200).json({
-      data: citas.map((cita) => ({ ...cita, ips_nombre: ips.get(cita.ips)?.nombre || cita.ips })),
+      data: citas.map((cita) => ({ ...cita, ips_nombre: nombreCompletoIps(ips.get(cita.ips)) || cita.ips })),
       horarios,
       opcionesIps: [...ips].map(([id, { nombre, sede }]) => ({ id, nombre, sede }))
     });
@@ -542,7 +542,7 @@ export async function crearCita(req, res) {
       mensaje: 'Cita confirmada correctamente.',
       porcentaje_descuento: req.usuarioCitas.descuento,
       total_a_pagar: costoCita - descuentoAplicado,
-      cita: { ...cita, ips_nombre: ipsSeleccionada.nombre }
+      cita: { ...cita, ips_nombre: nombreCompletoIps(ipsSeleccionada) }
     });
   } catch (error) {
     if (error.code === 'SQLITE_CONSTRAINT' &&
