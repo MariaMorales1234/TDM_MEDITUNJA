@@ -33,6 +33,9 @@ await ejecutar(
 );
 
 const llamadasTunja = [];
+let saldoCitas = 5000;
+let simularRespuestaPerdida = false;
+const movimientosCitas = [];
 const fetchOriginal = globalThis.fetch;
 globalThis.fetch = async (input, opciones = {}) => {
   const url = new URL(input);
@@ -76,6 +79,24 @@ globalThis.fetch = async (input, opciones = {}) => {
       saldo: 45000
     });
   }
+  if (url.pathname === '/api/v1/users/17/wallet') {
+    return Response.json({ saldo: saldoCitas, movimientos: movimientosCitas });
+  }
+  if (url.pathname === '/api/v1/cards/AABBCCDD') {
+    return Response.json({ activa: true, usuario: { id: 17, email: 'wallet@example.com' } });
+  }
+  if (url.pathname === '/api/v1/users/17/wallet/charge') {
+    assert.equal(headers.get('x-api-key'), 'clave-de-prueba');
+    const { monto, concepto } = JSON.parse(opciones.body);
+    if (monto > saldoCitas) {
+      return Response.json({ error: 'saldo_insuficiente', saldo: saldoCitas, falta: monto - saldoCitas }, { status: 402 });
+    }
+    saldoCitas -= monto;
+    const movimiento = { operacion: 'cobro', monto, saldo: saldoCitas, concepto };
+    movimientosCitas.unshift(movimiento);
+    if (simularRespuestaPerdida) throw new Error('Tiempo de espera agotado');
+    return Response.json(movimiento);
+  }
   return Response.json({ error: 'ruta_desconocida' }, { status: 404 });
 };
 
@@ -83,6 +104,54 @@ const servidor = app.listen(0);
 await once(servidor, 'listening');
 const baseUrl = `http://127.0.0.1:${servidor.address().port}`;
 const token = 'token-de-prueba';
+
+test('paga la cita por su total en TunjaAPI y evita duplicados o reintentos ambiguos', async () => {
+  const insertarCita = (codigo, titular, hora) => ejecutar('run', `
+    INSERT INTO citas (codigo_cita, usuario_id, ips, servicio, especialidad, fecha, hora, modalidad, costo, descuento_aplicado)
+    VALUES (?, ?, 'san-rafael', 'Medicina general', 'Medicina general', '2099-01-01', ?, 'presencial', 12000, 2000)`,
+  [codigo, titular, hora]);
+  const { lastID: cita } = await insertarCita('PAGO-PRUEBA-1', '17', '08:00');
+  const { lastID: otra } = await insertarCita('PAGO-PRUEBA-2', '18', '09:30');
+  const peticion = (id, method = 'GET', uid = 'AABBCCDD') => fetchOriginal(`${baseUrl}/api/citas/${id}/pago`, {
+    method, headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    ...(method === 'POST' && { body: JSON.stringify({ monto: 1, uid }) })
+  });
+  assert.equal((await peticion(otra, 'POST')).status, 404);
+  const consulta = (await (await peticion(cita)).json()).data;
+  assert.equal(consulta.total, 10000);
+  assert.equal(consulta.saldo, 5000);
+  assert.equal((await peticion(cita, 'POST', '046891p7ACAF2A81')).status, 400);
+  assert.equal((await peticion(cita, 'POST', 'DEADBEEF')).status, 403);
+  assert.equal(llamadasTunja.some(({ path }) => path.endsWith('/charge')), false);
+  assert.equal((await peticion(cita, 'POST')).status, 402);
+  saldoCitas = 25000;
+  const resultados = await Promise.all([peticion(cita, 'POST'), peticion(cita, 'POST')]);
+  assert.ok(resultados.some(({ status }) => status === 200));
+  assert.equal(movimientosCitas.length, 1);
+  assert.equal(saldoCitas, 15000);
+  assert.equal((await peticion(cita, 'POST')).status, 200);
+  assert.equal(movimientosCitas.length, 1);
+
+  const { lastID: citaConIncidencia } = await insertarCita('PAGO-PRUEBA-3', '17', '11:00');
+  simularRespuestaPerdida = true;
+  assert.equal((await peticion(citaConIncidencia, 'POST')).status, 202);
+  assert.equal((await peticion(citaConIncidencia, 'POST')).status, 409);
+  const verificado = (await (await peticion(citaConIncidencia)).json()).data;
+  assert.equal(verificado.estado_pago, 'pagado');
+  assert.equal(verificado.saldo, 5000);
+  assert.equal(movimientosCitas.length, 2);
+  const { lastID: citaSimulada } = await insertarCita('PAGO-PRUEBA-4', '17', '12:30');
+  const simulacion = (confirmar) => fetchOriginal(`${baseUrl}/api/citas/${citaSimulada}/pago`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ metodo: 'pse', confirmar_simulacion: confirmar })
+  });
+  assert.equal((await simulacion(false)).status, 400);
+  assert.deepEqual((await (await simulacion(true)).json()).data, { estado_pago: 'pagado', metodo: 'pse' });
+  assert.equal((await (await peticion(citaSimulada)).json()).data.metodo, 'pse');
+  assert.equal(saldoCitas, 5000);
+  assert.equal(movimientosCitas.length, 2);
+});
 
 after(async () => {
   globalThis.fetch = fetchOriginal;

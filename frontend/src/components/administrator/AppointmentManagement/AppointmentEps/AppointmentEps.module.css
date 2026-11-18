@@ -27,7 +27,8 @@
 }
 
 .listHeader {
-    color: var(--color-text);
+    background: var(--marca-azul);
+    color: var(--marca-blanco);
     font-family: var(--sm);
     font-size: 12px;
     font-weight: 600;

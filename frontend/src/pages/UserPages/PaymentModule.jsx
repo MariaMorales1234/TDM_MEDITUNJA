@@ -1,43 +1,13 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { X, CheckCircle2, CreditCard, Smartphone, Landmark, RotateCcw, User, ArrowRight } from "lucide-react";
+import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { X, CheckCircle2, RotateCcw, User, ArrowRight } from "lucide-react";
 import { useAuth } from "../../auth/useAuth.js";
 import { apiRequest, mensajeError } from "../../auth/api.js";
 import NavbarUser from "../../components/user/NavbarUser/NavbarUser.jsx";
 import styles from "./PaymentModule.module.css";
+import { metodosPago } from "./metodosRecarga.js";
 
 const montosSugeridos = [20000, 50000, 100000, 200000];
-
-const metodosPago = [
-    {
-        id: "nequi",
-        nombre: "Nequi",
-        subtitulo: "Débito automático",
-        icono: Smartphone,
-        colorIcono: "#7800ff"
-    },
-    {
-        id: "pse",
-        nombre: "PSE",
-        subtitulo: "Débito bancario",
-        icono: Landmark,
-        colorIcono: "#0056b3"
-    },
-    {
-        id: "tarjeta",
-        nombre: "Tarjeta débito / crédito",
-        subtitulo: "Visa, Mastercard",
-        icono: CreditCard,
-        colorIcono: "#0284c7"
-    },
-    {
-        id: "daviplata",
-        nombre: "Daviplata",
-        subtitulo: "Billetera digital",
-        icono: Smartphone,
-        colorIcono: "#ed1c24"
-    }
-];
 
 const formatoPesos = new Intl.NumberFormat("es-CO", {
     style: "currency",
@@ -48,7 +18,12 @@ const formatoPesos = new Intl.NumberFormat("es-CO", {
 function PaymentModule() {
     const { sesion } = useAuth();
     const navigate = useNavigate();
+    const [parametros] = useSearchParams();
+    const citaId = parametros.get("cita");
+    const volverAPagar = citaId ? `/pagos?cita=${encodeURIComponent(citaId)}` : null;
+    const { state } = useLocation();
     const accessToken = sesion?.accessToken;
+    const [resultadoCita, setResultadoCita] = useState(null);
 
     const [tarjeta, setTarjeta] = useState(null);
     const [saldo, setSaldo] = useState(null);
@@ -57,11 +32,28 @@ function PaymentModule() {
 
     const [monto, setMonto] = useState(50000);
     const [otroMonto, setOtroMonto] = useState("");
-    const [metodoPago, setMetodoPago] = useState("nequi");
+    const [metodoPago, setMetodoPago] = useState(() =>
+        metodosPago.find(({ id }) => id === parametros.get("metodo"))?.id || "nequi"
+    );
 
     const [procesando, setProcesando] = useState(false);
     const [error, setError] = useState("");
     const [transaccionExitosa, setTransaccionExitosa] = useState(null);
+
+    useEffect(() => {
+        if (!citaId || !accessToken) return undefined;
+        const solicitud = new AbortController();
+        apiRequest(`/citas?id=${encodeURIComponent(citaId)}`, {
+            headers: { Authorization: `Bearer ${accessToken}` },
+            signal: solicitud.signal,
+        }).then(({ data }) => {
+            const cita = data.find((item) => item.estado === "confirmada");
+            setResultadoCita({ citaId, cita, error: cita ? "" : "La cita seleccionada no está confirmada." });
+        }).catch((errorSolicitud) => {
+            if (!solicitud.signal.aborted) setResultadoCita({ citaId, error: mensajeError(errorSolicitud) });
+        });
+        return () => solicitud.abort();
+    }, [accessToken, citaId]);
 
     // Cargar información de la tarjeta y saldo actual
     useEffect(() => {
@@ -200,10 +192,26 @@ function PaymentModule() {
                                 {transaccionExitosa ? "Recarga confirmada" : "Recargar saldo"}
                             </h1>
                         </div>
-                        <Link to="/home" className={styles.closeButton} aria-label="Cerrar y volver al inicio">
+                        <Link to={volverAPagar || "/home"} className={styles.closeButton} aria-label={volverAPagar ? "Volver al pago de la cita" : "Cerrar y volver al inicio"}>
                             <X size={20} />
                         </Link>
                     </div>
+
+                    {state?.mensajeTransporte && <p role="status">{state.mensajeTransporte}</p>}
+                    {citaId && (
+                        <section className={styles.sectionBlock} aria-label="Cita confirmada">
+                            {resultadoCita?.citaId !== citaId ? (
+                                <p role="status">Consultando tu cita…</p>
+                            ) : resultadoCita.error ? (
+                                <p role="alert">{resultadoCita.error}</p>
+                            ) : (
+                                <p>
+                                    <strong>{resultadoCita.cita.codigo_cita}</strong> · {resultadoCita.cita.servicio} ·{" "}
+                                    {resultadoCita.cita.ips_nombre} · {resultadoCita.cita.fecha} a las {resultadoCita.cita.hora}
+                                </p>
+                            )}
+                        </section>
+                    )}
 
                     {/* Tarjeta Billetera / Banner Oscuro (Estilo Exacto de la Imagen) */}
                     <div className={styles.walletBanner} aria-label="Estado de la tarjeta y saldo disponible">
@@ -367,9 +375,9 @@ function PaymentModule() {
                                 <button
                                     type="button"
                                     className={styles.submitButton}
-                                    onClick={() => navigate("/citas")}
+                                    onClick={() => navigate(volverAPagar || "/citas")}
                                 >
-                                    <span>Continuar a agendar citas</span>
+                                    <span>{volverAPagar ? "Volver a pagar la cita" : "Continuar a agendar citas"}</span>
                                     <ArrowRight size={18} style={{ marginLeft: 8 }} />
                                 </button>
                                 <button

@@ -1,5 +1,11 @@
 import { ejecutar } from './sqlite.js';
 
+const condicionEpsSolicitud = `(
+  lower(trim(eps)) = lower(trim(?)) OR
+  lower(trim(eps)) = lower('EPS ' || trim(?)) OR
+  lower(trim(eps)) = lower(trim(replace(lower(?), 'eps ', '')))
+)`;
+
 export async function buscarPorDocumento(tipoDocumento, numeroDocumento) {
   return ejecutar(
     'get',
@@ -71,10 +77,10 @@ export async function listarSolicitudesPorEps(eps) {
     `SELECT tipo_documento, numero_documento, email, nombres, apellidos, telefono, eps,
             estado_afiliacion, comprobante_tipo, comprobante_nombre, fecha_registro
      FROM usuarios_tunja
-     WHERE lower(eps) = lower(?)
+     WHERE ${condicionEpsSolicitud}
      ORDER BY CASE estado_afiliacion WHEN 'pendiente' THEN 0 ELSE 1 END,
               fecha_registro DESC`,
-    [eps]
+    [eps, eps, eps]
   );
 }
 
@@ -155,8 +161,8 @@ export async function buscarSolicitud(tipoDocumento, numeroDocumento, eps) {
             estado_afiliacion, comprobante_archivo, comprobante_tipo,
             comprobante_nombre
      FROM usuarios_tunja
-     WHERE tipo_documento = ? AND numero_documento = ? AND lower(eps) = lower(?)`,
-    [tipoDocumento, numeroDocumento, eps]
+     WHERE tipo_documento = ? AND numero_documento = ? AND ${condicionEpsSolicitud}`,
+    [tipoDocumento, numeroDocumento, eps, eps, eps]
   );
 }
 
@@ -168,7 +174,7 @@ export async function actualizarEstadoSolicitud(tipoDocumento, numeroDocumento, 
          comprobante_archivo = CASE WHEN ? = 'aprobado' THEN NULL ELSE comprobante_archivo END,
          comprobante_tipo = CASE WHEN ? = 'aprobado' THEN NULL ELSE comprobante_tipo END,
          comprobante_nombre = CASE WHEN ? = 'aprobado' THEN NULL ELSE comprobante_nombre END
-     WHERE tipo_documento = ? AND numero_documento = ? AND lower(eps) = lower(?)`,
-    [estado, estado, estado, estado, tipoDocumento, numeroDocumento, eps]
+     WHERE tipo_documento = ? AND numero_documento = ? AND ${condicionEpsSolicitud}`,
+    [estado, estado, estado, estado, tipoDocumento, numeroDocumento, eps, eps, eps]
   );
 }

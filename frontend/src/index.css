@@ -19,6 +19,13 @@
 }
 
 :root, [data-theme="light"] {
+    color-scheme: light;
+    --marca-azul: #000f54;
+    --marca-violeta: #6045f4;
+    --marca-cian: #26fff0;
+    --marca-verde: #70ff9e;
+    --marca-blanco: #fcfcfc;
+    --marca-fondo-destacado: linear-gradient(120deg, var(--marca-azul), color-mix(in srgb, var(--marca-azul) 67%, var(--marca-violeta)));
     --color-bg: #fcfcfc;
     --color-bg-card: #ffffff;
     --color-bg-elevated: #fafaff;
@@ -39,6 +46,7 @@
 }
 
 [data-theme="dark"] {
+    color-scheme: dark;
     --color-bg: #141429;
     --color-bg-card: #161628;
     --color-bg-elevated: #0b0b15;
@@ -67,6 +75,36 @@ body {
     background-color: var(--color-bg-elevated);
     color: var(--color-text);
     transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.theme-toggle-floating {
+    position: fixed;
+    inset-inline-end: max(16px, env(safe-area-inset-right));
+    inset-block-end: max(16px, env(safe-area-inset-bottom));
+    z-index: 900;
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border: 1px solid var(--color-primary);
+    border-radius: 50%;
+    background: var(--color-bg-card);
+    color: var(--color-text);
+    box-shadow: 0 4px 16px var(--color-shadow);
+    cursor: pointer;
+}
+
+body:has([data-theme-toggle="inline"]) .theme-toggle-floating {
+    display: none;
+}
+
+.theme-toggle-floating:hover {
+    background: var(--hover-secundary);
+}
+
+[data-theme-toggle]:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 3px;
 }
 
 .user-gestor {
@@ -254,8 +292,8 @@ body {
 }
 
 .user-gestor__table th {
-    background: var(--hover-secundary);
-    color: var(--color-text);
+    background: var(--marca-azul);
+    color: var(--marca-blanco);
     font-family: var(--heading);
     font-size: 0.82rem;
     font-weight: 700;
@@ -299,6 +337,7 @@ body {
 }
 
 .user-gestor__status--aprobado {
+    border: 1px solid color-mix(in srgb, var(--marca-verde), transparent 38%);
     background: var(--estado-aprobado-fondo);
     color: var(--estado-aprobado-texto);
 }

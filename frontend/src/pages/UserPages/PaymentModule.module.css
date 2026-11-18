@@ -82,7 +82,7 @@
    Tarjeta Billetera / Banner Oscuro (Estilo Captura)
    ========================================= */
 .walletBanner {
-    background: linear-gradient(135deg, #050b33 0%, #081145 50%, #060c3b 100%);
+    background: var(--marca-fondo-destacado);
     border-radius: 20px;
     padding: 24px 28px;
     color: #ffffff;
@@ -127,7 +127,7 @@
     font-size: 0.72rem;
     font-weight: 800;
     letter-spacing: 0.08em;
-    color: #8c9ac6;
+    color: color-mix(in srgb, var(--marca-blanco) 82%, var(--marca-cian));
     text-transform: uppercase;
     margin: 0;
 }
@@ -224,9 +224,9 @@
 }
 
 .amountButtonActive {
-    background-color: #5b3df5 !important;
-    border-color: #5b3df5 !important;
-    color: #ffffff !important;
+    background-color: var(--marca-violeta) !important;
+    border-color: var(--marca-violeta) !important;
+    color: var(--marca-blanco) !important;
     box-shadow: 0 6px 18px rgba(91, 61, 245, 0.35);
 }
 
@@ -365,7 +365,7 @@
     align-items: center;
     justify-content: center;
     padding: 16px 24px;
-    background-color: #5b3df5;
+    background-color: var(--marca-violeta);
     color: #ffffff;
     border: none;
     border-radius: 14px;

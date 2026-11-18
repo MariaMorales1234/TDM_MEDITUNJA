@@ -3,11 +3,6 @@
 // Maquetación limpia en HTML semántico dentro de JSX con CSS Modules
 
 import styles from "./Convenios.module.css";
-import {
-  IPS_CATALOGO,
-  PORTAFOLIOS_ASISTENCIALES,
-  CATEGORIAS_SERVICIOS
-} from "./data/conveniosData";
 
 function FormularioConvenio({
   epsId,
@@ -16,6 +11,9 @@ function FormularioConvenio({
   ipsId,
   setIpsId,
   ipsActual,
+  ipsDisponibles,
+  portafolios,
+  categorias,
   portafolioId,
   setPortafolioId,
   categoriaFiltro,
@@ -30,11 +28,6 @@ function FormularioConvenio({
   onRestablecer,
   onSubmit
 }) {
-  const ipsSeleccionada =
-    ipsActual ||
-    IPS_CATALOGO.find((ips) => ips.id === ipsId) ||
-    IPS_CATALOGO[0];
-
   return (
     <form onSubmit={onSubmit} className={styles.formularioConvenios}>
       {/* 1. Identificación de Instituciones (IPS Prestadora y EPS Gestora en Tunja) */}
@@ -55,7 +48,7 @@ function FormularioConvenio({
               value={ipsId}
               onChange={(e) => setIpsId(e.target.value)}
             >
-              {IPS_CATALOGO.map((ips) => (
+              {ipsDisponibles.map((ips) => (
                 <option key={ips.id} value={ips.id}>
                   {ips.nombre} — {ips.sede}
                 </option>
@@ -93,7 +86,7 @@ function FormularioConvenio({
           <span className={styles.numeroPaso}>2</span> Alcance de Servicios y Cobertura
         </legend>
         <p className={styles.descripcionSeccion}>
-          Servicios de referencia para {ipsSeleccionada.nombre} — {ipsSeleccionada.sede}. Confirma disponibilidad y códigos con la IPS antes de formalizar.
+          Servicios de referencia para {ipsActual.nombre} — {ipsActual.sede}. Confirma disponibilidad y códigos con la IPS antes de formalizar.
         </p>
 
         {/* Portafolio Asistencial Pactado */}
@@ -105,7 +98,7 @@ function FormularioConvenio({
               value={portafolioId}
               onChange={(e) => setPortafolioId(e.target.value)}
             >
-              {PORTAFOLIOS_ASISTENCIALES.map((portafolio) => (
+              {portafolios.map((portafolio) => (
                 <option key={portafolio.id} value={portafolio.id}>
                   {portafolio.nombre}
                 </option>
@@ -120,7 +113,7 @@ function FormularioConvenio({
           
           {/* Pestañas de categorías */}
           <div className={styles.barraFiltroCategorias} role="tablist" aria-label="Categorías de servicios">
-            {CATEGORIAS_SERVICIOS.map((cat) => (
+            {categorias.map((cat) => (
               <button
                 key={cat.id}
                 type="button"

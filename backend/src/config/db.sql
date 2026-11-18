@@ -88,6 +88,13 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_citas_ips_fecha_hora_confirmada
 CREATE INDEX IF NOT EXISTS idx_citas_usuario_fecha
     ON citas (usuario_id, fecha, hora);
 
+CREATE TABLE IF NOT EXISTS pagos_cita (
+    cita_id INTEGER PRIMARY KEY REFERENCES citas(id_cita),
+    referencia TEXT NOT NULL UNIQUE,
+    metodo TEXT NOT NULL DEFAULT 'nfc',
+    estado TEXT NOT NULL CHECK (estado IN ('en_proceso', 'pagado'))
+);
+
 CREATE TABLE IF NOT EXISTS tarjetas_nfc (
     id_tarjeta INTEGER PRIMARY KEY AUTOINCREMENT,
     usuario_id TEXT NOT NULL UNIQUE,

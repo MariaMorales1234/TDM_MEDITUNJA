@@ -1,21 +1,12 @@
 import { SquarePen } from "lucide-react";
 import styles from "./modifyAppointment.module.css";
 
-const ipsDisponibles = [
-    ["san-rafael", "Hospital San Rafael de Tunja"],
-    ["santiago-tunja", "E.S.E. Santiago de Tunja"],
-    ["clinica-medilaser", "Clínica Medilaser"],
-    ["clinica-andes", "Clínica Los Andes"],
-    ["clinica-chia", "Clínica de Chía"],
-];
-
-const horarios = ["08:00", "09:30", "11:00"];
-
 function fechaHoyColombia() {
     return new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString().slice(0, 10);
 }
 
-function ModifyAppointment({ cita, enviando, error, onSubmit, onClose }) {
+function ModifyAppointment({ cita, opcionesIps, horarios, enviando, error, onSubmit, onClose }) {
+    const ipsActualEnCatalogo = opcionesIps.some(({ id }) => id === cita.ips);
     function enviar(event) {
         event.preventDefault();
         const datos = new FormData(event.currentTarget);
@@ -43,8 +34,9 @@ function ModifyAppointment({ cita, enviando, error, onSubmit, onClose }) {
                     <div className={styles.group}>
                         <label htmlFor="admin-ips">Reasignar a IPS en Convenio:</label>
                         <select id="admin-ips" name="ips" defaultValue={cita?.ips} required>
-                            {ipsDisponibles.map(([id, nombre]) => (
-                                <option key={id} value={id}>{nombre}</option>
+                            {!ipsActualEnCatalogo && <option value={cita.ips}>{cita.ips_nombre}</option>}
+                            {opcionesIps.map(({ id, nombre, sede }) => (
+                                <option key={id} value={id}>{nombre} · {sede}</option>
                             ))}
                         </select>
                     </div>

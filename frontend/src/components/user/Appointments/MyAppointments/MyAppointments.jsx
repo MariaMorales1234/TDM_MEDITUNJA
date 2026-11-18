@@ -131,7 +131,7 @@ function MyAppointments() {
                                     </p>
 
                                     <p className={styles.ips}>
-                                        {ipsNombres[cita.ips] || cita.ips}
+                                        {cita.ips_nombre || ipsNombres[cita.ips] || cita.ips}
                                     </p>
 
                                     <div className={styles.extraInfo}>
@@ -153,6 +153,11 @@ function MyAppointments() {
                                 </div>
 
                                 <div className={styles.actions}>
+                                    {cita.estado === "confirmada" && (
+                                        <Link className={styles.modify} to={`/pagos?cita=${cita.id_cita}`}>
+                                            Ver pago
+                                        </Link>
+                                    )}
 
                                     {cancelable ? (
                                         <button

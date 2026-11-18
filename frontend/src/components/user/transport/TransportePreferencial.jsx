@@ -4,13 +4,14 @@
 // Integración de secuencia de flujo: Agendamiento -> Transporte -> Pagos -> Mapa
 
 import { Link } from "react-router-dom";
+import ThemeToggle from "../../ThemeToggle/ThemeToggle.jsx";
 import styles from "./TransportePreferencial.module.css";
 import { TIPOS_DISCAPACIDAD, REQUERIMIENTOS_VEHICULO } from "./data/transporteData";
 import { useTransporte } from "./hooks/useTransporte";
 import ModalConfirmacion from "./ModalConfirmacion";
 import ResumenExito from "./ResumenExito";
 
-function TransportePreferencial() {
+function TransportePreferencial({ citaId }) {
   const {
     datosCita,
     citaCargando,
@@ -48,61 +49,54 @@ function TransportePreferencial() {
     setModalidadViaje,
     declaracionVeracidad,
     setDeclaracionVeracidad
-  } = useTransporte();
+  } = useTransporte(citaId);
+  const idPago = datosCita?.citaId || citaId;
+  const rutaPagos = idPago ? `/pagos?cita=${encodeURIComponent(idPago)}` : "/pagos";
 
   return (
     <div className={styles.moduloTransporte}>
       {/* 1. Barra de Secuencia Visual del Flujo de Usuario */}
-      <nav className={styles.barraSecuencia} aria-label="Ruta y pasos del proceso">
+      <nav className={styles.barraSecuencia} aria-label="Pasos de tu cita">
         <ol className={styles.listaSecuencia}>
           <li className={`${styles.pasoSecuencia} ${styles.pasoCompletado}`}>
-            <Link to="/citas" className={styles.enlacePasoSecuencia} title="Paso 1: Agendamiento y consulta de citas. Clic para volver si tienes dudas">
-              <span className={styles.iconoPaso}>✓</span>
-              <span>Agendamiento y consulta de citas</span>
+            <Link to="/mis-citas" className={styles.enlacePasoSecuencia}>
+              <span className={styles.iconoPaso} aria-hidden="true">1</span>
+              <span>Cita</span>
             </Link>
           </li>
           <li className={`${styles.pasoSecuencia} ${styles.pasoActivo}`} aria-current="step">
-            <span className={styles.iconoPaso}>2</span>
-            <span>Transporte preferencial</span>
+            <span className={styles.iconoPaso} aria-hidden="true">2</span>
+            <span>Transporte</span>
           </li>
           <li className={styles.pasoSecuencia}>
-            <Link to="/pagos" className={styles.enlacePasoSecuencia} title="Paso 3: Ir al Módulo de Pagos">
-              <span className={styles.iconoPaso}>3</span>
-              <span>Módulo de Pagos</span>
+            <Link to={rutaPagos} className={styles.enlacePasoSecuencia}>
+              <span className={styles.iconoPaso} aria-hidden="true">3</span>
+              <span>Pagos</span>
             </Link>
-          </li>
-          <li className={`${styles.pasoSecuencia} ${styles.pasoPendiente}`}>
-            <span className={styles.iconoPaso}>4</span>
-            <span>Mapa</span>
           </li>
         </ol>
       </nav>
 
       {/* 2. Cabecera con navegación de retorno */}
       <header className={styles.cabeceraTransporte}>
-        <nav aria-label="Navegación secundaria y opciones de ruta" className={styles.navFlujo}>
-          <Link to="/citas" className={styles.enlaceVolver}>
-            ← Volver a Agendamiento de Citas (Por si tienes alguna duda)
-          </Link>
-          <Link to="/pagos" className={styles.enlaceSaltarPagos}>
-            Omitir Transporte e ir directo a Pagos →
+        <div className={styles.cabeceraTitulo}>
+          <h1>Transporte preferencial</h1>
+          <ThemeToggle className={styles.botonTema} />
+        </div>
+        <p className={styles.descripcionCabecera}>
+          Solicita un traslado accesible para tu cita. La EPS te confirmará si hay transporte disponible.
+        </p>
+        <nav aria-label="Opciones de la cita" className={styles.navFlujo}>
+          <Link to="/mis-citas" className={styles.enlaceVolver}>Ver mis citas</Link>
+          <Link to={rutaPagos} className={styles.enlaceSaltarPagos}>
+            Ir a pagos sin transporte
           </Link>
         </nav>
-        <div className={styles.encabezadoInfo}>
-          <div className={styles.iconoPrincipal} aria-hidden="true">♿ 🚐</div>
-          <div>
-            <h1>Servicio de Transporte Preferencial Adaptado</h1>
-            <p className={styles.descripcionCabecera}>
-              Programa de transporte accesible de la EPS para pacientes con discapacidad y movilidad reducida.
-              Garantizamos tu traslado seguro, puntual y digno hacia tu IPS de atención médica en Tunja.
-            </p>
-          </div>
-        </div>
-
       </header>
 
       {/* 3. Contenido Principal */}
       <main className={styles.contenidoPrincipal}>
+        {citaId && datosCita && <p className={styles.estadoCita} role="status">Cita confirmada · {datosCita.codigoCita}</p>}
         {citaCargando ? (
           <p role="status">Consultando tus citas confirmadas...</p>
         ) : !datosCita ? (
@@ -113,6 +107,7 @@ function TransportePreferencial() {
           </section>
         ) : solicitudEnviada ? (
           <ResumenExito
+            rutaPagos={rutaPagos}
             datosCita={datosCita}
             solicitudId={solicitudId}
             estadoSolicitud={estadoSolicitud}
@@ -126,23 +121,15 @@ function TransportePreferencial() {
             {/* SECCIÓN 1: DATOS DEL PACIENTE Y EPS (Bloqueados desde agendamiento de cita) */}
             <fieldset className={styles.seccionFormulario}>
               <legend className={styles.tituloSeccion}>
-                <span className={styles.numeroPaso}>1</span> Datos del Paciente y EPS
+                <span className={styles.numeroSeccion}>1</span> Datos del paciente
               </legend>
               <p className={styles.ayudaSeccion}>
-                <span className={styles.badgeBloqueado}>🔒 Información precargada</span> Datos verificados automáticamente desde el agendamiento de tu cita médica. No editables para garantizar la trazabilidad de tu servicio.
+                Estos datos vienen de tu perfil.
               </p>
-
-              {/* Botón de duda para devolverse a citas */}
-              <div className={styles.cajaDudaCita}>
-                <span>¿Tienes alguna duda con estos datos o necesitas modificarlos?</span>
-                <Link to="/citas" className={styles.btnDudaCitas}>
-                  ← Devolverme a verificar en Agendamiento de Citas
-                </Link>
-              </div>
 
               <div className={styles.filaFormulario}>
                 <div className={styles.campoFormulario}>
-                  <label htmlFor="tipoDocumento">Tipo de Documento:</label>
+                  <label htmlFor="tipoDocumento">Tipo de documento</label>
                   <input
                     type="text"
                     id="tipoDocumento"
@@ -155,7 +142,7 @@ function TransportePreferencial() {
                 </div>
 
                 <div className={styles.campoFormulario}>
-                  <label htmlFor="numeroDocumento">Número de Documento:</label>
+                  <label htmlFor="numeroDocumento">Número de documento</label>
                   <input
                     type="text"
                     id="numeroDocumento"
@@ -171,7 +158,7 @@ function TransportePreferencial() {
 
               <div className={styles.filaFormulario}>
                 <div className={styles.campoFormulario}>
-                  <label htmlFor="nombresPaciente">Nombres y Apellidos Completos:</label>
+                  <label htmlFor="nombresPaciente">Nombre completo</label>
                   <input
                     type="text"
                     id="nombresPaciente"
@@ -184,7 +171,7 @@ function TransportePreferencial() {
                 </div>
 
                 <div className={styles.campoFormulario}>
-                  <label htmlFor="epsPaciente">EPS a la que pertenece:</label>
+                  <label htmlFor="epsPaciente">EPS</label>
                   <input
                     type="text"
                     id="epsPaciente"
@@ -199,7 +186,7 @@ function TransportePreferencial() {
 
               <div className={styles.filaFormulario}>
                 <div className={styles.campoFormulario}>
-                  <label htmlFor="telefonoPaciente">Teléfono de contacto del Paciente:</label>
+                  <label htmlFor="telefonoPaciente">Teléfono del paciente</label>
                   <input
                     type="tel"
                     id="telefonoPaciente"
@@ -212,7 +199,7 @@ function TransportePreferencial() {
                 </div>
 
                 <div className={styles.campoFormulario}>
-                  <label htmlFor="telefonoCuidador">Teléfono de Acudiente o Contacto de Emergencia:</label>
+                  <label htmlFor="telefonoCuidador">Teléfono de emergencia</label>
                   <input
                     type="tel"
                     id="telefonoCuidador"
@@ -230,15 +217,11 @@ function TransportePreferencial() {
             {/* SECCIÓN 2: CITA MÉDICA E IPS DE DESTINO (Numeral 2; sin número de autorización) */}
             <fieldset className={styles.seccionFormulario}>
               <legend className={styles.tituloSeccion}>
-                <span className={styles.numeroPaso}>2</span> Cita Médica e IPS de Destino en Tunja
+                <span className={styles.numeroSeccion}>2</span> Datos de la cita
               </legend>
-              <p className={styles.ayudaSeccion}>
-                <span className={styles.badgeBloqueado}>🔒 Información precargada</span> Datos de la cita programada en la IPS. El despacho coordinará la llegada del vehículo adaptado con 40 minutos de anticipación.
-              </p>
-
               <div className={styles.filaFormulario}>
                 <div className={styles.campoFormulario}>
-                  <label htmlFor="ipsDestino">IPS de Atención en Tunja:</label>
+                  <label htmlFor="ipsDestino">IPS de destino</label>
                   <input
                     type="text"
                     id="ipsDestino"
@@ -251,7 +234,7 @@ function TransportePreferencial() {
                 </div>
 
                 <div className={styles.campoFormulario}>
-                  <label htmlFor="tipoAtencion">Servicio o Especialidad Médica:</label>
+                  <label htmlFor="tipoAtencion">Servicio o especialidad</label>
                   <input
                     type="text"
                     id="tipoAtencion"
@@ -266,7 +249,7 @@ function TransportePreferencial() {
 
               <div className={styles.filaFormulario}>
                 <div className={styles.campoFormulario}>
-                  <label htmlFor="fechaCita">Fecha de la Cita Médica:</label>
+                  <label htmlFor="fechaCita">Fecha de la cita</label>
                   <input
                     type="date"
                     id="fechaCita"
@@ -279,7 +262,7 @@ function TransportePreferencial() {
                 </div>
 
                 <div className={styles.campoFormulario}>
-                  <label htmlFor="horaCita">Hora Programada de la Cita:</label>
+                  <label htmlFor="horaCita">Hora de la cita</label>
                   <input
                     type="time"
                     id="horaCita"
@@ -297,15 +280,15 @@ function TransportePreferencial() {
             {/* SECCIÓN 3: CONDICIÓN DE DISCAPACIDAD Y ADAPTACIONES REQUERIDAS */}
             <fieldset className={styles.seccionFormulario}>
               <legend className={styles.tituloSeccion}>
-                <span className={styles.numeroPaso}>3</span> Condición de Discapacidad y Adaptaciones Requeridas
+                <span className={styles.numeroSeccion}>3</span> Apoyos para el traslado
               </legend>
               <p className={styles.ayudaSeccion}>
-                Al elegir tu condición médica, el sistema seleccionará automáticamente las adaptaciones recomendadas para tu traslado. Puedes modificarlas si lo requieres.
+                Elige tu condición y ajusta las adaptaciones sugeridas.
               </p>
 
               <div className={styles.campoFormulario}>
                 <label htmlFor="tipoDiscapacidad">
-                  Tipo de Discapacidad o Condición Médica: <span className={styles.requerido}>*</span>
+                  Discapacidad o condición médica <span className={styles.requerido}>*</span>
                 </label>
                 <select
                   id="tipoDiscapacidad"
@@ -314,7 +297,7 @@ function TransportePreferencial() {
                   onChange={handleDiscapacidadChange}
                   required
                 >
-                  <option value="">-- Selecciona el tipo de condición médica --</option>
+                  <option value="">Selecciona una opción</option>
                   {TIPOS_DISCAPACIDAD.map((tipo) => (
                     <option key={tipo.value} value={tipo.value}>
                       {tipo.label}
@@ -323,7 +306,7 @@ function TransportePreferencial() {
                 </select>
                 {tipoDiscapacidad && requerimientosRecomendados.length > 0 && (
                   <small className={styles.alertaRecomendacion}>
-                    ✨ Hemos preseleccionado automáticamente las adaptaciones técnicas recomendadas para tu condición.
+                    Revisa las adaptaciones recomendadas para tu traslado.
                   </small>
                 )}
               </div>
@@ -331,7 +314,7 @@ function TransportePreferencial() {
               {/* Tarjetas de requerimientos adaptados */}
               <div className={styles.campoFormulario}>
                 <span className={styles.etiquetaGrupo}>
-                  Requerimientos Específicos del Vehículo Adaptado (Selecciona las que apliquen):
+                  Adaptaciones del vehículo
                 </span>
 
                 <div className={styles.rejillaOpciones} role="group" aria-label="Adaptaciones técnicas del vehículo">
@@ -343,19 +326,15 @@ function TransportePreferencial() {
                       <label
                         key={req.id}
                         className={`${styles.opcionTarjeta} ${isChecked ? styles.opcionActiva : ""}`}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handleToggleRequerimiento(req.id);
-                        }}
                       >
                         <input
                           type="checkbox"
                           name={`req_${req.id}`}
                           checked={isChecked}
-                          onChange={() => {}}
+                          onChange={() => handleToggleRequerimiento(req.id)}
                         />
                         <span className={styles.opcionContenido}>
-                          <span className={styles.opcionIcono} aria-hidden="true">{req.icono}</span>
+                          <span className={styles.iconoAdaptacion} aria-hidden="true">{req.icono}</span>
                           <span>
                             <strong>
                               {req.titulo}{" "}
@@ -376,7 +355,7 @@ function TransportePreferencial() {
               <div className={styles.filaFormulario}>
                 <div className={styles.campoFormulario}>
                   <label htmlFor="viajaAcompanante">
-                    ¿Viaja con Acompañante o Cuidador?: <span className={styles.requerido}>*</span>
+                    ¿Viajas con acompañante? <span className={styles.requerido}>*</span>
                   </label>
                   <select
                     id="viajaAcompanante"
@@ -385,8 +364,8 @@ function TransportePreferencial() {
                     onChange={(e) => setViajaAcompanante(e.target.value)}
                     required
                   >
-                    <option value="no">No, el paciente viajará solo (Requiere asistencia del conductor)</option>
-                    <option value="si">Sí, viajará 1 acompañante / cuidador (Recomendado)</option>
+                    <option value="no">No, viajo solo</option>
+                    <option value="si">Sí, viajo con un acompañante</option>
                   </select>
                 </div>
 
@@ -412,13 +391,13 @@ function TransportePreferencial() {
             {/* SECCIÓN 4: LOGÍSTICA DE RECOGIDA Y RETORNO */}
             <fieldset className={styles.seccionFormulario}>
               <legend className={styles.tituloSeccion}>
-                <span className={styles.numeroPaso}>4</span> Domicilio de Recogida y Retorno en Tunja
+                <span className={styles.numeroSeccion}>4</span> Recogida y regreso
               </legend>
 
               <div className={styles.filaFormulario}>
                 <div className={styles.campoFormulario}>
                   <label htmlFor="direccionOrigen">
-                    Dirección Exacta de Recogida: <span className={styles.requerido}>*</span>
+                  Dirección de recogida <span className={styles.requerido}>*</span>
                   </label>
                   <input
                     type="text"
@@ -448,7 +427,7 @@ function TransportePreferencial() {
               </div>
 
               <div className={styles.campoFormulario}>
-                <label htmlFor="puntosReferencia">Puntos de Referencia y Accesibilidad del Inmueble:</label>
+                <label htmlFor="puntosReferencia">Referencias de acceso (opcional)</label>
                 <textarea
                   id="puntosReferencia"
                   name="puntosReferencia"
@@ -462,7 +441,7 @@ function TransportePreferencial() {
 
               <div className={styles.campoFormulario}>
                 <label htmlFor="modalidadViaje">
-                  Modalidad del Traslado: <span className={styles.requerido}>*</span>
+                  Tipo de viaje <span className={styles.requerido}>*</span>
                 </label>
                 <select
                   id="modalidadViaje"
@@ -471,9 +450,9 @@ function TransportePreferencial() {
                   onChange={(e) => setModalidadViaje(e.target.value)}
                   required
                 >
-                  <option value="ida-y-regreso">Ida y Regreso (El transporte me lleva a la IPS y me regresa al domicilio)</option>
-                  <option value="solo-ida">Solo Ida (Solo necesito el traslado hacia la IPS)</option>
-                  <option value="solo-regreso">Solo Regreso (Traslado desde la IPS de regreso a casa)</option>
+                  <option value="ida-y-regreso">Ida y regreso</option>
+                  <option value="solo-ida">Solo ida a la IPS</option>
+                  <option value="solo-regreso">Solo regreso a casa</option>
                 </select>
               </div>
             </fieldset>
@@ -490,25 +469,22 @@ function TransportePreferencial() {
                   required
                 />
                 <span>
-                  Declaro que la información suministrada es verídica y que el servicio es solicitado para facilitar la atención médica prioritaria del paciente con discapacidad en la IPS de Tunja, conforme a las políticas de salud y movilidad accesible.
+                  Confirmo que los datos ingresados son correctos y que solicito el traslado para asistir a esta cita.
                 </span>
               </label>
             </div>
 
             {/* Botones de acción del formulario con navegación del flujo */}
             <div className={styles.botonesFormulario}>
-              <Link to="/citas" className={styles.btnVolverCitas}>
-                ← Volver a Citas
-              </Link>
               <button type="button" className={styles.btnLimpiar} onClick={handleSolicitarLimpiar}>
-                Limpiar Campos
+                Limpiar formulario
               </button>
-              <Link to="/pagos" className={styles.btnOmitirTransporte}>
-                Omitir transporte e ir a Pagos →
+              <Link to={rutaPagos} className={styles.btnOmitirTransporte}>
+                Ir a pagos sin transporte
               </Link>
               {errorSolicitud && <p role="alert">{errorSolicitud}</p>}
               <button type="submit" className={styles.btnSolicitarTransporte} disabled={enviando}>
-                {enviando ? "Registrando solicitud..." : "Registrar solicitud de transporte"}
+                {enviando ? "Enviando solicitud…" : "Solicitar transporte"}
               </button>
             </div>
           </form>
@@ -533,18 +509,13 @@ function TransportePreferencial() {
           aria-describedby="modal-limpiar-descripcion"
         >
           <div className="modal-contenido">
-            <div className="modal-icono" aria-hidden="true">🗑️</div>
 
             <h3 id="modal-limpiar-titulo" className="modal-titulo">
-              ¿Estás seguro de que deseas limpiar todos los campos?
+              ¿Limpiar el formulario?
             </h3>
 
             <p id="modal-limpiar-descripcion" className="modal-descripcion">
-              Esta acción borrará <strong>toda la información</strong> que hayas ingresado en el formulario de transporte: condición de discapacidad, adaptaciones, datos de recogida y declaración.
-            </p>
-
-            <p className="modal-aclaracion">
-              Los datos del paciente y de la cita médica <strong>no se verán afectados</strong>, ya que están precargados desde tu agendamiento.
+              Se borrarán los datos que ingresaste para solicitar el traslado.
             </p>
 
             <div className="modal-acciones">
@@ -561,24 +532,13 @@ function TransportePreferencial() {
                 className="btn-modal-confirmar"
                 onClick={confirmarLimpiar}
               >
-                Sí, limpiar campos
+                Limpiar formulario
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* 5. Pie de página */}
-      <footer className={styles.pieTransporte}>
-        <div className={styles.pieContenedor}>
-          <p>
-            <strong>MediTunja - Transporte Preferencial en Salud</strong> | Proyecto de Usabilidad y Taller de Diseño Multimedia.
-          </p>
-          <p className={styles.pieAclaracion}>
-            Cumple con lineamientos de accesibilidad web (WCAG 2.1) para garantizar que los pacientes con discapacidad de cualquier EPS en Tunja accedan de manera oportuna, eficaz y humana a sus servicios en salud.
-          </p>
-        </div>
-      </footer>
     </div>
   );
 }

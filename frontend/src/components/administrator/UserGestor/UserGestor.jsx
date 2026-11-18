@@ -7,6 +7,11 @@ const etiquetasEstado = {
     aprobado: "Aprobado",
     rechazado: "Rechazado",
 };
+const etiquetasCuenta = {
+    activa: "Activa",
+    inactiva: "Inactiva",
+    sin_coincidencia: "Sin coincidencia",
+};
 
 function calcularEdad(fechaNacimiento) {
     if (!fechaNacimiento) return "—";
@@ -32,6 +37,8 @@ function UserGestor() {
     const [solicitudesTunja, setSolicitudesTunja] = useState([]);
     const [cargando, setCargando] = useState(true);
     const [errorCarga, setErrorCarga] = useState("");
+    const [errorTunja, setErrorTunja] = useState("");
+    const [cargandoTunja, setCargandoTunja] = useState(true);
     const [busqueda, setBusqueda] = useState("");
     const [sexoFiltro, setSexoFiltro] = useState("todos");
     const [estadoFiltro, setEstadoFiltro] = useState("todos");
@@ -69,7 +76,10 @@ function UserGestor() {
                 if (activo) setSolicitudesTunja(respuesta.data);
             })
             .catch((error) => {
-                if (activo) setErrorCarga(mensajeError(error));
+                if (activo) setErrorTunja(mensajeError(error));
+            })
+            .finally(() => {
+                if (activo) setCargandoTunja(false);
             });
 
         return () => {
@@ -265,11 +275,14 @@ function UserGestor() {
             <section className="user-gestor__panel" aria-labelledby="titulo-solicitudes-tunja">
                 <div className="user-gestor__list-heading">
                     <div>
-                        <h2 id="titulo-solicitudes-tunja">Solicitudes de activación</h2>
-                        <p>{solicitudesTunja.length} solicitud(es) de {usuario.eps}</p>
+                        <h2 id="titulo-solicitudes-tunja">Afiliaciones de {usuario.eps}</h2>
                     </div>
                 </div>
-                {solicitudesTunja.length === 0 ? (
+                {cargandoTunja ? (
+                    <p role="status">Consultando cuentas en TunjaAPI…</p>
+                ) : errorTunja ? (
+                    <p role="alert">{errorTunja}</p>
+                ) : solicitudesTunja.length === 0 ? (
                     <p className="user-gestor__empty">No hay solicitudes de afiliación para esta EPS.</p>
                 ) : (
                     <div className="user-gestor__table-wrap">
@@ -279,7 +292,8 @@ function UserGestor() {
                                     <th scope="col">Afiliado</th>
                                     <th scope="col">Documento</th>
                                     <th scope="col">Comprobante</th>
-                                    <th scope="col">Estado</th>
+                                    <th scope="col">Estado de afiliación</th>
+                                    <th scope="col">Cuenta en TunjaAPI</th>
                                     <th scope="col">Acciones</th>
                                 </tr>
                             </thead>
@@ -306,6 +320,7 @@ function UserGestor() {
                                                 {etiquetasEstado[solicitud.estado_afiliacion]}
                                             </span>
                                         </td>
+                                        <td>{etiquetasCuenta[solicitud.estado_cuenta] || "—"}</td>
                                         <td>
                                             {solicitud.estado_afiliacion === "pendiente" && (
                                                 <div className="user-gestor__actions">

@@ -1,38 +1,24 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { apiRequest, mensajeError } from "../../../../auth/api.js";
 import { useAuth } from "../../../../auth/useAuth.js";
 import styles from "./ScheduleAppointment.module.css";
 
-const ipsDisponibles = [
-    { id: "san-rafael", nombre: "Hospital San Rafael de Tunja" },
-    { id: "santiago-tunja", nombre: "E.S.E. Santiago de Tunja" },
-    { id: "clinica-medilaser", nombre: "Clínica Medilaser" },
-    { id: "clinica-andes", nombre: "Clínica Los Andes" },
-    { id: "clinica-chia", nombre: "Clínica de Chía" },
-];
-
-const serviciosDisponibles = [
-    { id: "cardio", nombre: "Cardiología" },
-    { id: "radio", nombre: "Radiología" },
-];
-
-function fechaHoyColombia() {
-    return new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString().slice(0, 10);
-}
-
 function ScheduleAppointment() {
     const { sesion } = useAuth();
-    const [ips, setIps] = useState(ipsDisponibles[0].id);
-    const [servicio, setServicio] = useState(serviciosDisponibles[0].id);
+    const navigate = useNavigate();
+    const [catalogo, setCatalogo] = useState(null);
+    const [errorCatalogo, setErrorCatalogo] = useState("");
+    const [ips, setIps] = useState("");
+    const [servicio, setServicio] = useState("");
     const [fecha, setFecha] = useState("");
     const [modalidad, setModalidad] = useState("presencial");
     const [hora, setHora] = useState("");
     const [disponibilidad, setDisponibilidad] = useState({ clave: "", horarios: [], error: "" });
     const [enviando, setEnviando] = useState(false);
     const [error, setError] = useState("");
-    const [mensaje, setMensaje] = useState("");
     const [actualizacion, setActualizacion] = useState(0);
-    const claveDisponibilidad = fecha
+    const claveDisponibilidad = fecha && ips
         ? `${sesion?.accessToken}|${ips}|${fecha}|${actualizacion}`
         : "";
     const cargandoHorarios = Boolean(claveDisponibilidad) &&
@@ -45,8 +31,20 @@ function ScheduleAppointment() {
         : "";
 
     useEffect(() => {
+        if (!sesion?.accessToken) return undefined;
+        const solicitud = new AbortController();
+        apiRequest("/citas/catalogo", {
+            headers: { Authorization: `Bearer ${sesion.accessToken}` },
+            signal: solicitud.signal,
+        }).then(setCatalogo).catch((errorSolicitud) => {
+            if (!solicitud.signal.aborted) setErrorCatalogo(mensajeError(errorSolicitud));
+        });
+        return () => solicitud.abort();
+    }, [sesion?.accessToken]);
+
+    useEffect(() => {
         let activa = true;
-        if (!sesion?.accessToken || !fecha) return undefined;
+        if (!sesion?.accessToken || !claveDisponibilidad) return undefined;
 
         apiRequest(`/citas/disponibilidad?ips=${encodeURIComponent(ips)}&fecha=${encodeURIComponent(fecha)}`, {
             headers: { Authorization: `Bearer ${sesion.accessToken}` },
@@ -71,8 +69,8 @@ function ScheduleAppointment() {
 
     async function confirmarCita(event) {
         event.preventDefault();
+        if (!fecha || !ips || !servicio || !hora || cargandoHorarios || enviando) return;
         setError("");
-        setMensaje("");
         setEnviando(true);
 
         try {
@@ -81,10 +79,8 @@ function ScheduleAppointment() {
                 headers: { Authorization: `Bearer ${sesion.accessToken}` },
                 body: JSON.stringify({ ips, servicio, fecha, hora, modalidad }),
             });
-            setMensaje(`${respuesta.mensaje} Código: ${respuesta.cita.codigo_cita}.`);
-            setHora("");
-            setActualizacion((valor) => valor + 1);
             window.dispatchEvent(new Event("citas-actualizadas"));
+            navigate(`/transporte?cita=${respuesta.cita.id_cita}`);
         } catch (errorSolicitud) {
             setError(mensajeError(errorSolicitud));
             setActualizacion((valor) => valor + 1);
@@ -93,7 +89,10 @@ function ScheduleAppointment() {
         }
     }
 
-    const ipsNombre = ipsDisponibles.find((opcion) => opcion.id === ips)?.nombre;
+    const ipsDisponibles = catalogo?.data || [];
+    const ipsSeleccionada = ipsDisponibles.find((opcion) => opcion.id === ips);
+    const ipsNombre = ipsSeleccionada?.nombre;
+    const serviciosDisponibles = ipsSeleccionada?.servicios || [];
     const servicioNombre = serviciosDisponibles.find((opcion) => opcion.id === servicio)?.nombre;
 
     return (
@@ -102,23 +101,29 @@ function ScheduleAppointment() {
                 <form onSubmit={confirmarCita}>
                     <fieldset>
                         <h3><span className={styles.Number}>1</span>Información de la cita</h3>
+                        {errorCatalogo && <p role="alert">{errorCatalogo}</p>}
+                        {!catalogo && !errorCatalogo && <p role="status">Consultando convenios de tu EPS…</p>}
+                        {catalogo && !ipsDisponibles.length && <p>No hay servicios en convenios activos de tu EPS.</p>}
                         <div className={styles.formGrid}>
-                            <div className={styles.formGroup}>
-                                <label htmlFor="especialidad">Servicio</label>
-                                <select id="especialidad" value={servicio} onChange={(event) => setServicio(event.target.value)} required>
-                                    {serviciosDisponibles.map((opcion) => (
-                                        <option key={opcion.id} value={opcion.id}>{opcion.nombre}</option>
-                                    ))}
-                                </select>
-                            </div>
                             <div className={styles.formGroup}>
                                 <label htmlFor="ips">IPS</label>
                                 <select id="ips" value={ips} onChange={(event) => {
                                     setIps(event.target.value);
+                                    setServicio("");
                                     setHora("");
                                     setError("");
-                                }} required>
+                                }} required disabled={!ipsDisponibles.length}>
+                                    <option value="">Selecciona una IPS</option>
                                     {ipsDisponibles.map((opcion) => (
+                                        <option key={opcion.id} value={opcion.id}>{opcion.nombre} · {opcion.sede}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div className={styles.formGroup}>
+                                <label htmlFor="especialidad">Servicio</label>
+                                <select id="especialidad" value={servicio} onChange={(event) => setServicio(event.target.value)} required disabled={!ipsSeleccionada}>
+                                    <option value="">Selecciona un servicio</option>
+                                    {serviciosDisponibles.map((opcion) => (
                                         <option key={opcion.id} value={opcion.id}>{opcion.nombre}</option>
                                     ))}
                                 </select>
@@ -129,7 +134,7 @@ function ScheduleAppointment() {
                                     type="date"
                                     id="fecha"
                                     value={fecha}
-                                    min={fechaHoyColombia()}
+                                    min={catalogo?.fechaMinima}
                                     onChange={(event) => {
                                         setFecha(event.target.value);
                                         setHora("");
@@ -150,10 +155,11 @@ function ScheduleAppointment() {
 
                     <fieldset>
                         <h3><span className={styles.Number}>2</span>Horarios disponibles</h3>
-                        {!fecha && <p>Selecciona una fecha para consultar la disponibilidad en tiempo real.</p>}
+                        <p>Las citas se agendan con al menos 24 horas de anticipación. Última cita del día: 5:30 p. m.</p>
+                        {(!ips || !fecha) && <p>Selecciona una IPS y una fecha para consultar los horarios.</p>}
                         {cargandoHorarios && <p role="status">Consultando disponibilidad...</p>}
                         {errorDisponibilidad && <p role="alert">{errorDisponibilidad}</p>}
-                        {!cargandoHorarios && fecha && horarios.length === 0 && !errorDisponibilidad && (
+                        {!cargandoHorarios && ips && fecha && !horarios.some((opcion) => opcion.disponible) && !errorDisponibilidad && (
                             <p>No hay horarios disponibles para esta fecha.</p>
                         )}
                         <div className={styles.gridHours}>
@@ -173,7 +179,6 @@ function ScheduleAppointment() {
                         </div>
                     </fieldset>
                     {error && <p role="alert">{error}</p>}
-                    {mensaje && <p role="status">{mensaje}</p>}
                 </form>
             </section>
 
@@ -190,7 +195,7 @@ function ScheduleAppointment() {
                     </div>
                     <button
                         type="button"
-                        disabled={!fecha || !hora || cargandoHorarios || enviando}
+                        disabled={!servicio || !fecha || !horarios.some((opcion) => opcion.hora === hora && opcion.disponible) || cargandoHorarios || enviando}
                         onClick={confirmarCita}
                     >
                         {enviando ? "Agendando..." : "Confirmar cita"}

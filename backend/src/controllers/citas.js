@@ -3,19 +3,20 @@ import { ejecutar } from '../repositories/sqlite.js';
 import * as usuariosTunja from '../repositories/usuariosTunja.js';
 import * as sesionesTarjeta from '../repositories/sesionesTarjeta.js';
 import { tunjaRequest } from '../services/tunjaApi.js';
+import { listarConvenios } from '../repositories/administracion.js';
+import { IPS_CATALOGO, SERVICIOS_POR_CATEGORIA } from '../config/convenios.js';
+import { tarifaBaseCita as costoCita } from '../config/tarifasCitas.js';
 
-const horarios = ['08:00', '09:30', '11:00'];
-const ipsPermitidas = new Map([
-  ['san-rafael', 'Hospital San Rafael de Tunja'],
-  ['santiago-tunja', 'E.S.E Santiago de Tunja'],
-  ['clinica-medilaser', 'Clínica Medilaser'],
-  ['clinica-andes', 'Clínica los Andes'],
-  ['clinica-chia', 'Clínica de Chía S.A']
+const horarios = ['08:00', '09:30', '11:00', '12:30', '14:00', '15:30', '17:00', '17:30'];
+const anticipacionMinima = 24 * 60 * 60 * 1000;
+const aliasIps = new Map([
+  ['ese-san-antonio', 'santiago-tunja'],
+  ['medilaser', 'clinica-medilaser'],
+  ['los-andes', 'clinica-andes']
 ]);
-const serviciosPermitidos = new Map([
-  ['cardio', { nombre: 'Cardiología', costo: 120000 }],
-  ['radio', { nombre: 'Radiología', costo: 120000 }]
-]);
+const idsServicioAnteriores = new Map([['cardio', 'srv-cardiologia'], ['radio', 'srv-rayos-x']]);
+const ipsCatalogo = new Map(IPS_CATALOGO.map((ips) => [aliasIps.get(ips.id) || ips.id, ips]));
+const serviciosCatalogo = new Map(SERVICIOS_POR_CATEGORIA.map(({ id, nombre }) => [id, nombre]));
 const modalidadesPermitidas = new Set(['presencial', 'telemedicina']);
 const duracionSesionTarjetaMs = 15 * 60 * 1000;
 const condicionMismaEpsCita = `(
@@ -49,6 +50,44 @@ function fechaHoyColombia() {
 
 function instanteCita(fecha, hora) {
   return new Date(`${fecha}T${hora}:00-05:00`).getTime();
+}
+
+async function obtenerIpsEnConvenio(eps, { usarCatalogoBase = false } = {}) {
+  if (!eps) return [];
+  const convenios = await listarConvenios(eps);
+  if (usarCatalogoBase && convenios.length === 0) {
+    return [...ipsCatalogo].map(([id, { nombre, sede, servicios }]) => ({
+      id, nombre, sede,
+      servicios: servicios.map((idServicio) => ({ id: idServicio, nombre: serviciosCatalogo.get(idServicio) }))
+    }));
+  }
+  const ipsPorId = new Map();
+  for (const convenio of convenios) {
+    if (convenio.estado !== 'Activo') continue;
+    const id = aliasIps.get(convenio.ipsId) || convenio.ipsId;
+    const ips = ipsPorId.get(id) || {
+      id, nombre: convenio.ipsNombre, sede: convenio.ipsSede, servicios: new Map()
+    };
+    for (const servicio of convenio.serviciosSeleccionados) {
+      const servicioId = idsServicioAnteriores.get(servicio) || servicio;
+      ips.servicios.set(servicioId, {
+        id: servicioId, nombre: serviciosCatalogo.get(servicioId) || servicioId
+      });
+    }
+    if (ips.servicios.size) ipsPorId.set(id, ips);
+  }
+  return [...ipsPorId.values()].map((ips) => ({ ...ips, servicios: [...ips.servicios.values()] }));
+}
+
+export async function listarCatalogoCitas(req, res) {
+  try {
+    const data = await obtenerIpsEnConvenio(req.usuarioCitas.eps, { usarCatalogoBase: true });
+    return res.json({ data, fechaMinima: new Date(Date.now() + anticipacionMinima - 5 * 60 * 60 * 1000)
+      .toISOString().slice(0, 10) });
+  } catch (error) {
+    console.error('Error al consultar convenios para citas:', error.code || 'ERROR_INTERNO');
+    return responderError(res, 500, 'error_interno', 'No fue posible consultar los convenios de tu EPS.');
+  }
 }
 
 function obtenerPerfilTunja(respuesta) {
@@ -108,7 +147,8 @@ export async function autenticarUsuarioTunja(req, res, next) {
       req.usuarioCitas = {
         id: sesionTarjeta.usuario_id,
         email: sesionTarjeta.email,
-        descuento: sesionTarjeta.descuento
+        descuento: sesionTarjeta.descuento,
+        eps: sesionTarjeta.eps
       };
       req.sesionTarjeta = true;
       return next();
@@ -147,7 +187,7 @@ export async function autenticarUsuarioTunja(req, res, next) {
       await usuariosTunja.asociarIdTunja(perfil.email, perfil.id);
     }
 
-    req.usuarioCitas = perfil;
+    req.usuarioCitas = { ...perfil, eps: solicitud.eps };
     return next();
   } catch (error) {
     if (error.status === 401) {
@@ -163,11 +203,15 @@ export async function autenticarUsuarioTunja(req, res, next) {
 
 export async function obtenerDisponibilidad(req, res) {
   const { ips, fecha } = req.query;
-  if (!ipsPermitidas.has(ips) || !fechaValida(fecha) || fecha < fechaHoyColombia()) {
+  if (typeof ips !== 'string' || !fechaValida(fecha) || fecha < fechaHoyColombia()) {
     return responderError(res, 400, 'datos_invalidos', 'Selecciona una IPS y una fecha válida a partir de hoy.');
   }
 
   try {
+    const opciones = await obtenerIpsEnConvenio(req.usuarioCitas.eps, { usarCatalogoBase: true });
+    if (!opciones.some((opcion) => opcion.id === ips)) {
+      return responderError(res, 400, 'ips_sin_convenio', 'Selecciona una IPS disponible para tu EPS.');
+    }
     const ocupadas = await ejecutar(
       'all',
       `SELECT hora FROM citas
@@ -177,7 +221,7 @@ export async function obtenerDisponibilidad(req, res) {
     const horasOcupadas = new Set(ocupadas.map((cita) => cita.hora));
     const ahora = Date.now();
     const datos = horarios.map((hora) => {
-      const disponible = !horasOcupadas.has(hora) && instanteCita(fecha, hora) > ahora;
+      const disponible = !horasOcupadas.has(hora) && instanteCita(fecha, hora) >= ahora + anticipacionMinima;
       return {
         hora,
         disponible,
@@ -193,16 +237,23 @@ export async function obtenerDisponibilidad(req, res) {
 }
 
 export async function listarCitas(req, res) {
+  const id = req.query.id === undefined ? null : Number(req.query.id);
+  if (id !== null && (!Number.isSafeInteger(id) || id < 1)) {
+    return responderError(res, 400, 'cita_invalida', 'Selecciona una cita válida.');
+  }
   try {
     const citas = await ejecutar(
       'all',
       `SELECT id_cita, codigo_cita, ips, servicio, especialidad, fecha, hora,
               modalidad, costo, descuento_aplicado, estado
-       FROM citas WHERE usuario_id = ?
+       FROM citas WHERE usuario_id = ? AND (? IS NULL OR id_cita = ?)
        ORDER BY fecha DESC, hora DESC, id_cita DESC`,
-      [req.usuarioCitas.id]
+      [req.usuarioCitas.id, id, id]
     );
-    return res.status(200).json({ data: citas });
+    const ipsPorId = new Map((await obtenerIpsEnConvenio(req.usuarioCitas.eps)).map((ips) => [ips.id, ips]));
+    return res.status(200).json({ data: citas.map((cita) => ({
+      ...cita, ips_nombre: ipsPorId.get(cita.ips)?.nombre || ipsCatalogo.get(cita.ips)?.nombre || cita.ips
+    })) });
   } catch (error) {
     console.error('Error al listar citas:', error.code || 'ERROR_INTERNO');
     return responderError(res, 500, 'error_interno', 'No fue posible consultar tus citas.');
@@ -211,7 +262,7 @@ export async function listarCitas(req, res) {
 
 export async function listarCitasAdministrador(req, res) {
   try {
-    const data = await ejecutar(
+    const citas = await ejecutar(
       'all',
       `SELECT c.id_cita AS id, c.codigo_cita, c.ips, c.especialidad, c.fecha,
               c.hora, c.estado, c.costo, c.descuento_aplicado,
@@ -224,7 +275,13 @@ export async function listarCitasAdministrador(req, res) {
        ORDER BY c.fecha DESC, c.hora DESC, c.id_cita DESC`,
       [req.usuario.eps, req.usuario.eps, req.usuario.eps]
     );
-    return res.status(200).json({ data });
+    const ips = new Map(ipsCatalogo);
+    for (const convenio of await obtenerIpsEnConvenio(req.usuario.eps)) ips.set(convenio.id, convenio);
+    return res.status(200).json({
+      data: citas.map((cita) => ({ ...cita, ips_nombre: ips.get(cita.ips)?.nombre || cita.ips })),
+      horarios,
+      opcionesIps: [...ips].map(([id, { nombre, sede }]) => ({ id, nombre, sede }))
+    });
   } catch (error) {
     console.error('Error al listar citas administrativas:', error.code || 'ERROR_INTERNO');
     return responderError(res, 500, 'error_interno', 'No fue posible consultar las citas de la EPS.');
@@ -300,7 +357,7 @@ export async function reprogramarCitaAdministrador(req, res) {
   const idCita = Number(req.params.id);
   const { ips, fecha, hora, motivo } = req.body || {};
   if (!Number.isSafeInteger(idCita) || idCita < 1 ||
-      !ipsPermitidas.has(ips) || !fechaValida(fecha) ||
+      !textoValido(ips, 100) || !fechaValida(fecha) ||
       fecha < fechaHoyColombia() || !horarios.includes(hora) ||
       !textoValido(motivo, 500)) {
     return responderError(res, 400, 'datos_invalidos', 'Revisa la IPS, la fecha, el horario y la justificación.');
@@ -312,6 +369,10 @@ export async function reprogramarCitaAdministrador(req, res) {
   try {
     const cita = await buscarCitaDeEps(idCita, req.usuario.eps);
     if (!cita) return responderError(res, 404, 'cita_no_encontrada', 'No se encontró la cita de esta EPS.');
+    if (ips !== cita.ips && !ipsCatalogo.has(ips) &&
+        !(await obtenerIpsEnConvenio(req.usuario.eps)).some((opcion) => opcion.id === ips)) {
+      return responderError(res, 400, 'ips_sin_convenio', 'Selecciona una IPS válida.');
+    }
     if (cita.estado !== 'confirmada') {
       return responderError(res, 409, 'cita_no_confirmada', 'No se puede reprogramar una cita cancelada.');
     }
@@ -355,11 +416,12 @@ export async function cancelarCitaAdministrador(req, res) {
       'run',
       `UPDATE citas
        SET estado = 'cancelada', motivo_administrativo = ?, modificada_en = CURRENT_TIMESTAMP
-       WHERE id_cita = ? AND estado = 'confirmada'`,
+       WHERE id_cita = ? AND estado = 'confirmada'
+         AND NOT EXISTS (SELECT 1 FROM pagos_cita WHERE cita_id = citas.id_cita AND estado = 'en_proceso')`,
       [motivo.trim(), idCita]
     );
     if (resultado.changes !== 1) {
-      return responderError(res, 409, 'cita_no_confirmada', 'La cita ya fue cancelada.');
+      return responderError(res, 409, 'cancelacion_no_disponible', 'Actualiza la cita y verifica si hay un pago en proceso.');
     }
     return res.status(200).json({ mensaje: 'Cita cancelada correctamente.' });
   } catch (error) {
@@ -370,23 +432,25 @@ export async function cancelarCitaAdministrador(req, res) {
 
 export async function crearCita(req, res) {
   const { ips, servicio, fecha, hora, modalidad = 'presencial' } = req.body || {};
-  const servicioSeleccionado = serviciosPermitidos.get(servicio);
 
-  if (!ipsPermitidas.has(ips) || !servicioSeleccionado ||
-      !fechaValida(fecha) || fecha < fechaHoyColombia() ||
+  if (!textoValido(ips, 100) || !textoValido(servicio, 100) || !fechaValida(fecha) ||
       !horarios.includes(hora) || !modalidadesPermitidas.has(modalidad)) {
     return responderError(res, 400, 'datos_invalidos', 'Revisa la IPS, el servicio, la fecha, el horario y la modalidad.');
   }
-  if (instanteCita(fecha, hora) <= Date.now()) {
-    return responderError(res, 400, 'horario_vencido', 'Selecciona un horario futuro.');
+  if (instanteCita(fecha, hora) - Date.now() < anticipacionMinima) {
+    return responderError(res, 400, 'anticipacion_insuficiente', 'Agenda con al menos 24 horas de anticipación.');
   }
 
-  const descuentoAplicado = Math.round(
-    servicioSeleccionado.costo * req.usuarioCitas.descuento / 100
-  );
-  const codigoCita = `CITA-${new Date().getFullYear()}-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
-
   try {
+    const opciones = await obtenerIpsEnConvenio(req.usuarioCitas.eps, { usarCatalogoBase: true });
+    const ipsSeleccionada = opciones.find((opcion) => opcion.id === ips);
+    const servicioId = idsServicioAnteriores.get(servicio) || servicio;
+    const servicioSeleccionado = ipsSeleccionada?.servicios.find((opcion) => opcion.id === servicioId);
+    if (!servicioSeleccionado) {
+      return responderError(res, 400, 'servicio_sin_convenio', 'Selecciona un servicio disponible en esa IPS para tu EPS.');
+    }
+    const descuentoAplicado = Math.round(costoCita * req.usuarioCitas.descuento / 100);
+    const codigoCita = `CITA-${new Date().getFullYear()}-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
     const { lastID } = await ejecutar(
       'run',
       `INSERT INTO citas (
@@ -402,7 +466,7 @@ export async function crearCita(req, res) {
         fecha,
         hora,
         modalidad,
-        servicioSeleccionado.costo,
+        costoCita,
         descuentoAplicado
       ]
     );
@@ -416,8 +480,8 @@ export async function crearCita(req, res) {
     return res.status(201).json({
       mensaje: 'Cita confirmada correctamente.',
       porcentaje_descuento: req.usuarioCitas.descuento,
-      total_a_pagar: servicioSeleccionado.costo - descuentoAplicado,
-      cita
+      total_a_pagar: costoCita - descuentoAplicado,
+      cita: { ...cita, ips_nombre: ipsSeleccionada.nombre }
     });
   } catch (error) {
     if (error.code === 'SQLITE_CONSTRAINT' &&
@@ -455,11 +519,12 @@ export async function cancelarCita(req, res) {
     const resultado = await ejecutar(
       'run',
       `UPDATE citas SET estado = 'cancelada'
-       WHERE id_cita = ? AND usuario_id = ? AND estado = 'confirmada'`,
+       WHERE id_cita = ? AND usuario_id = ? AND estado = 'confirmada'
+         AND NOT EXISTS (SELECT 1 FROM pagos_cita WHERE cita_id = citas.id_cita AND estado = 'en_proceso')`,
       [idCita, req.usuarioCitas.id]
     );
     if (resultado.changes !== 1) {
-      return responderError(res, 409, 'cita_no_confirmada', 'La cita ya fue cancelada.');
+      return responderError(res, 409, 'cancelacion_no_disponible', 'Actualiza la cita y verifica si hay un pago en proceso.');
     }
     return res.status(200).json({
       mensaje: 'Cita cancelada correctamente.',

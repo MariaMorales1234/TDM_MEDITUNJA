@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 
-function ResumenExito({ datosCita, solicitudId, estadoSolicitud, requerimientosSeleccionados, catalogoRequerimientos }) {
+function ResumenExito({ datosCita, solicitudId, estadoSolicitud, requerimientosSeleccionados, catalogoRequerimientos, rutaPagos }) {
   const requerimientos = requerimientosSeleccionados
     .map((id) => catalogoRequerimientos.find((item) => item.id === id)?.titulo)
     .filter(Boolean);
@@ -31,7 +31,7 @@ function ResumenExito({ datosCita, solicitudId, estadoSolicitud, requerimientosS
       </div>
       <div className="acciones-confirmacion">
         <Link to="/citas" className="btn-accion-secundario">Volver a mis citas</Link>
-        <Link to="/pagos" className="btn-accion-secundario">Consultar disponibilidad de pagos</Link>
+        <Link to={rutaPagos} className="btn-accion-secundario">Continuar a pagos</Link>
       </div>
     </section>
   );

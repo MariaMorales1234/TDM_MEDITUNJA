@@ -6,17 +6,11 @@ import ModifyAppointment from "../ModifyAppointment/ModifyAppointment.jsx";
 import CancelAppointment from "../CancelAppointment/CancelAppointment.jsx";
 import styles from "./AppointmentEps.module.css";
 
-const nombresIps = {
-    "san-rafael": "Hospital San Rafael de Tunja",
-    "santiago-tunja": "E.S.E. Santiago de Tunja",
-    "clinica-medilaser": "Clínica Medilaser",
-    "clinica-andes": "Clínica Los Andes",
-    "clinica-chia": "Clínica de Chía",
-};
-
 function AppointmentEps() {
     const { token } = useAdminAuth();
     const [citas, setCitas] = useState([]);
+    const [opcionesIps, setOpcionesIps] = useState([]);
+    const [horarios, setHorarios] = useState([]);
     const [busqueda, setBusqueda] = useState("");
     const [estadoFiltro, setEstadoFiltro] = useState("todos");
     const [modalActivo, setModalActivo] = useState(null);
@@ -32,7 +26,10 @@ function AppointmentEps() {
         apiRequest("/admin/citas", {
             headers: { Authorization: `Bearer ${token}` },
         }).then((respuesta) => {
-            if (activa) setCitas(respuesta.data);
+            if (!activa) return;
+            setCitas(respuesta.data);
+            setOpcionesIps(respuesta.opcionesIps);
+            setHorarios(respuesta.horarios);
         }).catch((errorSolicitud) => {
             if (activa) setError(mensajeError(errorSolicitud));
         }).finally(() => {
@@ -53,7 +50,7 @@ function AppointmentEps() {
                 cita.correo,
                 cita.codigo_cita,
                 cita.especialidad,
-                cita.ips,
+                cita.ips_nombre,
             ].join(" ").toLocaleLowerCase("es").includes(termino);
             const coincideEstado = estadoFiltro === "todos" || cita.estado === estadoFiltro;
             return coincideBusqueda && coincideEstado;
@@ -102,7 +99,13 @@ function AppointmentEps() {
             "PUT",
             datos,
             "Cita reprogramada correctamente.",
-            (cita) => ({ ...cita, ips: datos.ips, fecha: datos.fecha, hora: datos.hora })
+            (cita) => ({
+                ...cita,
+                ips: datos.ips,
+                ips_nombre: opcionesIps.find(({ id }) => id === datos.ips)?.nombre || cita.ips_nombre,
+                fecha: datos.fecha,
+                hora: datos.hora,
+            })
         );
     }
 
@@ -160,7 +163,7 @@ function AppointmentEps() {
                         </div>
                         <div className={styles.details}>
                             <span>{cita.especialidad}</span>
-                            <span>{nombresIps[cita.ips] || cita.ips}</span>
+                            <span>{cita.ips_nombre}</span>
                             <span className={styles.patientMeta}>Código: {cita.codigo_cita}</span>
                         </div>
                         <div className={styles.schedule}>
@@ -189,6 +192,8 @@ function AppointmentEps() {
             {modalActivo === "modificar" && (
                 <ModifyAppointment
                     cita={citaSeleccionada}
+                    opcionesIps={opcionesIps}
+                    horarios={horarios}
                     enviando={guardando}
                     error={errorOperacion}
                     onSubmit={reprogramar}

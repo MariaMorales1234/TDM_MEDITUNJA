@@ -1,12 +1,13 @@
 import { lazy, Suspense } from "react";
 import { ThemeProvider } from "./context/ThemeContext.jsx";
+import ThemeToggle from "./components/ThemeToggle/ThemeToggle.jsx";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 import LandingPage from "./pages/Landingpage.jsx";
 import HomeUserModule from "./pages/UserPages/HomeUserModule.jsx";
 import Login from "./pages/Login.jsx";
 import Register from "./pages/Register.jsx";
-import PaymentModule from "./pages/UserPages/PaymentModule.jsx";
+import AppointmentPaymentModule from "./pages/UserPages/AppointmentPaymentModule.jsx";
 import TransportModule from "./pages/UserPages/TransportModule.jsx";
 import ProcedureResults from "./components/user/resultados_procedimientos.jsx";
 import ResultadosAdministrador from "./components/administrator/resultados_administrador.jsx";
@@ -34,6 +35,7 @@ function App() {
     return (
         <ThemeProvider>
         <BrowserRouter>
+            <ThemeToggle className="theme-toggle-floating" floating />
             <Routes>
                 <Route path="/" element={<LandingPage />} />
                 <Route path="/meditunja" element={<LandingPage />} />
@@ -67,7 +69,7 @@ function App() {
                     <Route path="/home" element={<HomeUserModule />} />
                     <Route path="/citas" element={<AppointmentModule />} />
                     <Route path="/mis-citas" element={<MyAppoitmentModule />} />
-                    <Route path="/pagos" element={<PaymentModule />} />
+                    <Route path="/pagos" element={<AppointmentPaymentModule />} />
                     <Route path="/recargar-saldo" element={<RechargeBalanceModule />} />
                     <Route path="/transporte" element={<TransportModule />} />
                     <Route path="/perfilUsuario" element={<ProfileUser />} />

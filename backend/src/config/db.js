@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sqlite3 from 'sqlite3';
+import { tarifaBaseCita, tarifaMaximaCita } from './tarifasCitas.js';
 
 const carpetaModulo = path.dirname(fileURLToPath(import.meta.url));
 const rutaBaseDatos = path.resolve(
@@ -233,6 +234,23 @@ function actualizarTipoDocumentoNIT() {
   });
 }
 
+async function actualizarPagosCita() {
+  const columnas = await new Promise((resolve, reject) =>
+    db.all('PRAGMA table_info(pagos_cita)', (error, filas) => error ? reject(error) : resolve(filas))
+  );
+  const ejecutar = (sql, params = []) => new Promise((resolve, reject) =>
+    db.run(sql, params, (error) => error ? reject(error) : resolve())
+  );
+  if (!columnas.some(({ name }) => name === 'metodo')) {
+    await ejecutar("ALTER TABLE pagos_cita ADD COLUMN metodo TEXT NOT NULL DEFAULT 'nfc'");
+  }
+  await ejecutar(`UPDATE citas
+    SET costo = ?, descuento_aplicado = min(?, round(descuento_aplicado * 1.0 * ? / costo))
+    WHERE costo > ? AND estado = 'confirmada'
+      AND NOT EXISTS (SELECT 1 FROM pagos_cita p WHERE p.cita_id = citas.id_cita)`,
+  [tarifaBaseCita, tarifaBaseCita, tarifaBaseCita, tarifaMaximaCita]);
+}
+
 export const ready = new Promise((resolve, reject) => {
   fs.readFile(rutaEsquema, 'utf8', (errorLectura, esquema) => {
     if (errorLectura) {
@@ -245,7 +263,7 @@ export const ready = new Promise((resolve, reject) => {
         reject(errorEsquema);
         return;
       }
-      actualizarEsquema().then(resolve, reject);
+      actualizarEsquema().then(actualizarPagosCita).then(() => resolve(db), reject);
     });
   });
 });

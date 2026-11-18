@@ -31,6 +31,7 @@ import {
   listarCitas,
   obtenerResumenAdministrador,
   obtenerDisponibilidad,
+  listarCatalogoCitas,
   reprogramarCitaAdministrador
 } from '../controllers/citas.js';
 import {
@@ -45,6 +46,7 @@ import {
   vincularTarjeta
 } from '../controllers/nfc.js';
 import { obtenerSaldo, recargarSaldo } from '../controllers/wallet.js';
+import { consultarPagoCita, pagarCita } from '../controllers/pagosCita.js';
 import {
   listarAfiliadosParaRecarga,
   recargarAfiliado
@@ -93,8 +95,11 @@ router.post('/admin/card-login', iniciarSesionAdministradorTarjeta);
 router.post('/superadmin/login', iniciarSesionSuperadministrador);
 
 router.get('/citas/disponibilidad', autenticarUsuarioTunja, obtenerDisponibilidad);
+router.get('/citas/catalogo', autenticarUsuarioTunja, listarCatalogoCitas);
 router.get('/citas', autenticarUsuarioTunja, listarCitas);
 router.post('/citas', autenticarUsuarioTunja, exigirTarjetaVinculada, crearCita);
+router.get('/citas/:id/pago', autenticarUsuarioTunja, exigirTarjetaVinculada, consultarPagoCita);
+router.post('/citas/:id/pago', autenticarUsuarioTunja, exigirTarjetaVinculada, pagarCita);
 router.put('/citas/:id/cancelar', autenticarUsuarioTunja, cancelarCita);
 router.get('/resultados', autenticarUsuarioTunja, listarResultadosUsuario);
 router.get('/nfc/tarjeta', autenticarUsuarioTunja, obtenerTarjeta);

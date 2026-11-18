@@ -8,6 +8,17 @@ import test from 'node:test';
 const carpetaTemporal = fs.mkdtempSync(path.join(os.tmpdir(), 'meditunja-admin-'));
 process.env.DB_PATH = path.join(carpetaTemporal, 'test.db');
 process.env.LOG_PATH = path.join(carpetaTemporal, 'app.log');
+process.env.TUNJA_API = 'https://tunja-api.test/api/v1';
+process.env.TUNJA_CLAVE = 'clave-de-prueba';
+const fetchOriginal = globalThis.fetch;
+globalThis.fetch = async (input, opciones) => {
+  if (new URL(input).origin !== 'https://tunja-api.test') return fetchOriginal(input, opciones);
+  assert.equal(opciones.headers['X-API-Key'], process.env.TUNJA_CLAVE);
+  return Response.json({ total: 2, usuarios: [
+    { email: 'solicitud-sura@example.test', documento: '6000000001', activo: true },
+    { email: 'otra-eps@example.test', documento: '6000000002', activo: true }
+  ] });
+};
 
 const [{ default: app }, { ready }, { ejecutar }] = await Promise.all([
   import('../server.js'),
@@ -109,7 +120,7 @@ test('gestión administrativa autentica roles y persiste datos aislados por EPS'
         tipo_documento, numero_documento, email, nombres, apellidos, eps,
         estado_afiliacion, comprobante_archivo, comprobante_tipo, comprobante_nombre
       ) VALUES ('CC', '6000000001', 'solicitud-sura@example.test', 'Afiliado',
-        'Sura', 'EPS Sura', 'pendiente', ?, 'application/pdf', 'documento.pdf')`,
+        'Sura', 'Sura', 'pendiente', ?, 'application/pdf', 'documento.pdf')`,
       [nombreComprobante]
     );
     const authorization = { Authorization: `Bearer ${sesionAdmin.token}` };
@@ -125,7 +136,9 @@ test('gestión administrativa autentica roles y persiste datos aislados por EPS'
       headers: authorization
     });
     assert.equal(solicitudesSura.status, 200);
-    assert.equal((await solicitudesSura.json()).data.length, 1);
+    const { data: solicitudes } = await solicitudesSura.json();
+    assert.equal(solicitudes.length, 1);
+    assert.equal(solicitudes[0].estado_cuenta, 'activa');
     const comprobanteSura = await fetch(
       `${baseUrl}/api/admin/solicitudes-afiliacion/CC/6000000001/comprobante`,
       { headers: authorization }
@@ -271,6 +284,7 @@ test('gestión administrativa autentica roles y persiste datos aislados por EPS'
     assert.equal(registros.includes('6000000001'), false);
     assert.ok(registros.includes('/admin/solicitudes-afiliacion/:tipoDocumento/:numeroDocumento/comprobante'));
   } finally {
+    globalThis.fetch = fetchOriginal;
     await new Promise((resolve, reject) => {
       servidor.close((error) => error ? reject(error) : resolve());
     });

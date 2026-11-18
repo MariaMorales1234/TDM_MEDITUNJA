@@ -2,6 +2,11 @@ import crypto from 'node:crypto';
 import * as usuarios from '../repositories/usuarios.js';
 import * as usuariosTunja from '../repositories/usuariosTunja.js';
 import * as administracion from '../repositories/administracion.js';
+import { listarUsuariosTunja } from '../services/tunjaUsuarios.js';
+import {
+  CATEGORIAS_SERVICIOS, EPS_CATALOGO, IPS_CATALOGO,
+  PORTAFOLIOS_ASISTENCIALES, SERVICIOS_POR_CATEGORIA
+} from '../config/convenios.js';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -132,7 +137,28 @@ export async function actualizarEstadoAfiliado(req, res) {
 
 export async function listarSolicitudesAfiliacion(req, res) {
   try {
-    const data = await usuariosTunja.listarSolicitudesPorEps(req.usuario.eps);
+    const solicitudes = await usuariosTunja.listarSolicitudesPorEps(req.usuario.eps);
+    if (!solicitudes.length) return res.json({ data: [] });
+
+    let cuentas;
+    try {
+      cuentas = await listarUsuariosTunja();
+    } catch (error) {
+      console.error('Error al consultar los usuarios de TunjaAPI:', error.code || error.status);
+      return responderError(res, 502, 'tunja_api_no_disponible', 'No fue posible verificar las cuentas de esta EPS en TunjaAPI.');
+    }
+    const cuentasPorEmail = new Map(cuentas
+      .filter((cuenta) => typeof cuenta?.email === 'string')
+      .map((cuenta) => [cuenta.email.trim().toLowerCase(), cuenta]));
+    const data = solicitudes.map((solicitud) => {
+      const cuenta = cuentasPorEmail.get(solicitud.email.trim().toLowerCase());
+      const documento = String(cuenta?.documento ?? cuenta?.numero_documento ?? '').trim().toUpperCase();
+      const coincide = cuenta && (!documento || documento === solicitud.numero_documento.trim().toUpperCase());
+      return {
+        ...solicitud,
+        estado_cuenta: coincide ? (cuenta.activo === true ? 'activa' : 'inactiva') : 'sin_coincidencia'
+      };
+    });
     return res.status(200).json({ data });
   } catch (error) {
     console.error('Error al listar solicitudes de afiliación:', error.code || 'ERROR_INTERNO');
@@ -222,7 +248,16 @@ export async function descargarComprobanteAfiliacion(req, res) {
 export async function listarConvenios(req, res) {
   try {
     const data = await administracion.listarConvenios(req.usuario.eps);
-    return res.status(200).json({ data });
+    return res.status(200).json({
+      data,
+      catalogo: {
+        eps: EPS_CATALOGO.filter(({ nombre }) => mismaEps(nombre, req.usuario.eps)),
+        ips: IPS_CATALOGO,
+        portafolios: PORTAFOLIOS_ASISTENCIALES,
+        categorias: CATEGORIAS_SERVICIOS,
+        servicios: SERVICIOS_POR_CATEGORIA
+      }
+    });
   } catch (error) {
     console.error('Error al listar convenios:', error.code || 'ERROR_INTERNO');
     return responderError(res, 500, 'Error interno del servidor', 'No fue posible consultar los convenios.');

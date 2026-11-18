@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { apiRequest, mensajeError } from "../../../../auth/api.js";
 import { useAuth } from "../../../../auth/useAuth.js";
 import {
@@ -34,15 +35,17 @@ function crearDatosCita(usuario, cita) {
     epsPacienteTexto: usuario.eps || "—",
     telefonoPaciente: usuario.telefono || "No registrado",
     telefonoCuidador: "No registrado",
-    ipsDestinoTexto: nombresIps[cita.ips] || cita.ips,
+    ipsDestinoTexto: cita.ips_nombre || nombresIps[cita.ips] || cita.ips,
     tipoAtencion: cita.especialidad,
+    codigoCita: cita.codigo_cita,
     fechaCita: cita.fecha,
     horaCita: cita.hora
   };
 }
 
-export function useTransporte() {
+export function useTransporte(citaId) {
   const { sesion } = useAuth();
+  const navigate = useNavigate();
   const [datosCita, setDatosCita] = useState(null);
   const [cargandoCita, setCargandoCita] = useState(true);
   const [errorCita, setErrorCita] = useState("");
@@ -72,15 +75,17 @@ export function useTransporte() {
     let activa = true;
     const autorizacion = { Authorization: `Bearer ${sesion.accessToken}` };
     Promise.all([
-      apiRequest("/citas", { headers: autorizacion }),
+      apiRequest(citaId ? `/citas?id=${encodeURIComponent(citaId)}` : "/citas", { headers: autorizacion }),
       apiRequest("/transporte", { headers: autorizacion })
     ]).then(([respuestaCitas, respuestaSolicitudes]) => {
       if (!activa) return;
       const cita = respuestaCitas.data
-        .filter((item) => item.estado === "confirmada" && instanteCita(item) > Date.now())
+        .filter((item) => item.estado === "confirmada" && instanteCita(item) > Date.now() &&
+          (citaId === null || String(item.id_cita) === citaId))
         .sort((a, b) => instanteCita(a) - instanteCita(b))[0];
       if (!cita) {
-        setErrorCita("Agenda una cita confirmada para solicitar transporte.");
+        setErrorCita(citaId ? "La cita seleccionada ya no está disponible para transporte." :
+          "Agenda una cita confirmada para solicitar transporte.");
         return;
       }
 
@@ -100,7 +105,7 @@ export function useTransporte() {
     return () => {
       activa = false;
     };
-  }, [sesion.accessToken, sesion.usuario]);
+  }, [sesion.accessToken, sesion.usuario, citaId]);
 
   const handleDiscapacidadChange = (event) => {
     const valor = event.target.value;
@@ -164,10 +169,7 @@ export function useTransporte() {
           declaracionVeracidad
         })
       });
-      setSolicitudId(respuesta.data.id);
-      setEstadoSolicitud(respuesta.data.estado);
-      setSolicitudEnviada(true);
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      navigate(`/pagos?cita=${datosCita.citaId}`, { state: { mensajeTransporte: respuesta.mensaje } });
     } catch (error) {
       setErrorSolicitud(mensajeError(error));
     } finally {

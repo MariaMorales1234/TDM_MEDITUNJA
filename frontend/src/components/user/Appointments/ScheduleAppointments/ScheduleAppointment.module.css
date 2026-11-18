@@ -137,8 +137,9 @@ p {
 .select {
     padding: 12px 8px;
     border-radius: 8px;
-    background-color: var(--color-primary);
-    color: var(--color-bg);
+    background-color: var(--marca-violeta);
+    border: 1px solid var(--marca-violeta);
+    color: var(--marca-blanco);
     font-family: var(--sm);
     cursor: pointer;
 }
@@ -149,7 +150,7 @@ p {
     gap: 20px;
     padding: 30px;
     margin: 20px;
-    background-color: #000f54;
+    background: var(--marca-fondo-destacado);
     border-radius: 30px;
     box-sizing: border-box;
 
@@ -207,7 +208,7 @@ p {
 .summaryDetails span {
     font-family: var(--text);
     font-size: 14px;
-    color: #717171;
+    color: color-mix(in srgb, var(--marca-blanco) 82%, var(--marca-cian));
 }
 
 .summaryDetails strong {

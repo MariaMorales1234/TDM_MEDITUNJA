@@ -1,5 +1,5 @@
 // Datos constantes y configuración para el Módulo de Convenios
-// MediTunja - Gestión Administrativa EPS y Red de Salud de Tunja
+// MediTunja - Red de Salud de Tunja
 
 // 1. Catálogo de Instituciones Prestadoras de Salud (IPS) en Tunja
 const SERVICIOS_HOSPITAL_SAN_RAFAEL = [

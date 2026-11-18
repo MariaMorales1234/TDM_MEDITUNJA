@@ -17,6 +17,9 @@ function Convenios() {
     ipsId,
     handleCambiarIps,
     ipsActual,
+    ipsDisponibles,
+    portafolios,
+    categorias,
     portafolioId,
     setPortafolioId,
     categoriaFiltro,
@@ -57,7 +60,7 @@ function Convenios() {
         {cargando && <p role="status">Cargando convenios...</p>}
 
         {/* Formulario de formalización de convenio */}
-        <FormularioConvenio
+        {ipsActual && <FormularioConvenio
           epsId={epsId}
           epsCatalogo={epsDisponibles}
           setEpsId={handleCambiarEps}
@@ -65,6 +68,9 @@ function Convenios() {
           ipsId={ipsId}
           setIpsId={handleCambiarIps}
           ipsActual={ipsActual}
+          ipsDisponibles={ipsDisponibles}
+          portafolios={portafolios}
+          categorias={categorias}
           portafolioId={portafolioId}
           setPortafolioId={setPortafolioId}
           categoriaFiltro={categoriaFiltro}
@@ -78,7 +84,7 @@ function Convenios() {
           onDeseleccionarCategoria={handleDeseleccionarCategoria}
           onRestablecer={handleRestablecer}
           onSubmit={handleSubmit}
-        />
+        />}
 
         {/* Listado de convenios vigentes */}
         <ListaConvenios

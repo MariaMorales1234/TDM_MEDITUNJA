@@ -4,33 +4,18 @@
 import { useState, useMemo, useEffect } from "react";
 import { apiRequest, mensajeError } from "../../../../auth/api.js";
 import { useAdminAuth } from "../../../../auth/useAdminAuth.js";
-import {
-  EPS_CATALOGO,
-  IPS_CATALOGO,
-  PORTAFOLIOS_ASISTENCIALES,
-  SERVICIOS_POR_CATEGORIA
-} from "../data/conveniosData";
-
-function normalizarEps(valor) {
-  return valor.normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLocaleLowerCase("es")
-    .replace(/\beps\b/g, "")
-    .replace(/[^a-z0-9]/g, "");
-}
+const catalogoVacio = { eps: [], ips: [], portafolios: [], categorias: [], servicios: [] };
 
 export function useConvenios() {
-  const { token, usuario } = useAdminAuth();
-  const epsDisponibles = useMemo(
-    () => EPS_CATALOGO.filter((eps) => normalizarEps(eps.nombre) === normalizarEps(usuario.eps)),
-    [usuario.eps]
-  );
+  const { token } = useAdminAuth();
+  const [catalogo, setCatalogo] = useState(null);
+  const { eps: epsDisponibles, ips: ipsDisponibles, portafolios, categorias, servicios } = catalogo || catalogoVacio;
   const [convenios, setConvenios] = useState([]);
   const [cargando, setCargando] = useState(true);
 
   // Estados del formulario de convenio: EPS Gestora e IPS Prestadora
-  const [epsId, setEpsId] = useState(() => epsDisponibles[0]?.id || "");
-  const [ipsId, setIpsId] = useState(IPS_CATALOGO[0].id);
+  const [epsId, setEpsId] = useState("");
+  const [ipsId, setIpsId] = useState("");
   const [portafolioId, setPortafolioId] = useState("integral");
   const [categoriaFiltro, setCategoriaFiltro] = useState("todas");
   const [serviciosSeleccionados, setServiciosSeleccionados] = useState([
@@ -48,7 +33,11 @@ export function useConvenios() {
     apiRequest("/admin/convenios", {
       headers: { Authorization: `Bearer ${token}` }
     }).then((respuesta) => {
-      if (activo) setConvenios(respuesta.data);
+      if (!activo) return;
+      setConvenios(respuesta.data);
+      setCatalogo(respuesta.catalogo);
+      setEpsId(respuesta.catalogo.eps[0]?.id || "");
+      setIpsId(respuesta.catalogo.ips[0]?.id || "");
     }).catch((error) => {
       if (activo) setNotificacion(mensajeError(error));
     }).finally(() => {
@@ -67,18 +56,18 @@ export function useConvenios() {
 
   // Obtener datos de la IPS seleccionada actualmente
   const ipsActual = useMemo(() => {
-    return IPS_CATALOGO.find((ips) => ips.id === ipsId) || IPS_CATALOGO[0] || null;
-  }, [ipsId]);
+    return ipsDisponibles.find((ips) => ips.id === ipsId) || null;
+  }, [ipsDisponibles, ipsId]);
 
   // Servicios filtrados según la categoría activa y la IPS seleccionada
   const serviciosFiltrados = useMemo(() => {
     const serviciosIps = Array.isArray(ipsActual?.servicios) ? ipsActual.servicios : [];
-    return SERVICIOS_POR_CATEGORIA.filter(
+    return servicios.filter(
       (srv) =>
         (serviciosIps.length === 0 || serviciosIps.includes(srv.id)) &&
         (categoriaFiltro === "todas" || srv.categoria === categoriaFiltro)
     );
-  }, [categoriaFiltro, ipsActual]);
+  }, [categoriaFiltro, ipsActual, servicios]);
 
   // Cambiar EPS
   const handleCambiarEps = (valor) => {
@@ -92,7 +81,7 @@ export function useConvenios() {
     const id = valor && typeof valor === "object" && valor.target ? valor.target.value : valor;
     if (!id) return;
 
-    const nuevaIps = IPS_CATALOGO.find((ips) => ips.id === id);
+    const nuevaIps = ipsDisponibles.find((ips) => ips.id === id);
     if (!nuevaIps) return;
 
     setIpsId(id);
@@ -130,11 +119,10 @@ export function useConvenios() {
   // Restablecer el formulario
   const handleRestablecer = () => {
     setEpsId(epsDisponibles[0]?.id || "");
-    setIpsId(IPS_CATALOGO[0].id);
+    setIpsId(ipsDisponibles[0]?.id || "");
     setPortafolioId("integral");
     setCategoriaFiltro("todas");
-    const primeraIps = IPS_CATALOGO[0];
-    const serviciosDefecto = Array.isArray(primeraIps.servicios) ? primeraIps.servicios.slice(0, 3) : [];
+    const serviciosDefecto = ipsDisponibles[0]?.servicios.slice(0, 3) || [];
     setServiciosSeleccionados(serviciosDefecto);
     setClausulaTransporte(true);
     setNotificacion("");
@@ -153,7 +141,8 @@ export function useConvenios() {
       setNotificacion("La EPS asignada a esta cuenta no coincide con el catálogo de EPS.");
       return;
     }
-    const portafolioObj = PORTAFOLIOS_ASISTENCIALES.find((p) => p.id === portafolioId);
+    if (!ipsActual) return;
+    const portafolioObj = portafolios.find((p) => p.id === portafolioId);
 
     const nuevoConvenio = {
       epsId: epsActual.id,
@@ -214,6 +203,9 @@ export function useConvenios() {
     setIpsId: handleCambiarIps,
     handleCambiarIps,
     ipsActual,
+    ipsDisponibles,
+    portafolios,
+    categorias,
     portafolioId,
     setPortafolioId,
     categoriaFiltro,

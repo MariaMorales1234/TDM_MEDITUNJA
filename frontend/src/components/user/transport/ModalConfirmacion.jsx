@@ -13,19 +13,12 @@ function ModalConfirmacion({ isOpen, reqTitulo, onConfirm, onCancel }) {
       aria-describedby="modal-descripcion"
     >
       <div className="modal-contenido">
-        <div className="modal-icono" aria-hidden="true">⚠️</div>
-        
         <h3 id="modal-titulo" className="modal-titulo">
-          ¿Deseas retirar este requerimiento recomendado?
+          ¿Quitar esta adaptación?
         </h3>
         
         <p id="modal-descripcion" className="modal-descripcion">
-          El requerimiento <strong>"{reqTitulo}"</strong> fue seleccionado automáticamente
-          de acuerdo con tu condición médica para garantizar un traslado seguro y confortable.
-        </p>
-
-        <p className="modal-aclaracion">
-          Si decides retirarlo, el vehículo asignado podría no contar con esta adaptación técnica.
+          Si quitas <strong>{reqTitulo}</strong>, la solicitud se enviará sin esta adaptación.
         </p>
 
         <div className="modal-acciones">
@@ -35,14 +28,14 @@ function ModalConfirmacion({ isOpen, reqTitulo, onConfirm, onCancel }) {
             onClick={onCancel}
             autoFocus
           >
-            Mantener requerimiento
+            Mantener adaptación
           </button>
           <button 
             type="button" 
             className="btn-modal-confirmar"
             onClick={onConfirm}
           >
-            Sí, quitar requerimiento
+            Quitar adaptación
           </button>
         </div>
       </div>
