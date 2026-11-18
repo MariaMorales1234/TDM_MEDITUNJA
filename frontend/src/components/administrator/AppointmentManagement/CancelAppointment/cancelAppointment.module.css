@@ -178,3 +178,33 @@
 .discard:hover {
     background-color: var(--hover-primary);
 }
+
+@media (max-width: 480px) {
+    .modalOverlay {
+        align-items: flex-start;
+        padding: 12px;
+    }
+
+    .cancelform {
+        max-height: calc(100vh - 24px);
+        max-height: calc(100dvh - 24px);
+        padding: 20px 16px;
+    }
+
+    .cancelform h3 {
+        font-size: 21px;
+    }
+
+    .actions {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+
+    .actions button {
+        width: 100%;
+        max-width: none;
+        min-height: 44px;
+        white-space: normal;
+    }
+}
