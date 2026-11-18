@@ -21,7 +21,8 @@ export async function buscarAdministradorPorId(idUsuario) {
     'get',
     `SELECT id_usuario, email, eps
      FROM usuarios
-     WHERE id_usuario = ? AND rol = 'administrador' AND estado_registro = 'aprobado'`,
+     WHERE id_usuario = ? AND rol = 'administrador' AND estado_registro = 'aprobado'
+       AND activo = 1`,
     [idUsuario]
   );
 }
@@ -30,7 +31,7 @@ export async function buscarAdministradorPorEmail(email) {
   return ejecutar(
     'get',
     `SELECT id_usuario, nombres, apellidos, tipo_documento, numero_documento,
-            estado_registro, rol, eps
+            estado_registro, rol, eps, activo
      FROM usuarios
      WHERE lower(trim(email)) = lower(trim(?)) AND rol = 'administrador'`,
     [email]
@@ -41,10 +42,91 @@ export async function buscarCredenciales(tipoDocumento, numeroDocumento) {
   return ejecutar(
     'get',
     `SELECT id_usuario, nombres, apellidos, tipo_documento, numero_documento,
-            password_hash, estado_registro, rol, eps
+            password_hash, estado_registro, rol, eps, activo, email
      FROM usuarios
      WHERE tipo_documento = ? AND numero_documento = ?`,
     [tipoDocumento, numeroDocumento]
+  );
+}
+
+export async function buscarOperadorPorEmail(email) {
+  return ejecutar(
+    'get',
+    `SELECT id_usuario, nombres, apellidos, tipo_documento, numero_documento,
+            estado_registro, rol, eps, activo
+     FROM usuarios
+     WHERE lower(trim(email)) = ? AND rol = 'superadministrador' AND tipo_documento = 'NIT'`,
+    [email]
+  );
+}
+
+export async function listarAdministradoresEps() {
+  return ejecutar(
+    'all',
+    `SELECT id_usuario AS id, nombres, apellidos, numero_documento AS nit,
+            email, eps, activo
+     FROM usuarios
+     WHERE rol = 'administrador'
+     ORDER BY eps COLLATE NOCASE, nombres COLLATE NOCASE`
+  );
+}
+
+export async function buscarPorNitAdministradorEps(nit) {
+  return ejecutar(
+    'get',
+    `SELECT id_usuario, email, eps
+     FROM usuarios
+     WHERE tipo_documento = 'NIT' AND numero_documento = ? AND rol = 'administrador'`,
+    [nit]
+  );
+}
+
+export async function buscarAdministradorEpsPorEps(eps) {
+  return ejecutar(
+    'get',
+    `SELECT id_usuario
+     FROM usuarios
+     WHERE rol = 'administrador' AND lower(trim(eps)) = lower(trim(?))`,
+    [eps]
+  );
+}
+
+export async function buscarAdministradorEpsPorId(id) {
+  return ejecutar(
+    'get',
+    `SELECT id_usuario AS id, activo
+     FROM usuarios
+     WHERE id_usuario = ? AND rol = 'administrador'`,
+    [id]
+  );
+}
+
+export async function crearAdministradorEps(datos) {
+  return ejecutar(
+    'run',
+    `INSERT INTO usuarios (
+       tipo_documento, numero_documento, nombres, apellidos, email, eps,
+       rol, password_hash, activo, estado_registro
+     ) VALUES ('NIT', ?, ?, 'Administración', ?, ?, 'administrador', ?, 1, 'aprobado')`,
+    [datos.nit, datos.nombres, datos.email, datos.eps, datos.passwordHash]
+  );
+}
+
+export async function actualizarEstadoAdministradorEps(id, activo) {
+  return ejecutar(
+    'run',
+    `UPDATE usuarios SET activo = ?
+     WHERE id_usuario = ? AND rol = 'administrador'`,
+    [activo ? 1 : 0, id]
+  );
+}
+
+export async function actualizarContrasenaAdministradorEps(id, passwordHash) {
+  return ejecutar(
+    'run',
+    `UPDATE usuarios SET password_hash = ?
+     WHERE id_usuario = ? AND rol = 'administrador'`,
+    [passwordHash, id]
   );
 }
 

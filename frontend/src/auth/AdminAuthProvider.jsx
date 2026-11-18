@@ -16,7 +16,7 @@ function AdminAuthProvider({ children }) {
         const tokenGuardado = window.localStorage.getItem(claveToken);
         if (!tokenGuardado) return undefined;
 
-        apiRequest("/admin/sesion", {
+        apiRequest("/sesion", {
             headers: { Authorization: `Bearer ${tokenGuardado}` },
         }).then((respuesta) => {
             if (!activo) return;
@@ -60,6 +60,17 @@ function AdminAuthProvider({ children }) {
         return respuesta;
     }, []);
 
+    const iniciarSesionSuperadministrador = useCallback(async (credenciales) => {
+        const respuesta = await apiRequest("/superadmin/login", {
+            method: "POST",
+            body: JSON.stringify(credenciales),
+        });
+        window.localStorage.setItem(claveToken, respuesta.token);
+        setToken(respuesta.token);
+        setUsuario(respuesta.data);
+        return respuesta;
+    }, []);
+
     const cerrarSesion = useCallback(async () => {
         window.localStorage.removeItem(claveToken);
         setToken(null);
@@ -80,8 +91,16 @@ function AdminAuthProvider({ children }) {
     }, [token]);
 
     const valor = useMemo(
-        () => ({ token, usuario, cargando, iniciarSesion, iniciarSesionTarjeta, cerrarSesion }),
-        [token, usuario, cargando, iniciarSesion, iniciarSesionTarjeta, cerrarSesion],
+        () => ({
+            token,
+            usuario,
+            cargando,
+            iniciarSesion,
+            iniciarSesionTarjeta,
+            iniciarSesionSuperadministrador,
+            cerrarSesion,
+        }),
+        [token, usuario, cargando, iniciarSesion, iniciarSesionTarjeta, iniciarSesionSuperadministrador, cerrarSesion],
     );
 
     return (

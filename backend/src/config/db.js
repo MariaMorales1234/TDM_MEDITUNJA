@@ -26,7 +26,7 @@ function actualizarEsquema() {
         ['fecha_nacimiento', 'TEXT'],
         ['sexo', "TEXT CHECK (sexo IS NULL OR sexo IN ('M', 'F', 'O'))"],
         ['eps', 'TEXT'],
-        ['rol', "TEXT NOT NULL DEFAULT 'afiliado' CHECK (rol IN ('afiliado', 'administrador'))"]
+        ['rol', "TEXT NOT NULL DEFAULT 'afiliado' CHECK (rol IN ('afiliado', 'administrador', 'superadministrador'))"]
       ].filter(([nombre]) => !existentes.has(nombre));
 
       const agregarSiguiente = (indice) => {
@@ -148,7 +148,9 @@ function actualizarTipoDocumentoNIT() {
           reject(error);
           return;
         }
-        if (/['"]NIT['"]/i.test(tabla?.sql || '')) {
+        const sqlTabla = tabla?.sql || '';
+        if (/['"]NIT['"]/i.test(sqlTabla) &&
+            /['"]superadministrador['"]/i.test(sqlTabla)) {
           resolve(db);
           return;
         }
@@ -174,7 +176,7 @@ function actualizarTipoDocumentoNIT() {
               sexo TEXT CHECK (sexo IS NULL OR sexo IN ('M', 'F', 'O')),
               eps TEXT,
               rol TEXT NOT NULL DEFAULT 'afiliado'
-                CHECK (rol IN ('afiliado', 'administrador')),
+                CHECK (rol IN ('afiliado', 'administrador', 'superadministrador')),
               password_hash TEXT NOT NULL CHECK (
                 length(password_hash) = 161 AND
                 substr(password_hash, 33, 1) = ':' AND

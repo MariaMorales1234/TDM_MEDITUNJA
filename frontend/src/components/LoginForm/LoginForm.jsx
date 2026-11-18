@@ -15,10 +15,14 @@ function LoginForm() {
         usuario,
         iniciarSesion: iniciarSesionAdmin,
         iniciarSesionTarjeta: iniciarSesionAdminTarjeta,
+        iniciarSesionSuperadministrador,
     } = useAdminAuth();
     const navigate = useNavigate();
     const location = useLocation();
-    const [tipoDocumento, setTipoDocumento] = useState("CC");
+    const esLoginSuperadministrador = location.pathname === "/superadmin/login";
+    const [tipoDocumento, setTipoDocumento] = useState(
+        esLoginSuperadministrador ? "NIT" : "CC",
+    );
     const [numeroDocumento, setNumeroDocumento] = useState("");
     const [error, setError] = useState("");
     const [enviando, setEnviando] = useState(false);
@@ -37,7 +41,7 @@ function LoginForm() {
         return () => window.clearTimeout(temporizador);
     }, [esperaReintento]);
 
-    if (sesion) {
+    if (sesion && !esLoginSuperadministrador) {
         return (
             <Navigate
                 to={sesion.usuario?.estado_afiliacion === "aprobado" ? "/home" : "/perfilUsuario"}
@@ -45,7 +49,10 @@ function LoginForm() {
             />
         );
     }
-    if (usuario?.rol === "administrador") {
+    if (usuario?.rol === "superadministrador") {
+        return <Navigate to="/superadmin/administradores-eps" replace />;
+    }
+    if (usuario?.rol === "administrador" && !esLoginSuperadministrador) {
         return <Navigate to="/perfilAdministrador" replace />;
     }
 
@@ -58,13 +65,23 @@ function LoginForm() {
         try {
             if (modoTarjeta) {
                 await iniciarSesionConUid(uidTarjeta.trim());
+            } else if (esLoginSuperadministrador) {
+                await iniciarSesionSuperadministrador({
+                    tipo_documento: "NIT",
+                    numero_documento: datos.get("numeroDocumento").trim(),
+                    contrasena: datos.get("contrasena"),
+                });
+                navigate("/superadmin/administradores-eps", { replace: true });
             } else if (tipoDocumento === "NIT") {
-                await iniciarSesionAdmin({
+                const respuesta = await iniciarSesionAdmin({
                     tipo_documento: tipoDocumento,
                     numero_documento: datos.get("numeroDocumento").trim(),
                     contrasena: datos.get("contrasena"),
                 });
-                navigate(location.state?.from?.pathname || "/perfilAdministrador", { replace: true });
+                const destino = respuesta.data.rol === "superadministrador"
+                    ? "/superadmin/administradores-eps"
+                    : location.state?.from?.pathname || "/perfilAdministrador";
+                navigate(destino, { replace: true });
             } else {
                 await iniciarSesion({
                     tipo_documento: tipoDocumento,
@@ -92,8 +109,11 @@ function LoginForm() {
         setEnviando(true);
         try {
             try {
-                await iniciarSesionAdminTarjeta(uid);
-                navigate(location.state?.from?.pathname || "/perfilAdministrador", { replace: true });
+                const respuesta = await iniciarSesionAdminTarjeta(uid);
+                const destino = respuesta.data.rol === "superadministrador"
+                    ? "/superadmin/administradores-eps"
+                    : location.state?.from?.pathname || "/perfilAdministrador";
+                navigate(destino, { replace: true });
                 return;
             } catch (errorSolicitud) {
                 if (errorSolicitud?.code !== "tarjeta_no_administrativa") {
@@ -157,8 +177,12 @@ function LoginForm() {
 
     return (
         <main className={styles.Login}>
-            <h4 className={styles.subtitle}>Inicio de sesión</h4>
-            <h1 className={styles.title}>Ingresa a tu cuenta</h1>
+            <h4 className={styles.subtitle}>
+                {esLoginSuperadministrador ? "Operador del sistema" : "Inicio de sesión"}
+            </h4>
+            <h1 className={styles.title}>
+                {esLoginSuperadministrador ? "Ingresa como operador del sistema" : "Ingresa a tu cuenta"}
+            </h1>
             {(location.state?.notice || location.state?.mensaje) && (
                 <p role="status">{location.state.notice || location.state.mensaje}</p>
             )}
@@ -193,29 +217,33 @@ function LoginForm() {
                     </div>
                 ) : (
                     <div className={styles.documentRow}>
-                    <div className={`${styles.formGroup} ${styles.documentType}`}>
-                        <label htmlFor="tipo-documento">Tipo de documento</label>
-                        <select
-                            id="tipo-documento"
-                            name="tipoDocumento"
-                            value={tipoDocumento}
-                            onChange={(event) => {
-                                setTipoDocumento(event.target.value);
-                                setNumeroDocumento("");
-                                setError("");
-                            }}
-                            required
-                        >
-                            <option value="CC">C.C.</option>
-                            <option value="TI">T.I.</option>
-                            <option value="CE">C.E.</option>
-                            <option value="PAS">Pasaporte</option>
-                            <option value="NIT">NIT</option>
-                        </select>
-                    </div>
+                    {!esLoginSuperadministrador && (
+                        <div className={`${styles.formGroup} ${styles.documentType}`}>
+                            <label htmlFor="tipo-documento">Tipo de documento</label>
+                            <select
+                                id="tipo-documento"
+                                name="tipoDocumento"
+                                value={tipoDocumento}
+                                onChange={(event) => {
+                                    setTipoDocumento(event.target.value);
+                                    setNumeroDocumento("");
+                                    setError("");
+                                }}
+                                required
+                            >
+                                <option value="CC">C.C.</option>
+                                <option value="TI">T.I.</option>
+                                <option value="CE">C.E.</option>
+                                <option value="PAS">Pasaporte</option>
+                                <option value="NIT">NIT</option>
+                            </select>
+                        </div>
+                    )}
 
                     <div className={`${styles.formGroup} ${styles.documentNumber}`}>
-                        <label htmlFor="numero-documento">Número de documento</label>
+                        <label htmlFor="numero-documento">
+                            {esLoginSuperadministrador ? "NIT del operador" : "Número de documento"}
+                        </label>
                         <input
                             type="text"
                             id="numero-documento"
@@ -307,27 +335,44 @@ function LoginForm() {
                 </button>
             </form>
 
-            <hr className={styles.divider}></hr>
-
-            <button
-                type="button"
-                className={styles.nfcButton}
-                onClick={cambiarModoTarjeta}
-                disabled={tipoDocumento === "NIT" || enviando}
-                aria-pressed={modoTarjeta}
-            >
-                <span className={styles.nfcIcon}>
-                    <Nfc size={28} />
-                </span>
-                <span>
-                    <strong>{modoTarjeta ? "Volver al inicio con documento" : "Ingresar con tarjeta NFC"}</strong>
-                    <br />
-                    <small>{modoTarjeta ? "Volver al acceso con documento y contraseña" : "Acerca la tarjeta para iniciar sesión sin contraseña"}</small>
-                </span>
-            </button>
-            <p className={styles.registerLink}>
-                ¿No tienes cuenta? <Link to="/registro" className={styles.registerLinkAnchor}>Regístrate aquí</Link>
-            </p>
+            {!esLoginSuperadministrador && (
+                <>
+                    <hr className={styles.divider}></hr>
+                    <button
+                        type="button"
+                        className={styles.nfcButton}
+                        onClick={cambiarModoTarjeta}
+                        disabled={tipoDocumento === "NIT" || enviando}
+                        aria-pressed={modoTarjeta}
+                    >
+                        <span className={styles.nfcIcon}>
+                            <Nfc size={28} />
+                        </span>
+                        <span>
+                            <strong>{modoTarjeta ? "Volver al inicio con documento" : "Ingresar con tarjeta NFC"}</strong>
+                            <br />
+                            <small>{modoTarjeta ? "Volver al acceso con documento y contraseña" : "Acerca la tarjeta para iniciar sesión sin contraseña"}</small>
+                        </span>
+                    </button>
+                    <p className={styles.registerLink}>
+                        ¿No tienes cuenta? <Link to="/registro" className={styles.registerLinkAnchor}>Regístrate aquí</Link>
+                    </p>
+                </>
+            )}
+            {esLoginSuperadministrador && (
+                <p className={styles.registerLink}>
+                    <Link to="/login" className={styles.registerLinkAnchor}>
+                        Volver al inicio de sesión
+                    </Link>
+                </p>
+            )}
+            {!esLoginSuperadministrador && (
+                <p className={styles.registerLink}>
+                    <Link to="/superadmin/login" className={styles.registerLinkAnchor}>
+                        Acceso del operador del sistema
+                    </Link>
+                </p>
+            )}
         </main>
     );
 }

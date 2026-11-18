@@ -30,10 +30,24 @@ export async function renovarSiActiva(tokenHash, ahora, nuevaExpiracion) {
          SELECT 1 FROM usuarios
          WHERE usuarios.id_usuario = sesiones.id_usuario
            AND usuarios.estado_registro = 'aprobado'
+           AND (
+             usuarios.rol NOT IN ('administrador', 'superadministrador')
+             OR usuarios.activo = 1
+           )
        )`,
     [ahora, nuevaExpiracion, tokenHash, ahora]
   );
   return resultado.changes === 1;
+}
+
+export async function revocarTodasDeUsuario(idUsuario, ahora) {
+  return ejecutar(
+    'run',
+    `UPDATE sesiones
+     SET revocada_en = ?
+     WHERE id_usuario = ? AND revocada_en IS NULL`,
+    [ahora, idUsuario]
+  );
 }
 
 export async function buscarUsuarioActiva(tokenHash) {

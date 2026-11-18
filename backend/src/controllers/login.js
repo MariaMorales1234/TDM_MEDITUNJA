@@ -4,6 +4,7 @@ import * as usuarios from '../repositories/usuarios.js';
 import * as sesiones from '../repositories/sesiones.js';
 import * as tarjetasNfc from '../repositories/tarjetasNfc.js';
 import { tunjaRequest } from '../services/tunjaApi.js';
+import { autenticarOperadorTunja, coincideOperador } from '../services/operadorTunja.js';
 import { responderFalloTarjeta } from './nfc.js';
 
 const scrypt = promisify(crypto.scrypt);
@@ -59,25 +60,12 @@ async function procesarInicioSesion(req, res, soloAdministrador) {
   try {
     const usuario = await usuarios.buscarCredenciales(tipoDocumento, numeroDocumento);
 
-    let contrasenaValida = false;
-    if (soloAdministrador) {
-      try {
-        const respuestaTunja = await tunjaRequest('/auth/login', {
-          method: 'POST',
-          body: {
-            email: usuario?.email || `admin.${usuario?.eps?.toLowerCase().replace(/\s+/g, '')}@meditunja.com`,
-            contrasena
-          }
-        });
-        if (respuestaTunja?.token || respuestaTunja?.usuario || respuestaTunja?.id) {
-          contrasenaValida = true;
-        }
-      } catch {
-        contrasenaValida = usuario && (await verificarContrasena(contrasena, usuario.password_hash));
-      }
-    } else {
-      contrasenaValida = usuario && (await verificarContrasena(contrasena, usuario.password_hash));
+    if (soloAdministrador && tipoDocumento === 'NIT' && usuario?.rol === 'superadministrador') {
+      return autenticarSuperadministrador(res, numeroDocumento, contrasena, usuario);
     }
+
+    const contrasenaValida = usuario &&
+      await verificarContrasena(contrasena, usuario.password_hash);
 
     if (!usuario || !contrasenaValida) {
       return responderError(
@@ -104,6 +92,9 @@ async function procesarInicioSesion(req, res, soloAdministrador) {
     }
     if (soloAdministrador && usuario.rol !== 'administrador') {
       return responderError(res, 403, 'Acceso denegado', 'Esta cuenta no tiene permisos de administrador.');
+    }
+    if (soloAdministrador && usuario.activo !== 1) {
+      return responderError(res, 403, 'Cuenta desactivada', 'La cuenta administradora está desactivada.');
     }
     if (soloAdministrador && (typeof usuario.eps !== 'string' || !usuario.eps.trim())) {
       return responderError(res, 403, 'EPS no asignada', 'La cuenta administradora debe tener una EPS asignada.');
@@ -146,6 +137,107 @@ export function iniciarSesionAdministrador(req, res) {
   return procesarInicioSesion(req, res, true);
 }
 
+export function iniciarSesionSuperadministrador(req, res) {
+  const { tipo_documento, numero_documento, contrasena } = req.body || {};
+  const tipoDocumento = typeof tipo_documento === 'string'
+    ? tipo_documento.trim().toUpperCase()
+    : '';
+  const numeroDocumento = typeof numero_documento === 'string'
+    ? numero_documento.trim().toUpperCase()
+    : '';
+  if (tipoDocumento !== 'NIT' || !/^\d{9}-\d$/.test(numeroDocumento) ||
+      typeof contrasena !== 'string' || contrasena.length < 1 || contrasena.length > 128) {
+    return responderError(res, 400, 'Datos inválidos', 'Revisa el NIT y la contraseña.');
+  }
+
+  return autenticarSuperadministrador(res, numeroDocumento, contrasena);
+}
+
+async function autenticarSuperadministrador(res, numeroDocumento, contrasena, cuentaEncontrada) {
+  try {
+    const usuario = cuentaEncontrada ?? await usuarios.buscarCredenciales('NIT', numeroDocumento);
+    const cuentaValida = usuario?.rol === 'superadministrador' &&
+      usuario.estado_registro === 'aprobado' &&
+      usuario.activo === 1 &&
+      await autenticarOperadorTunja({
+        email: usuario.email.trim().toLowerCase(), nit: numeroDocumento, contrasena
+      });
+    if (!cuentaValida) {
+      return responderError(
+        res,
+        401,
+        'Credenciales incorrectas',
+        'El NIT o la contraseña no son correctos.'
+      );
+    }
+
+    return await responderSesionOperador(res, usuario);
+  } catch (error) {
+    if ([400, 401, 403].includes(error.status)) {
+      return responderError(res, 401, 'Credenciales incorrectas', 'El NIT o la contraseña no son correctos.');
+    }
+    if (error.status || error.code?.startsWith('TUNJA_')) {
+      return responderFalloTarjeta(res, error);
+    }
+    console.error('Error en POST /api/superadmin/login:', error.code || 'ERROR_INTERNO');
+    return responderError(res, 500, 'Error interno del servidor', 'Ocurrió un error al iniciar sesión.');
+  }
+}
+
+async function responderSesionOperador(res, usuario) {
+  const token = crypto.randomBytes(32).toString('hex');
+  const ahora = Date.now();
+  const expiraEn = ahora + duracionSesionMs;
+  const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+  await sesiones.crear(usuario.id_usuario, tokenHash, ahora, expiraEn);
+
+  return res.status(200).json({
+    mensaje: 'Inicio de sesión exitoso.',
+    token,
+    tipo_token: 'Bearer',
+    expira_en: new Date(expiraEn).toISOString(),
+    expira_en_segundos: duracionSesionMs / 1000,
+    data: {
+      id_usuario: usuario.id_usuario,
+      nombres: usuario.nombres,
+      apellidos: usuario.apellidos,
+      tipo_documento: usuario.tipo_documento,
+      numero_documento: usuario.numero_documento,
+      estado_registro: usuario.estado_registro,
+      rol: usuario.rol,
+      eps: null
+    }
+  });
+}
+
+async function iniciarSesionOperadorTarjeta(res, uid) {
+  const noAdministrativa = () => responderError(
+    res, 404, 'tarjeta_no_administrativa', 'Esta tarjeta no corresponde a una cuenta administradora.'
+  );
+  try {
+    const tarjeta = await tunjaRequest(`/cards/${encodeURIComponent(uid)}`, { requiresKey: true });
+    const titular = tarjeta.usuario;
+    if (tarjeta.admin || !Number.isSafeInteger(titular?.id) || titular.id < 1 ||
+        typeof titular.email !== 'string') return noAdministrativa();
+
+    const email = titular.email.trim().toLowerCase();
+    const operador = await usuarios.buscarOperadorPorEmail(email);
+    if (!operador) return noAdministrativa();
+    if (tarjeta.activa !== true || operador.activo !== 1 || operador.estado_registro !== 'aprobado') {
+      return responderError(res, 403, 'cuenta_no_disponible', 'La tarjeta y la cuenta del operador deben estar activas.');
+    }
+    const cuenta = await tunjaRequest(`/users/${titular.id}`, { requiresKey: true });
+    if (cuenta.id !== titular.id || cuenta.activo !== true ||
+        !coincideOperador(cuenta, { email, nit: operador.numero_documento })) {
+      return responderError(res, 401, 'tarjeta_asociacion_inconsistente', 'TunjaAPI no confirmó la cuenta del operador.');
+    }
+    return await responderSesionOperador(res, operador);
+  } catch (error) {
+    if (error.status === 404) return noAdministrativa();
+    return responderFalloTarjeta(res, error);
+  }
+}
+
 export async function iniciarSesionAdministradorTarjeta(req, res) {
   const uid = typeof req.body?.uid === 'string'
     ? req.body.uid.trim().toUpperCase()
@@ -160,15 +252,10 @@ export async function iniciarSesionAdministradorTarjeta(req, res) {
       ? await usuarios.buscarAdministradorPorEmail(tarjetaLocal.email)
       : null;
     if (!tarjetaLocal || !administrador) {
-      return responderError(
-        res,
-        404,
-        'tarjeta_no_administrativa',
-        'Esta tarjeta no corresponde a una cuenta administradora.'
-      );
+      return iniciarSesionOperadorTarjeta(res, uid);
     }
 
-    if (administrador.estado_registro !== 'aprobado') {
+    if (administrador.estado_registro !== 'aprobado' || administrador.activo !== 1) {
       return responderError(
         res,
         403,

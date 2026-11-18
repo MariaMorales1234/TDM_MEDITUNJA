@@ -24,7 +24,9 @@ import ConveniosModule from "./pages/AdministratorPages/ConveniosModule.jsx";
 import BienvenidaAdminModule from "./pages/AdministratorPages/BienvenidaAdminModule.jsx";
 import NFCVinculation from "./components/NFCVinculation/NFCVinculation.jsx";
 import RequireAdmin from "./auth/RequireAdmin.jsx";
+import RequireSuperadministrador from "./auth/RequireSuperadministrador.jsx";
 import RequireAuth from "./auth/RequireAuth.jsx";
+import SuperAdminEpsModule from "./pages/SuperAdminPages/SuperAdminEpsModule.jsx";
 
 const Map = lazy(() => import("./pages/UserPages/MapModules.jsx"));
 
@@ -36,11 +38,15 @@ function App() {
                 <Route path="/" element={<LandingPage />} />
                 <Route path="/meditunja" element={<LandingPage />} />
                 <Route path="/login" element={<Login />} />
+                <Route path="/superadmin/login" element={<Login />} />
                 <Route path="/registro" element={<Register />} />
                 <Route path="/admin/login" element={<Navigate to="/login" replace />} />
                 <Route path="/operador" element={<Navigate to="/login" replace />} />
                 <Route path="/operador/*" element={<Navigate to="/login" replace />} />
                 <Route path="/inicioOperador" element={<Navigate to="/login" replace />} />
+                <Route element={<RequireSuperadministrador />}>
+                    <Route path="/superadmin/administradores-eps" element={<SuperAdminEpsModule />} />
+                </Route>
                 <Route element={<RequireAdmin />}>
                     <Route element={<AdminLayout />}>
                         <Route path="/admin" element={<BienvenidaAdminModule />} />

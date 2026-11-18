@@ -33,14 +33,15 @@ El backend escucha en `http://localhost:3001`; Vite suele usar
 
 ## Flujos conectados
 
-- El registro y el inicio de sesión con documento y contraseña usan TunjaAPI; el
-  acceso NFC consulta la tarjeta activa y abre una sesión MediTunja sin contraseña.
+- El registro y el inicio de sesión de afiliados usan TunjaAPI. Los
+  administradores EPS y generales usan cuentas locales; el acceso NFC de
+  administradores EPS verifica la tarjeta activa y abre una sesión MediTunja.
 - Disponibilidad, reserva, listado y cancelación de citas persisten en SQLite.
 - Los administradores consultan métricas, citas y solicitudes de transporte de su
   EPS, y gestionan afiliados, convenios y resultados desde la API. Pueden aceptar
   o rechazar solicitudes de transporte, sin que eso asigne automáticamente un vehículo.
-- No existe un rol de operador en la API; las rutas antiguas de operador están
-  deshabilitadas en lugar de mostrar métricas de demostración.
+- El administrador general administra las cuentas de los administradores EPS sin
+  acceso a datos de pacientes. Las rutas antiguas de operador siguen deshabilitadas.
 - Los administradores de EPS pueden vincular su propia tarjeta NFC y asignar
   tarjetas a afiliados activos y aprobados de su EPS desde **Tarjetas NFC**.
 - Las solicitudes de transporte se asocian a una cita confirmada y quedan
@@ -67,6 +68,29 @@ credencial copiable y no es criptográfico;
 bloquea o desvincula tarjetas perdidas inmediatamente. MediTunja registra la
 tarjeta en TunjaAPI y verifica su estado allí. La recarga acredita el saldo de
 la billetera y no confirma que esté disponible en la tarjeta física.
+
+## Administrador general
+
+El acceso se realiza desde `/superadmin/login`. Configura en `backend/.env` un
+NIT propio y una contraseña distinta de las cuentas EPS, además de un nombre y
+correo:
+
+```env
+SUPERADMIN_NIT=<NIT del administrador general>
+SUPERADMIN_NAME=<nombre>
+SUPERADMIN_EMAIL=<correo>
+SUPERADMIN_PASSWORD=<contraseña única de al menos 12 caracteres>
+```
+
+Desde `backend/`, ejecuta `npm run provision:superadmin` una vez. Volver a
+ejecutar el comando actualiza la contraseña de esa cuenta y revoca sus sesiones;
+se rechaza un NIT que pertenezca a otra cuenta.
+
+En `/superadmin/administradores-eps` se pueden crear cuentas para las EPS
+configuradas, activarlas o desactivarlas y restablecer sus contraseñas. La
+creación registra también la cuenta correspondiente en TunjaAPI y requiere
+`TUNJA_CLAVE`. Desactivar o restablecer una cuenta revoca sus sesiones. El módulo
+no muestra pacientes ni historias clínicas.
 
 ## Pruebas
 

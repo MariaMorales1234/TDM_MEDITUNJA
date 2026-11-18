@@ -2,11 +2,14 @@ import { Router } from 'express';
 import {
   iniciarSesion,
   iniciarSesionAdministrador,
-  iniciarSesionAdministradorTarjeta
+  iniciarSesionAdministradorTarjeta,
+  iniciarSesionSuperadministrador
 } from '../controllers/login.js';
 import { registrarUsuario } from '../controllers/registro.js';
 import { autenticarSesion } from '../middleware/autenticarSesion.js';
 import { exigirAdministrador } from '../middleware/exigirAdministrador.js';
+import { exigirSuperadministrador } from '../middleware/exigirSuperadministrador.js';
+import { gestionarTarjetaOperador } from '../controllers/tarjetaOperador.js';
 import { exigirTarjetaVinculada } from '../middleware/exigirTarjetaVinculada.js';
 import {
   actualizarAfiliado,
@@ -53,6 +56,12 @@ import {
   vincularTarjetaAfiliado
 } from '../controllers/tarjetasAdministrador.js';
 import {
+  actualizarEstadoAdministradorEps,
+  crearAdministradorEps,
+  listarAdministradoresEps,
+  restablecerContrasenaAdministradorEps
+} from '../controllers/superadministradores.js';
+import {
   crearSolicitudTransporte,
   listarSolicitudesTransporte
 } from '../controllers/transporte.js';
@@ -81,6 +90,7 @@ router.post('/registro', registrarUsuario);
 router.post('/login', iniciarSesion);
 router.post('/admin/login', iniciarSesionAdministrador);
 router.post('/admin/card-login', iniciarSesionAdministradorTarjeta);
+router.post('/superadmin/login', iniciarSesionSuperadministrador);
 
 router.get('/citas/disponibilidad', autenticarUsuarioTunja, obtenerDisponibilidad);
 router.get('/citas', autenticarUsuarioTunja, listarCitas);
@@ -107,6 +117,23 @@ router.get('/sesion', (req, res) => {
 router.get('/admin/sesion', exigirAdministrador, (req, res) => {
   res.status(200).json({ data: req.usuario });
 });
+router.get('/superadmin/sesion', exigirSuperadministrador, (req, res) => {
+  res.status(200).json({ data: req.usuario });
+});
+router.get('/superadmin/administradores-eps', exigirSuperadministrador, listarAdministradoresEps);
+router.get('/superadmin/mi-tarjeta', exigirSuperadministrador, gestionarTarjetaOperador);
+router.post('/superadmin/mi-tarjeta', exigirSuperadministrador, gestionarTarjetaOperador);
+router.post('/superadmin/administradores-eps', exigirSuperadministrador, crearAdministradorEps);
+router.patch(
+  '/superadmin/administradores-eps/:id/estado',
+  exigirSuperadministrador,
+  actualizarEstadoAdministradorEps
+);
+router.patch(
+  '/superadmin/administradores-eps/:id/contrasena',
+  exigirSuperadministrador,
+  restablecerContrasenaAdministradorEps
+);
 router.get('/admin/afiliados', exigirAdministrador, listarAfiliados);
 router.get('/admin/recargas/afiliados', exigirAdministrador, listarAfiliadosParaRecarga);
 router.post('/admin/recargas/afiliados/:id', exigirAdministrador, recargarAfiliado);

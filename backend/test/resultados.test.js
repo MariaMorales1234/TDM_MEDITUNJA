@@ -48,7 +48,8 @@ test('resultados se guardan y solo se exponen al afiliado y administrador de su 
     assert.equal(registroAdmin.status, 201);
     await ejecutar(
       'run',
-      `UPDATE usuarios SET estado_registro = 'aprobado', rol = 'administrador'
+      `UPDATE usuarios SET estado_registro = 'aprobado', rol = 'administrador',
+         activo = 1
        WHERE numero_documento = ?`,
       ['8000000001']
     );

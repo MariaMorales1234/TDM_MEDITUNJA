@@ -1,0 +1,233 @@
+.page {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    max-width: 1240px;
+    margin: 32px auto 56px;
+    padding: 0 24px;
+    color: var(--color-text);
+    font-family: var(--text);
+}
+
+.header,
+.panelHeader {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.header > div:first-child > span {
+    color: var(--color-primary);
+    font-family: var(--sm);
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+}
+
+.header h1,
+.panel h2 {
+    margin: 8px 0;
+    color: var(--color-text);
+    font-family: var(--heading);
+}
+
+.header h1 {
+    font-size: clamp(1.8rem, 3.5vw, 2.5rem);
+}
+
+.header p,
+.panel > p,
+.panelHeader p {
+    margin: 0;
+    color: var(--color-text-secundary);
+    line-height: 1.6;
+}
+
+.headerActions {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-shrink: 0;
+}
+
+.panel {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-width: 0;
+    padding: clamp(20px, 3vw, 30px);
+    border: 1px solid var(--color-border);
+    border-radius: 22px;
+    background: var(--color-bg-card, var(--color-bg));
+    box-shadow: 0 12px 32px var(--color-shadow);
+}
+
+.panel h2 {
+    margin: 0;
+    font-size: clamp(1.15rem, 2.4vw, 1.4rem);
+}
+
+.panelHeader {
+    align-items: center;
+}
+
+.tableWrap {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.tableWrap table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.tableWrap th,
+.tableWrap td {
+    padding: 13px 12px;
+    border-bottom: 1px solid var(--color-border);
+    vertical-align: middle;
+}
+
+.tableWrap th {
+    color: var(--color-text-secundary);
+    font-size: 0.86rem;
+}
+
+.tableWrap td {
+    overflow-wrap: anywhere;
+}
+
+.active,
+.inactive {
+    display: inline-flex;
+    padding: 6px 10px;
+    border-radius: 999px;
+    font-size: 0.86rem;
+    font-weight: 700;
+}
+
+.active {
+    background: color-mix(in srgb, #16804a 14%, var(--color-bg));
+    color: #16804a;
+}
+
+.inactive {
+    background: color-mix(in srgb, #9d332c 12%, var(--color-bg));
+    color: #9d332c;
+}
+
+.forms {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+    gap: 24px;
+}
+
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.form label {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    color: var(--color-text);
+    font-weight: 650;
+}
+
+.form input,
+.form select {
+    width: 100%;
+    min-height: 44px;
+    padding: 10px 12px;
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    background: var(--color-bg);
+    color: var(--color-text);
+    font: inherit;
+    box-sizing: border-box;
+}
+
+.form input:focus,
+.form select:focus {
+    outline: 3px solid color-mix(in srgb, var(--color-primary) 32%, transparent);
+    border-color: var(--color-primary);
+}
+
+.primaryButton,
+.secondaryButton {
+    min-height: 42px;
+    padding: 10px 16px;
+    border: 1px solid var(--color-primary);
+    border-radius: 10px;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.primaryButton {
+    background: var(--color-primary);
+    color: var(--color-bg);
+}
+
+.secondaryButton {
+    background: transparent;
+    color: var(--color-primary);
+}
+
+.primaryButton:disabled,
+.secondaryButton:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.notice,
+.error,
+.success {
+    margin: 0;
+    padding: 12px 14px;
+    border-radius: 10px;
+    line-height: 1.5;
+}
+
+.notice {
+    background: var(--color-bg-elevated);
+    color: var(--color-text-secundary);
+}
+
+.error {
+    border: 1px solid #d88984;
+    background: color-mix(in srgb, #b83b32 10%, var(--color-bg));
+    color: #9e2d27;
+}
+
+.success {
+    border: 1px solid #77bb94;
+    background: color-mix(in srgb, #16804a 10%, var(--color-bg));
+    color: #176d43;
+}
+
+@media (max-width: 760px) {
+    .page {
+        padding: 0 14px;
+    }
+
+    .header,
+    .panelHeader {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .forms {
+        grid-template-columns: 1fr;
+    }
+
+    .tableWrap th,
+    .tableWrap td {
+        padding: 10px 8px;
+    }
+}

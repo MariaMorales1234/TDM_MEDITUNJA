@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS usuarios (
     sexo TEXT CHECK (sexo IS NULL OR sexo IN ('M', 'F', 'O')),
     eps TEXT,
     rol TEXT NOT NULL DEFAULT 'afiliado'
-        CHECK (rol IN ('afiliado', 'administrador')),
+        CHECK (rol IN ('afiliado', 'administrador', 'superadministrador')),
     password_hash TEXT NOT NULL CHECK (
         length(password_hash) = 161 AND
         substr(password_hash, 33, 1) = ':' AND

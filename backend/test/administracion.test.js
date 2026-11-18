@@ -62,9 +62,10 @@ test('gestión administrativa autentica roles y persiste datos aislados por EPS'
     await ejecutar(
       'run',
       `UPDATE usuarios SET estado_registro = 'aprobado',
-         rol = CASE WHEN numero_documento = ? THEN 'administrador' ELSE 'afiliado' END
+         rol = CASE WHEN numero_documento = ? THEN 'administrador' ELSE 'afiliado' END,
+         activo = CASE WHEN numero_documento = ? THEN 1 ELSE activo END
        WHERE numero_documento IN (?, ?, ?)`,
-      ['5000000001', '5000000001', '5000000002', '5000000003']
+      ['5000000001', '5000000001', '5000000001', '5000000002', '5000000003']
     );
     const hashContrasena = await ejecutar(
       'get',
@@ -219,7 +220,7 @@ test('gestión administrativa autentica roles y persiste datos aislados por EPS'
     await registrar('5000000004', 'Nueva EPS', 'admin-nueva@example.test');
     await ejecutar(
       'run',
-      "UPDATE usuarios SET estado_registro = 'aprobado', rol = 'administrador' WHERE numero_documento = ?",
+      "UPDATE usuarios SET estado_registro = 'aprobado', rol = 'administrador', activo = 1 WHERE numero_documento = ?",
       ['5000000004']
     );
     const { datos: sesionOtraEps } = await iniciarSesion('/api/admin/login', '5000000004');

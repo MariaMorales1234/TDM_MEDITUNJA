@@ -4,7 +4,9 @@ Las rutas de administración usan la base SQLite del backend, requieren una sesi
 
 ## Integraciones de la aplicación
 
-- El registro y el inicio de sesión con documento y contraseña se realizan mediante TunjaAPI. El acceso con tarjeta consulta TunjaAPI y crea una sesión MediTunja.
+- El registro y el inicio de sesión de afiliados se realizan mediante TunjaAPI.
+  Los administradores EPS y generales usan credenciales locales. El acceso con
+  tarjeta de un administrador EPS consulta TunjaAPI y crea una sesión MediTunja.
 - Citas: `GET /api/citas/disponibilidad`, `GET/POST /api/citas` y `PUT /api/citas/:id/cancelar`.
 - Solicitudes de transporte: `GET/POST /api/transporte`; deben corresponder a una cita confirmada del usuario. La respuesta queda en estado `solicitada`. No existe gestión administrativa de estas solicitudes.
 - Administración de citas: `GET /api/admin/resumen`, `GET /api/admin/citas`, `PUT /api/admin/citas/:id/reprogramar` y `PUT /api/admin/citas/:id/cancelar`. Las operaciones comprueban la EPS del afiliado y guardan el motivo administrativo.
@@ -36,6 +38,29 @@ npm run provision:admins
 El comando crea cada usuario con tipo de documento NIT y el nombre de la EPS, y guarda únicamente el hash de la contraseña. También activa las cuentas existentes cuando sus datos identificadores coinciden con la configuración; no cambia sus contraseñas ni sobrescribe otros datos. Si una identificación ya pertenece a una cuenta incompatible, el comando se detiene sin modificarla. La base está en `backend/data/meditunja.db` o en la ruta definida por `DB_PATH`.
 
 Ingresa por `/admin/login` con tipo NIT, el número en formato `XXXXXXXXX-DV` y la contraseña asignada. No guardes las contraseñas iniciales en el repositorio ni en logs.
+
+## Administrador general
+
+El administrador general tiene un rol separado, no pertenece a ninguna EPS y
+solo puede gestionar cuentas administrativas EPS. No puede acceder a rutas de
+pacientes ni a los módulos de una EPS.
+
+Configura un NIT exclusivo, nombre, correo y contraseña de al menos 12 caracteres
+en `SUPERADMIN_NIT`, `SUPERADMIN_NAME`, `SUPERADMIN_EMAIL` y
+`SUPERADMIN_PASSWORD` en `backend/.env`. No reutilices el NIT de un administrador
+EPS ni compartas los valores. Desde `backend/`, ejecuta:
+
+```sh
+npm run provision:superadmin
+```
+
+El comando registra o verifica la identidad activa en TunjaAPI mediante
+`TUNJA_API` y `TUNJA_CLAVE`, asigna el rol `superadministrador` en MediTunja
+y revoca las sesiones previas del operador al volver a aprovisionarlo.
+El operador ingresa en `/superadmin/login` con su NIT y la contraseña validada
+por TunjaAPI. Desde `/superadmin/administradores-eps` puede vincular su tarjeta
+en **Mi tarjeta NFC** y gestionar las cuentas EPS. La vinculación se guarda
+en TunjaAPI.
 
 El panel permite aprobar/rechazar solicitudes, actualizar datos de afiliados y crear/desactivar convenios. Los cambios se guardan en SQLite; cada petición vuelve a comprobar rol y EPS en el servidor.
 
