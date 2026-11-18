@@ -4,6 +4,7 @@ import './index.css'
 import App from './App.jsx'
 import AuthProvider from './auth/AuthProvider.jsx'
 import AdminAuthProvider from './auth/AdminAuthProvider.jsx'
+import './registerServiceWorker.js'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
