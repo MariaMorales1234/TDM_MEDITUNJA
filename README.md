@@ -1,7 +1,7 @@
 # MediTunja
 
-Aplicación React/Vite con API Express y base de datos SQLite para afiliación,
-agendamiento de citas y administración por EPS.
+Aplicación React/Vite con API Express y base SQLite para afiliación, citas,
+billetera, tarjetas NFC y administración por EPS.
 
 ## Desarrollo local
 
@@ -15,97 +15,71 @@ Requisitos: Node.js 22.9 o superior y npm.
    npm --prefix frontend install
    ```
 
-2. Copia `backend/.env.example` a `backend/.env` y configura `TUNJA_API`,
-   `TUNJA_CLAVE` y las credenciales de administración que necesites. No subas ni
-   compartas `backend/.env`.
-3. Inicia el backend y frontend juntos:
+2. Copia `backend/.env.example` a `backend/.env` y completa allí la configuración
+   necesaria para TunjaAPI y las cuentas administrativas. Usa valores propios;
+   nunca publiques ese archivo ni credenciales en documentación, capturas o logs.
+3. Inicia el backend y el frontend juntos:
 
    ```powershell
    npm run dev
    ```
 
-   Para iniciar solo el backend desde la raíz, ejecuta `npm run start`.
-   Inicia el frontend por separado con `npm --prefix frontend run dev`.
+   El backend también se inicia con `npm run start`. Para el frontend por
+   separado usa `npm --prefix frontend run dev`.
 
 El backend escucha en `http://localhost:3001`; Vite suele usar
-`http://localhost:5173` y reenvía `/api` al backend. Para otro despliegue, define
-`VITE_API_URL` en el frontend con la URL pública de la API, terminada en `/api`.
-En el backend configura `CORS_ORIGINS` con el origen exacto del frontend
-(por ejemplo, `https://tu-proyecto.vercel.app`, sin `/` al final). Se pueden
-indicar varios orígenes separados por comas. Si Vercel genera otra URL, agrega
-ese origen a la configuración del backend y vuelve a desplegarlo; no se permiten
-automáticamente todos los dominios `vercel.app`. La API también debe estar
-desplegada y accesible públicamente. Presiona `Ctrl+C` para detener ambos procesos.
+`http://localhost:5173` y reenvía `/api` al backend. En otros despliegues define
+`VITE_API_URL` con la URL pública de la API terminada en `/api`, y configura
+`CORS_ORIGINS` en el backend con los orígenes exactos del frontend, separados
+por comas. No se permiten automáticamente todos los dominios `vercel.app`.
+Presiona `Ctrl+C` para detener ambos procesos.
 
-## Flujos conectados
+## Funciones disponibles
 
-- El registro y el inicio de sesión de afiliados usan TunjaAPI. Los
-  administradores EPS y generales usan cuentas locales; el acceso NFC de
-  administradores EPS verifica la tarjeta activa y abre una sesión MediTunja.
-- Disponibilidad, reserva, listado y cancelación de citas persisten en SQLite.
-- Los administradores consultan métricas, citas y solicitudes de transporte de su
-  EPS, y gestionan afiliados, convenios y resultados desde la API. Pueden aceptar
-  o rechazar solicitudes de transporte, sin que eso asigne automáticamente un vehículo.
-- El administrador general administra las cuentas de los administradores EPS sin
-  acceso a datos de pacientes. Las rutas antiguas de operador siguen deshabilitadas.
-- Los administradores de EPS pueden vincular su propia tarjeta NFC y asignar
-  tarjetas a afiliados activos y aprobados de su EPS desde **Tarjetas NFC**.
-- Las solicitudes de transporte se asocian a una cita confirmada y quedan
-  pendientes de confirmación operativa.
-- El ACR122U se integra mediante el puente local de `nfc-bridge/`. Ejecuta
-  `Puente.bat` una vez en el PC del lector; al entrar a **Vinculación de tarjeta
-  NFC**, la app solicita automáticamente una lectura y permite confirmar el UID
-  antes de enviarlo a la API. El navegador no puede iniciar el `.bat` por sí
-  solo; consulta `nfc-bridge/README.md`.
+- Los afiliados se registran e inician sesión mediante TunjaAPI. Las cuentas
+  administrativas EPS y general usan sesiones locales; el acceso NFC de
+  administradores EPS valida la tarjeta en TunjaAPI.
+- Las citas, pagos asociados, afiliaciones, convenios, resultados y solicitudes
+  de transporte se gestionan con la API y SQLite. Reservar citas y solicitar
+  transporte requiere una tarjeta NFC vinculada.
+- Las solicitudes de transporte corresponden a citas confirmadas y quedan
+  pendientes de coordinación. No hay un flujo administrativo para aceptarlas o
+  rechazarlas.
+- Los administradores EPS operan sobre datos de su propia EPS y pueden gestionar
+  afiliados, citas, convenios, resultados, recargas en ventanilla y tarjetas NFC.
+- El administrador general gestiona cuentas de administradores EPS; no accede a
+  datos de pacientes. Las rutas antiguas de operador redirigen al inicio de sesión.
+- El lector ACR122U usa el puente local de `Lector/`. Ejecuta `Lector/Puente.bat`
+  en el PC del lector; el navegador no puede iniciar ese archivo por sí solo.
+  Consulta [Lector/README.md](Lector/README.md) para el uso y los límites.
 
-## Saldo y alcance del NFC
+## Billetera, pagos y NFC
 
-El módulo de recarga consulta la billetera de TunjaAPI y acredita saldo mediante
-`POST /wallet/topup`. La clave `TUNJA_CLAVE` se usa únicamente desde el backend;
-debe configurarse en `backend/.env`. Esta operación acredita saldo directamente:
-no cobra una tarjeta bancaria, no procesa PSE y no genera una transacción de pago
-externo. Para cobrar fondos reales se debe integrar una pasarela de pago.
+La billetera consulta y acredita saldo en TunjaAPI. La clave de integración se
+usa únicamente en el backend y se configura en `backend/.env`. Las opciones de
+pago Nequi, Daviplata, tarjeta y PSE son simuladas: no se conecta una pasarela ni
+se cobran esos medios. El pago NFC de citas sí solicita el cobro a la billetera
+de TunjaAPI. Una recarga acredita saldo en esa billetera; no confirma que el
+saldo esté disponible en la tarjeta física.
 
-La API registra el UID para vincular una tarjeta. Se puede iniciar sesión con
-el UID vinculado, como en un torniquete: al acercar una tarjeta activa se abre
-una sesión MediTunja de 15 minutos, renovada mientras se usa la aplicación. La
-cuenta debe estar aprobada y la tarjeta registrada en TunjaAPI. El UID es una
-credencial copiable y no es criptográfico;
-bloquea o desvincula tarjetas perdidas inmediatamente. MediTunja registra la
-tarjeta en TunjaAPI y verifica su estado allí. La recarga acredita el saldo de
-la billetera y no confirma que esté disponible en la tarjeta física.
+El UID se registra para vincular una tarjeta y puede usarse para iniciar sesión
+con una sesión MediTunja de 15 minutos, renovada durante el uso. La cuenta debe
+estar activa y aprobada, y la tarjeta debe estar activa en TunjaAPI. El UID se
+puede copiar y no demuestra por sí solo la identidad del titular; bloquea o
+desvincula de inmediato las tarjetas perdidas.
 
-## Administrador general
+## Aprovisionamiento administrativo
 
-El acceso se realiza desde `/superadmin/login`. Configura en `backend/.env` un
-NIT propio y una contraseña distinta de las cuentas EPS, además de un nombre y
-correo:
+Configura los NIT, nombres, correos y contraseñas en `backend/.env`; no guardes
+valores reales en el repositorio. Desde `backend/`, ejecuta `npm run
+provision:admins` para aprovisionar las cuentas EPS y la cuenta de prueba que
+esté configurada. Ejecuta `npm run provision:superadmin` para registrar o
+actualizar el administrador general. Volver a aprovisionarlo revoca sus
+sesiones anteriores. Los detalles están en [backend/README.md](backend/README.md).
 
-```env
-SUPERADMIN_NIT=<NIT del administrador general>
-SUPERADMIN_NAME=<nombre>
-SUPERADMIN_EMAIL=<correo>
-SUPERADMIN_PASSWORD=<contraseña única de al menos 12 caracteres>
-```
-
-Desde `backend/`, ejecuta `npm run provision:superadmin` una vez. Volver a
-ejecutar el comando actualiza la contraseña de esa cuenta y revoca sus sesiones;
-se rechaza un NIT que pertenezca a otra cuenta.
-
-En `/superadmin/administradores-eps` se pueden crear cuentas para las EPS
-configuradas, activarlas o desactivarlas y restablecer sus contraseñas. La
-creación registra también la cuenta correspondiente en TunjaAPI y requiere
-`TUNJA_CLAVE`. Desactivar o restablecer una cuenta revoca sus sesiones. El módulo
-no muestra pacientes ni historias clínicas.
-
-## Pruebas
-
-```powershell
-npm --prefix backend test
-npm --prefix frontend run lint
-npm --prefix frontend run build
-```
+## Datos locales
 
 La base de datos se crea en `backend/data/meditunja.db` o en la ruta definida por
-`DB_PATH`. La provisión y alcance de las cuentas administradoras se documentan
-en `backend/README.md`.
+`DB_PATH`. Los comprobantes privados se almacenan junto a la base de datos y no
+se sirven como archivos estáticos. `backend/data/` y los archivos `.env` están
+excluidos del repositorio.
