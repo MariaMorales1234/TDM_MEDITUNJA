@@ -1,5 +1,8 @@
 {
   "version": 2,
+  "functions": {
+    "api/server.js": { "includeFiles": "src/config/db.sql" }
+  },
   "rewrites": [
     { "source": "/(.*)", "destination": "/api/server.js" }
   ]

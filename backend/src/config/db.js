@@ -6,8 +6,10 @@ import { tarifaBaseCita, tarifaMaximaCita } from './tarifasCitas.js';
 import { EPS_AFILIACIONES, EPS_CATALOGO, IPS_CATALOGO } from './convenios.js';
 
 const carpetaModulo = path.dirname(fileURLToPath(import.meta.url));
+// shortcut: en Vercel solo /tmp es escribible y se borra en cada arranque en frío; migrar a una BD gestionada para datos persistentes.
 const rutaBaseDatos = path.resolve(
-  process.env.DB_PATH || path.join(carpetaModulo, '../../data/meditunja.db')
+  process.env.DB_PATH ||
+    (process.env.VERCEL ? '/tmp/meditunja.db' : path.join(carpetaModulo, '../../data/meditunja.db'))
 );
 const rutaEsquema = path.join(carpetaModulo, 'db.sql');
 
