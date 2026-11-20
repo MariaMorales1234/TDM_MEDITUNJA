@@ -6,6 +6,10 @@ import ModifyAppointment from "../ModifyAppointment/ModifyAppointment.jsx";
 import CancelAppointment from "../CancelAppointment/CancelAppointment.jsx";
 import styles from "./AppointmentEps.module.css";
 
+function fechaHoraCita({ fecha, hora }) {
+    return new Date(`${fecha}T${hora}:00-05:00`).getTime();
+}
+
 function AppointmentEps() {
     const { token } = useAdminAuth();
     const [citas, setCitas] = useState([]);
@@ -42,6 +46,7 @@ function AppointmentEps() {
 
     const citasVisibles = useMemo(() => {
         const termino = busqueda.trim().toLocaleLowerCase("es");
+        const ahora = Date.now();
         return citas.filter((cita) => {
             const coincideBusqueda = !termino || [
                 cita.paciente,
@@ -54,6 +59,14 @@ function AppointmentEps() {
             ].join(" ").toLocaleLowerCase("es").includes(termino);
             const coincideEstado = estadoFiltro === "todos" || cita.estado === estadoFiltro;
             return coincideBusqueda && coincideEstado;
+        }).sort((primera, segunda) => {
+            const fechaPrimera = fechaHoraCita(primera);
+            const fechaSegunda = fechaHoraCita(segunda);
+            const primeraPasada = fechaPrimera < ahora;
+            const segundaPasada = fechaSegunda < ahora;
+
+            if (primeraPasada !== segundaPasada) return Number(primeraPasada) - Number(segundaPasada);
+            return primeraPasada ? fechaSegunda - fechaPrimera : fechaPrimera - fechaSegunda;
         });
     }, [citas, busqueda, estadoFiltro]);
 
